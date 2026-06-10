@@ -1,18 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { createBusiness, getBusinesses } from '@/actions/business';
+
+interface Business {
+  id: string;
+  name: string;
+  googleLink: string | null;
+  _count: { customers: number };
+}
 
 export default function BusinessPage() {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
+
+  async function load() {
+    setBusinesses(await getBusinesses());
+  }
+
+  useEffect(() => { load(); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log('Crear negocio:', form);
+    await createBusiness(form);
     setForm({ name: '', googleLink: '' });
     setOpen(false);
+    await load();
   }
 
   return (
@@ -66,11 +80,26 @@ export default function BusinessPage() {
         </div>
       )}
 
-      <div className="card">
-        <p style={{ fontSize: 14, color: 'var(--text-tertiary)', textAlign: 'center', padding: '48px 0' }}>
-          Todavía no tienes negocios registrados
-        </p>
-      </div>
+      {businesses.length === 0 ? (
+        <div className="card">
+          <p style={{ fontSize: 14, color: 'var(--text-tertiary)', textAlign: 'center', padding: '48px 0' }}>
+            Todavía no tienes negocios registrados
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {businesses.map((b) => (
+            <div key={b.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+              <div>
+                <span style={{ fontWeight: 500 }}>{b.name}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-tertiary)', marginLeft: 12 }}>
+                  {b._count.customers} clientes
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
