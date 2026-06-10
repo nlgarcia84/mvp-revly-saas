@@ -1,8 +1,9 @@
-export default function SignIn() {
+import { SignIn } from '@clerk/nextjs';
+
+export default function SignInPage() {
   return (
     <main>
-      <h1>Sign In</h1>
-      <p>Página de inicio de sesión (Clerk).</p>
+      <SignIn />
     </main>
   );
 }

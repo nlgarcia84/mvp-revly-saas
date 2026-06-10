@@ -1,8 +1,9 @@
-export default function SignUp() {
+import { SignUp } from '@clerk/nextjs';
+
+export default function SignUpPage() {
   return (
     <main>
-      <h1>Sign Up</h1>
-      <p>Página de registro (Clerk).</p>
+      <SignUp />
     </main>
   );
 }
