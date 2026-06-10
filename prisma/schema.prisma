@@ -1,31 +1,28 @@
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+datasource db {
+  provider = "postgresql"
+}
 
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique
+  name       String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
   businesses Business[]
 }
 
 model Business {
-  id          String   @id @default(uuid())
-  name        String
-  googleLink  String?  // Enlace para redirigir clientes satisfechos (Módulo 4)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  
-  customers   Customer[]
+  id         String     @id @default(uuid())
+  name       String
+  googleLink String?
+  userId     String
+  createdAt  DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers  Customer[]
 }
 
 model Customer {
@@ -34,6 +31,6 @@ model Customer {
   email      String
   phone      String?
   businessId String
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 }
