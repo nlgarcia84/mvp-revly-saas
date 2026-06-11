@@ -16,6 +16,8 @@ import { redirect } from 'next/navigation';
 //   redirect: función de Next.js para redirigir al navegador a otra ruta.
 //   Solo funciona en Server Components / Server Actions.
 
+export type ActionResult = { error: string } | { success: boolean } | void;
+
 // ════════════════════════════════════════════════════════════════════
 //  signUp
 // ════════════════════════════════════════════════════════════════════
@@ -23,7 +25,7 @@ import { redirect } from 'next/navigation';
 //  tabla User de Prisma para que quede vinculado a sus datos.
 // ════════════════════════════════════════════════════════════════════
 
-export const signUp = async (_prevState: unknown, formData: FormData) => {
+export const signUp = async (_prevState: unknown, formData: FormData): Promise<ActionResult> => {
   // _prevState: estado anterior devuelto por useActionState (se ignora).
   // formData: datos del formulario (<input name="email"> → formData.get('email')).
 
@@ -87,7 +89,7 @@ export const signUp = async (_prevState: unknown, formData: FormData) => {
 //  No usa Prisma — solo valida credenciales.
 // ════════════════════════════════════════════════════════════════════
 
-export const signIn = async (_prevState: unknown, formData: FormData) => {
+export const signIn = async (_prevState: unknown, formData: FormData): Promise<ActionResult> => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 

@@ -1,11 +1,11 @@
 'use client';
 
-import { signUp } from '@/actions/auth';
+import { signUp, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
 
 export default function SignUpPage() {
-  const [state, action, pending] = useActionState(signUp, null);
+  const [state, action, pending] = useActionState<ActionResult | null>(signUp, null);
 
   // Si el registro fue exitoso, mostramos la pantalla de verificación
   if (state?.success) {
