@@ -19,7 +19,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-neutral-500">Resumen de tu actividad</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm flex flex-col gap-1">
           <span className="text-xs text-neutral-500 font-medium">Negocios</span>
           <span className="text-4xl font-bold">{totalBusinesses}</span>

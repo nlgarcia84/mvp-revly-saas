@@ -31,10 +31,10 @@ const BusinessPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-2xl font-semibold mb-1">Negocios</h1>
-          <p className="text-sm text-neutral-500">Gestiona tus negocios y sus enlaces de reseña</p>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-1">Negocios</h1>
+          <p className="text-xs sm:text-sm text-neutral-500">Gestiona tus negocios y sus enlaces de reseña</p>
         </div>
         <button
           className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium cursor-pointer border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 hover:border-neutral-800"
@@ -50,7 +50,7 @@ const BusinessPage = () => {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white border border-neutral-200 rounded-xl shadow-sm w-[420px] p-8"
+            className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-[400px] sm:w-[420px] p-6 sm:p-8"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-6">Crear negocio</h2>

@@ -13,7 +13,7 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[220px] border-r border-neutral-200 h-full p-4 pl-3 bg-neutral-100">
+    <aside className="hidden lg:block w-[220px] border-r border-neutral-200 h-full p-4 pl-3 bg-neutral-100 shrink-0">
       <nav className="flex flex-col gap-1">
         {links.map((link) => {
           const active = pathname === link.href;
