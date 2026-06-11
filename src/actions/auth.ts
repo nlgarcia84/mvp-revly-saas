@@ -23,9 +23,10 @@ import { redirect } from 'next/navigation';
 //  tabla User de Prisma para que quede vinculado a sus datos.
 // ════════════════════════════════════════════════════════════════════
 
-export const signUp = async (formData: FormData) => {
-  // formData: datos enviados desde el formulario de registro.
-  // .get('email') obtiene el valor del <input name="email">.
+export const signUp = async (_prevState: unknown, formData: FormData) => {
+  // _prevState: estado anterior devuelto por useActionState (se ignora).
+  // formData: datos del formulario (<input name="email"> → formData.get('email')).
+
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const name = formData.get('name') as string;
@@ -34,26 +35,21 @@ export const signUp = async (formData: FormData) => {
   // SUPABASE: crea el usuario en Supabase Auth
   // ──────────────────────────────────────────────
 
-  // createClient() crea un cliente de Supabase vinculado a la sesión
-  // actual (lee/escribe cookies HTTP con el access_token).
   const supabase = await createClient();
 
-  // supabase.auth.signUp() envía una petición a Supabase Auth para:
-  //   1. Crear un nuevo usuario con email + password
-  //   2. Enviar un email de verificación (si está habilitado en el dashboard)
-  //   3. Devolver los datos del usuario creado
   const { data, error } = await supabase.auth.signUp({
-    email,                    // email único del usuario
-    password,                 // contraseña en texto plano (Supabase la hashea)
+    email,
+    password,
     options: {
-      data: { full_name: name },  // metadatos opcionales del usuario
+      data: { full_name: name },
     },
   });
 
-  // Si Supabase devuelve un error (email duplicado, password débil, etc.)
-  // lo lanzamos como excepción. El formulario lo capturará y mostrará.
+  // Si Supabase devuelve error, lo devolvemos como objeto
+  // para que useActionState lo muestre en el formulario.
+  // NO usamos throw porque useActionState no lo captura.
   if (error) {
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
   // ──────────────────────────────────────────────
@@ -61,17 +57,9 @@ export const signUp = async (formData: FormData) => {
   //   - Busca al usuario por su id (el mismo que generó Supabase Auth)
   //   - Si existe → actualiza email y name
   //   - Si no existe → crea un registro nuevo con ese id
-  //
-  //   Necesitamos esto porque nuestros datos (negocios, clientes)
-  //   están en Prisma/PostgreSQL y referencian al User.id.
-  //   Si no guardamos el usuario aquí, las relaciones no funcionarían.
   // ──────────────────────────────────────────────
 
   if (data.user) {
-    // data.user.id es el UUID que Supabase Auth generó para este usuario.
-    // Lo usamos como clave primaria en nuestra tabla User para mantener
-    // el mismo ID entre Supabase Auth y Prisma.
-
     await prisma
       .user                          // tabla User del schema Prisma
       .upsert({                      // INSERT OR UPDATE
@@ -79,20 +67,20 @@ export const signUp = async (formData: FormData) => {
           id: data.user.id,          // el mismo ID de Supabase Auth
         },
         update: {                    // si existe → actualiza:
-          email,                     // email del formulario
-          name,                      // name del formulario
+          email,
+          name,
         },
         create: {                    // si no existe → crea:
           id: data.user.id,          // mismo ID de Supabase Auth
-          email,                     // email del formulario
-          name,                      // name del formulario
+          email,
+          name,
         },
       });
   }
 
-  // redirect lanza una redirección HTTP 303 al dashboard.
-  // Como es Server Action, el navegador sigue la redirección
-  // y el usuario llega a /dashboard con sesión iniciada.
+  // redirect() lanza internamente un error especial (Next.js RedirectError).
+  // Como está fuera del bloque if(error), Next.js lo maneja correctamente
+  // y redirige al navegador a /dashboard.
   redirect('/dashboard');
 };
 
@@ -104,7 +92,7 @@ export const signUp = async (formData: FormData) => {
 //  No usa Prisma — solo valida credenciales.
 // ════════════════════════════════════════════════════════════════════
 
-export const signIn = async (formData: FormData) => {
+export const signIn = async (_prevState: unknown, formData: FormData) => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
@@ -112,25 +100,19 @@ export const signIn = async (formData: FormData) => {
   // SUPABASE: verifica credenciales y crea sesión
   // ──────────────────────────────────────────────
 
-  // Crea el cliente de Supabase para esta petición
   const supabase = await createClient();
 
-  // signInWithPassword() envía email + password a Supabase Auth.
-  // Si son válidos, Supabase devuelve un access_token + refresh_token
-  // que el cliente guarda automáticamente en las cookies HTTP
-  // (gracias a la configuración de createServerClient).
   const { error } = await supabase.auth.signInWithPassword({
-    email,      // email del formulario
-    password,   // contraseña en texto plano
+    email,
+    password,
   });
 
-  // Si las credenciales son incorrectas, Supabase devuelve un error
-  // (ej: "Invalid login credentials"). Lo propagamos al formulario.
+  // Si las credenciales son incorrectas, devolvemos el error
+  // para que useActionState lo muestre en el formulario.
   if (error) {
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
-  // Redirige al dashboard con la sesión activa
   redirect('/dashboard');
 };
 
