@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
-  { href: '', label: 'Perfil Personal' },
+  { href: '/profile', label: 'Perfil Personal' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/business', label: 'Negocios' },
 ];
