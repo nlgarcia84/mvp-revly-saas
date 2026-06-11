@@ -36,7 +36,10 @@ export default function SignUpPage() {
               border: '1px solid #e8e8e8',
               fontSize: 14,
               padding: '10px 12px',
-              '&:focus': { borderColor: '#0a0a0a', boxShadow: '0 0 0 2px rgba(0,0,0,0.05)' },
+              '&:focus': {
+                borderColor: '#0a0a0a',
+                boxShadow: '0 0 0 2px rgba(0,0,0,0.05)',
+              },
             },
             footerActionLink: { color: '#0a0a0a' },
             footer: { '& > :last-child': { display: 'none' } },
