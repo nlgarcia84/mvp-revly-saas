@@ -6,6 +6,7 @@
 // ──────────────────────────────────────────────
 import { signIn } from '@/actions/auth';
 import { useActionState } from 'react';
+import Link from 'next/link';
 
 export default function SignInPage() {
   const [state, action, pending] = useActionState(signIn, null);
@@ -58,9 +59,9 @@ export default function SignInPage() {
 
         <p className="text-xs text-neutral-400 text-center mt-6">
           ¿No tienes cuenta?{' '}
-          <a href="/sign-up" className="text-neutral-950 font-medium underline">
+          <Link href="/sign-up" className="text-neutral-950 font-medium underline">
             Regístrate
-          </a>
+          </Link>
         </p>
       </div>
     </div>

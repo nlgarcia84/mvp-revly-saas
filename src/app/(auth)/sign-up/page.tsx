@@ -2,6 +2,7 @@
 
 import { signUp } from '@/actions/auth';
 import { useActionState } from 'react';
+import Link from 'next/link';
 
 export default function SignUpPage() {
   const [state, action, pending] = useActionState(signUp, null);
@@ -16,12 +17,12 @@ export default function SignUpPage() {
             Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada
             (y la carpeta de spam) para activar tu cuenta.
           </p>
-          <a
+          <Link
             href="/sign-in"
             className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800"
           >
             Ir a iniciar sesión
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -89,9 +90,9 @@ export default function SignUpPage() {
 
         <p className="text-xs text-neutral-400 text-center mt-6">
           ¿Ya tienes cuenta?{' '}
-          <a href="/sign-in" className="text-neutral-950 font-medium underline">
+          <Link href="/sign-in" className="text-neutral-950 font-medium underline">
             Inicia sesión
-          </a>
+          </Link>
         </p>
       </div>
     </div>

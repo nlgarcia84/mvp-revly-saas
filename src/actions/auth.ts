@@ -53,32 +53,29 @@ export const signUp = async (_prevState: unknown, formData: FormData) => {
   }
 
   // ──────────────────────────────────────────────
-  // PRISMA (upsert = INSERT OR UPDATE):
-  //   - Busca al usuario por su id (el mismo que generó Supabase Auth)
-  //   - Si existe → actualiza email y name
-  //   - Si no existe → crea un registro nuevo con ese id
+  // PRISMA: guarda el usuario en nuestra tabla User
   // ──────────────────────────────────────────────
 
   if (data.user) {
-    // Buscamos si ya existe un usuario con este email
-    // (puede haber quedado de la época de Clerk).
     const exists = await prisma.user.findUnique({ where: { email } });
 
     if (exists) {
-      // Ya existe en la BD con un ID antiguo (Clerk).
-      // Lo eliminamos (cascadea a businesses → customers) y
-      // creamos uno nuevo con el ID de Supabase Auth.
+      // Usuario de la época de Clerk → lo reemplazamos
       await prisma.user.delete({ where: { id: exists.id } });
     }
 
-    // Creamos el usuario con el ID de Supabase Auth
     await prisma.user.create({
       data: { id: data.user.id, email, name },
     });
   }
 
-  // Devolvemos éxito para que el formulario muestre la pantalla
-  // "Revisa tu email para confirmar la cuenta".
+  // Si Supabase devolvió sesión (confirmación desactivada),
+  // redirigimos al dashboard directamente.
+  // Si no, mostramos pantalla "Revisa tu email".
+  if (data.session) {
+    redirect('/dashboard');
+  }
+
   return { success: true };
 };
 
