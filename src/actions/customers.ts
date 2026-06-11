@@ -19,11 +19,12 @@ export async function addCustomer(data: {
 
   const customer = await prisma.customer.create({
     data: {
+      id: crypto.randomUUID(),
       name: data.name,
       email: data.email,
       phone: data.phone ?? null,
-      business: { connect: { id: data.businessId } },
-    },
+      businessId: data.businessId,
+    } as any,
   });
 
   return customer;
