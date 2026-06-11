@@ -8,13 +8,13 @@ export default function HomePage() {
         <div className="flex gap-3">
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium border border-neutral-200 bg-white text-neutral-950 transition-all duration-150 hover:bg-neutral-100 hover:border-neutral-300"
+            className="inline-flex items-center justify-center gap-2 px-4.5 py-2 rounded-md text-sm font-medium border border-neutral-200 bg-white text-neutral-950 transition-all duration-150 hover:bg-neutral-100 hover:border-neutral-300"
           >
             Iniciar sesión
           </Link>
           <Link
             href="/sign-up"
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 hover:border-neutral-800"
+            className="inline-flex items-center justify-center gap-2 px-4.5 py-2 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 hover:border-neutral-800"
           >
             Registrarse
           </Link>
@@ -22,9 +22,9 @@ export default function HomePage() {
       </header>
 
       <main className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-[640px] text-center">
+        <div className="max-w-160 text-center">
           <h1 className="text-5xl font-bold tracking-tight leading-[1.1] mb-4">
-            Más reseñas en Google
+            Gestiona la voz de tus clientes
           </h1>
           <p className="text-lg text-neutral-500 leading-relaxed mb-8">
             Ayuda a tu negocio a conseguir reseñas en Google de forma

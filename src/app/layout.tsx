@@ -2,7 +2,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 
 export const metadata = {
-  title: 'Mi SaaS MVP',
+  title: 'Revly | Gestión de reservas para negocios',
   description: 'Plantilla inicial para un SaaS',
 };
 
