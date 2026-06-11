@@ -22,7 +22,7 @@ export async function addCustomer(data: {
       name: data.name,
       email: data.email,
       phone: data.phone ?? null,
-      businessId: data.businessId,
+      business: { connect: { id: data.businessId } },
     },
   });
 
