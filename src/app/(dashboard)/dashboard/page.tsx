@@ -1,9 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
+  // TODO: obtener userId de Supabase
+  const userId = '';
   const businesses = await prisma.business.findMany({
     where: { userId },
     include: { _count: { select: { customers: true } } },

@@ -1,6 +1,5 @@
 'use server';
 
-import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 
 export async function addCustomer(data: {
@@ -9,7 +8,8 @@ export async function addCustomer(data: {
   email: string;
   phone?: string;
 }) {
-  const { userId } = await auth();
+  // TODO: obtener userId de Supabase
+  const userId = '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -31,7 +31,8 @@ export async function addCustomer(data: {
 }
 
 export async function getCustomers(businessId: string) {
-  const { userId } = await auth();
+  // TODO: obtener userId de Supabase
+  const userId = '';
   if (!userId) return [];
 
   return prisma.customer.findMany({

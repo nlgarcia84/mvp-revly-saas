@@ -1,13 +1,11 @@
 import Navbar from '@/components/navbar';
 import Sidebar from '@/components/sidebar';
-import { syncUser } from '@/lib/sync-user';
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await syncUser();
 
   return (
     <div className="flex flex-col h-screen">

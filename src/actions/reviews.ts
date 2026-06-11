@@ -1,10 +1,10 @@
 'use server';
 
-import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 
 export async function sendReviewRequest(businessId: string) {
-  const { userId } = await auth();
+  // TODO: obtener userId de Supabase
+  const userId = '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
