@@ -68,20 +68,24 @@ export async function middleware(request: NextRequest) {
   // Solo llamamos a Supabase si es una ruta que requiere saber
   // si el usuario tiene sesión. En rutas públicas (/, /api, ...)
   // nos saltamos la llamada HTTP a Supabase.
-  let user = null;
+  //
+  // Usamos getSession() en lugar de getUser() porque lee las cookies
+  // localmente sin hacer una petición HTTP a Supabase. Esto es mucho
+  // más rápido (~0ms vs ~200ms) y suficiente para el middleware.
+  let session = null;
 
   if (isProtected || isAuth) {
     const {
-      data: { user: u },
-    } = await supabase.auth.getUser();
-    user = u;
+      data: { session: s },
+    } = await supabase.auth.getSession();
+    session = s;
   }
 
-  if (isProtected && !user) {
+  if (isProtected && !session) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
-  if (isAuth && user) {
+  if (isAuth && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
