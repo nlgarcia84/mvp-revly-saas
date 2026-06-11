@@ -60,22 +60,21 @@ export const signUp = async (_prevState: unknown, formData: FormData) => {
   // ──────────────────────────────────────────────
 
   if (data.user) {
-    await prisma
-      .user                          // tabla User del schema Prisma
-      .upsert({                      // INSERT OR UPDATE
-        where: {                     // busca por:
-          id: data.user.id,          // el mismo ID de Supabase Auth
-        },
-        update: {                    // si existe → actualiza:
-          email,
-          name,
-        },
-        create: {                    // si no existe → crea:
-          id: data.user.id,          // mismo ID de Supabase Auth
-          email,
-          name,
-        },
-      });
+    // Buscamos si ya existe un usuario con este email
+    // (puede haber quedado de la época de Clerk).
+    const exists = await prisma.user.findUnique({ where: { email } });
+
+    if (exists) {
+      // Ya existe en la BD con un ID antiguo (Clerk).
+      // Lo eliminamos (cascadea a businesses → customers) y
+      // creamos uno nuevo con el ID de Supabase Auth.
+      await prisma.user.delete({ where: { id: exists.id } });
+    }
+
+    // Creamos el usuario con el ID de Supabase Auth
+    await prisma.user.create({
+      data: { id: data.user.id, email, name },
+    });
   }
 
   // redirect() lanza internamente un error especial (Next.js RedirectError).
