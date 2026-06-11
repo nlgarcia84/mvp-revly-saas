@@ -53,33 +53,28 @@ export async function middleware(request: NextRequest) {
   );
 
   /**
-   * getUser(): Verifica la sesión actual llamando a Supabase Auth.
-   * Si el usuario tiene cookies de sesión válidas, devuelve el objeto
-   * user con su id, email, etc. Si no, user es null.
-   * Es importante usar getUser() y no getUser() para evitar
-   * almacenar sesiones en caché y siempre verificar contra Supabase.
-   */
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  /**
-   * isProtected: Rutas que solo pueden ver usuarios autenticados.
-   * Si el usuario no ha iniciado sesión, lo redirigimos a /sign-in.
-   * Añade aquí cualquier ruta nueva que requiera autenticación.
+   * isProtected: rutas que requieren sesión
+   * isAuth: rutas de login/registro (solo sin sesión)
    */
   const isProtected =
     request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/business');
 
-  /**
-   * isAuth: Rutas de autenticación (inicio de sesión y registro).
-   * Si el usuario ya tiene sesión activa, no tiene sentido que vea
-   * estas páginas, así que lo redirigimos al dashboard.
-   */
   const isAuth =
     request.nextUrl.pathname.startsWith('/sign-in') ||
     request.nextUrl.pathname.startsWith('/sign-up');
+
+  // Solo llamamos a Supabase si es una ruta que requiere saber
+  // si el usuario tiene sesión. En rutas públicas (/, /api, ...)
+  // nos saltamos la llamada HTTP a Supabase.
+  let user = null;
+
+  if (isProtected || isAuth) {
+    const {
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    user = u;
+  }
 
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
