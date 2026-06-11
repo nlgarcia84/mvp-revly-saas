@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export default function HomePage() {
+const HomePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="h-14 border-b border-neutral-200 flex items-center justify-between px-6">
@@ -53,4 +53,6 @@ export default function HomePage() {
       </footer>
     </div>
   );
-}
+};
+
+export default HomePage;

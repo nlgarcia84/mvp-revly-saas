@@ -4,7 +4,7 @@ import { signUp, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
 
-export default function SignUpPage() {
+const SignUpPage = () => {
   const [state, action, pending] = useActionState(signUp, null as ActionResult);
 
   // Si el registro fue exitoso, mostramos la pantalla de verificación
@@ -97,4 +97,6 @@ export default function SignUpPage() {
       </div>
     </div>
   );
-}
+};
+
+export default SignUpPage;

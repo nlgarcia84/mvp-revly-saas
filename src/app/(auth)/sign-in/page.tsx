@@ -4,7 +4,7 @@ import { signIn, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
 
-export default function SignInPage() {
+const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
 
   return (
@@ -62,4 +62,6 @@ export default function SignInPage() {
       </div>
     </div>
   );
-}
+};
+
+export default SignInPage;

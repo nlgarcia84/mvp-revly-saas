@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
+  { href: '', label: 'Perfil Personal' },
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/business', label: 'Negocios' },
 ];
 
-export default function Sidebar() {
+const Sidebar = () => {
   const pathname = usePathname();
 
   return (
@@ -33,4 +34,6 @@ export default function Sidebar() {
       </nav>
     </aside>
   );
-}
+};
+
+export default Sidebar;

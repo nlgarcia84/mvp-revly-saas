@@ -1,6 +1,6 @@
 import { signOut } from '@/actions/auth';
 
-export default function Navbar() {
+const Navbar = () => {
   return (
     <header className="h-14 border-b border-neutral-200 flex items-center px-6 bg-white">
       <span className="font-semibold text-base">Revly</span>
@@ -16,4 +16,6 @@ export default function Navbar() {
       </div>
     </header>
   );
-}
+};
+
+export default Navbar;

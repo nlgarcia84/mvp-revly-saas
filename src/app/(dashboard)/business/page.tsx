@@ -10,24 +10,24 @@ interface Business {
   _count: { customers: number };
 }
 
-export default function BusinessPage() {
+const BusinessPage = () => {
   const [open, setOpen] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
 
-  async function load() {
+  const load = async () => {
     setBusinesses(await getBusinesses());
-  }
+  };
 
   useEffect(() => { load(); }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await createBusiness(form);
     setForm({ name: '', googleLink: '' });
     setOpen(false);
     await load();
-  }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,4 +123,6 @@ export default function BusinessPage() {
       )}
     </div>
   );
-}
+};
+
+export default BusinessPage;
