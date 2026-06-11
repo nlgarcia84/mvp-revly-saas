@@ -1,9 +1,18 @@
+import { signOut } from '@/actions/auth';
+
 export default function Navbar() {
   return (
     <header className="h-14 border-b border-neutral-200 flex items-center px-6 bg-white">
       <span className="font-semibold text-base">Revly</span>
       <div className="ml-auto">
-        {/* Aquí irá el botón de cerrar sesión con Supabase */}
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="text-sm text-neutral-500 hover:text-neutral-950 transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </form>
       </div>
     </header>
   );
