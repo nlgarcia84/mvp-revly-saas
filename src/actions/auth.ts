@@ -77,10 +77,9 @@ export const signUp = async (_prevState: unknown, formData: FormData) => {
     });
   }
 
-  // redirect() lanza internamente un error especial (Next.js RedirectError).
-  // Como está fuera del bloque if(error), Next.js lo maneja correctamente
-  // y redirige al navegador a /dashboard.
-  redirect('/dashboard');
+  // Devolvemos éxito para que el formulario muestre la pantalla
+  // "Revisa tu email para confirmar la cuenta".
+  return { success: true };
 };
 
 // ════════════════════════════════════════════════════════════════════
