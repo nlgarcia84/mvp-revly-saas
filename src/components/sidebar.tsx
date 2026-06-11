@@ -12,30 +12,19 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside style={{
-      width: 220,
-      borderRight: '1px solid var(--border)',
-      height: '100%',
-      padding: '16px 12px',
-      background: 'var(--bg-secondary)',
-    }}>
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <aside className="w-[220px] border-r border-neutral-200 h-full p-4 pl-3 bg-neutral-100">
+      <nav className="flex flex-col gap-1">
         {links.map((link) => {
           const active = pathname === link.href;
           return (
             <Link
               key={link.href}
               href={link.href}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: 14,
-                fontWeight: active ? 500 : 400,
-                background: active ? 'var(--bg)' : 'transparent',
-                border: active ? '1px solid var(--border)' : '1px solid transparent',
-                color: active ? 'var(--text)' : 'var(--text-secondary)',
-                transition: 'all 0.15s ease',
-              }}
+              className={`px-3 py-2 rounded-md text-sm transition-all duration-150 ${
+                active
+                  ? 'font-medium bg-white border border-neutral-200 text-neutral-950'
+                  : 'bg-transparent border border-transparent text-neutral-500'
+              }`}
             >
               {link.label}
             </Link>

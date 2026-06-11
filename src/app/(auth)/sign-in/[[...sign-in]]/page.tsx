@@ -2,49 +2,43 @@ import { SignIn } from '@clerk/nextjs';
 
 export default function SignInPage() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--bg-secondary)',
-    }}>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100">
       <SignIn
         fallbackRedirectUrl="/dashboard"
         appearance={{
           elements: {
             card: {
-              boxShadow: 'var(--shadow-md)',
-              borderRadius: 'var(--radius)',
-              border: '1px solid var(--border)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+              borderRadius: 12,
+              border: '1px solid #e8e8e8',
               padding: 32,
             },
             headerTitle: { fontSize: 20, fontWeight: 600 },
-            headerSubtitle: { color: 'var(--text-secondary)' },
+            headerSubtitle: { color: '#6b6b6b' },
             formButtonPrimary: {
-              background: 'var(--accent)',
-              borderRadius: 'var(--radius-sm)',
+              background: '#0a0a0a',
+              borderRadius: 6,
               fontSize: 14,
               fontWeight: 500,
               padding: '10px 20px',
-              '&:hover': { background: 'var(--accent-hover)' },
+              '&:hover': { background: '#272727' },
             },
             socialButtonsBlockButton: {
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
+              borderRadius: 6,
+              border: '1px solid #e8e8e8',
               fontSize: 14,
               fontWeight: 500,
-              '&:hover': { background: 'var(--bg-secondary)' },
+              '&:hover': { background: '#f7f7f7' },
             },
-            formFieldLabel: { fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' },
+            formFieldLabel: { fontSize: 13, fontWeight: 500, color: '#6b6b6b' },
             formFieldInput: {
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
+              borderRadius: 6,
+              border: '1px solid #e8e8e8',
               fontSize: 14,
               padding: '10px 12px',
-              '&:focus': { borderColor: 'var(--accent)', boxShadow: '0 0 0 2px rgba(0,0,0,0.05)' },
+              '&:focus': { borderColor: '#0a0a0a', boxShadow: '0 0 0 2px rgba(0,0,0,0.05)' },
             },
-            footerActionLink: { color: 'var(--accent)' },
+            footerActionLink: { color: '#0a0a0a' },
             footer: { '& > :last-child': { display: 'none' } },
           },
         }}

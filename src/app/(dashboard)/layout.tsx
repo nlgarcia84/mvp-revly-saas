@@ -10,11 +10,11 @@ export default async function DashboardLayout({
   await syncUser();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div className="flex flex-col h-screen">
       <Navbar />
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div className="flex flex-1">
         <Sidebar />
-        <main style={{ flex: 1, padding: 32, overflowY: 'auto', background: 'var(--bg-secondary)' }}>
+        <main className="flex-1 p-8 overflow-y-auto bg-neutral-100">
           {children}
         </main>
       </div>

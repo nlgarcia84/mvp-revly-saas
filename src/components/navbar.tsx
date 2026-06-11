@@ -2,16 +2,9 @@ import { UserButton } from '@clerk/nextjs';
 
 export default function Navbar() {
   return (
-    <header style={{
-      height: 56,
-      borderBottom: '1px solid var(--border)',
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 24px',
-      background: 'var(--bg)',
-    }}>
-      <span style={{ fontWeight: 600, fontSize: 16 }}>Reseñas MVP</span>
-      <div style={{ marginLeft: 'auto' }}>
+    <header className="h-14 border-b border-neutral-200 flex items-center px-6 bg-white">
+      <span className="font-semibold text-base">Reseñas MVP</span>
+      <div className="ml-auto">
         <UserButton />
       </div>
     </header>
