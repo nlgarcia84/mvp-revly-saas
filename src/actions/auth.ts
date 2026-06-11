@@ -16,16 +16,16 @@ import { redirect } from 'next/navigation';
 //   redirect: función de Next.js para redirigir al navegador a otra ruta.
 //   Solo funciona en Server Components / Server Actions.
 
-export type ActionResult = { error: string } | { success: boolean } | void;
+export type ActionResult = { error: string } | { success: boolean } | null;
 
 // ════════════════════════════════════════════════════════════════════
 //  signUp
 // ════════════════════════════════════════════════════════════════════
-//  Crea una cuenta en Supabase Auth y sincroniza el usuario en la
-//  tabla User de Prisma para que quede vinculado a sus datos.
-// ════════════════════════════════════════════════════════════════════
 
-export const signUp = async (_prevState: unknown, formData: FormData): Promise<ActionResult> => {
+export const signUp = async (
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> => {
   // _prevState: estado anterior devuelto por useActionState (se ignora).
   // formData: datos del formulario (<input name="email"> → formData.get('email')).
 
@@ -89,7 +89,10 @@ export const signUp = async (_prevState: unknown, formData: FormData): Promise<A
 //  No usa Prisma — solo valida credenciales.
 // ════════════════════════════════════════════════════════════════════
 
-export const signIn = async (_prevState: unknown, formData: FormData): Promise<ActionResult> => {
+export const signIn = async (
+  _prevState: ActionResult,
+  formData: FormData,
+): Promise<ActionResult> => {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 

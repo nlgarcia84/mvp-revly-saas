@@ -5,10 +5,10 @@ import { useActionState } from 'react';
 import Link from 'next/link';
 
 export default function SignUpPage() {
-  const [state, action, pending] = useActionState<ActionResult | null>(signUp, null);
+  const [state, action, pending] = useActionState(signUp, null as ActionResult);
 
   // Si el registro fue exitoso, mostramos la pantalla de verificación
-  if (state?.success) {
+  if (state && 'success' in state && state.success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-100">
         <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-[420px] p-8 text-center">
@@ -75,7 +75,7 @@ export default function SignUpPage() {
             />
           </div>
 
-          {state?.error && (
+          {state && 'error' in state && state.error && (
             <p className="text-sm text-red-500">{state.error}</p>
           )}
 

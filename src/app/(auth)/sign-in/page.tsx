@@ -1,15 +1,11 @@
 'use client';
 
-// ──────────────────────────────────────────────
-// ACCIÓN: llama a Supabase Auth (signInWithPassword)
-// Prisma NO se usa aquí — solo verifica credenciales
-// ──────────────────────────────────────────────
 import { signIn, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
 
 export default function SignInPage() {
-  const [state, action, pending] = useActionState<ActionResult | null>(signIn, null);
+  const [state, action, pending] = useActionState(signIn, null as ActionResult);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutral-100">
@@ -44,7 +40,7 @@ export default function SignInPage() {
             />
           </div>
 
-          {state?.error && (
+          {state && 'error' in state && state.error && (
             <p className="text-sm text-red-500">{state.error}</p>
           )}
 
