@@ -1,16 +1,18 @@
 'use server';
 
 import prisma from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
 
 function slugify(text: string): string {
   return text
     .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
 
 async function generateSlug(name: string): Promise<string> {
-  const base = slugify(name);
+  const base = slugify(name) || 'negocio';
   let slug = base;
   let counter = 1;
   while (await prisma.business.findUnique({ where: { slug } })) {
@@ -19,52 +21,41 @@ async function generateSlug(name: string): Promise<string> {
   return slug;
 }
 
-/**
- * Crea un negocio nuevo asociado al usuario autenticado.
- */
+async function getUserId(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.user?.id ?? '';
+}
+
 export const createBusiness = async (data: {
   name: string;
   googleLink?: string;
 }) => {
-  // TODO: obtener userId de Supabase
-  const userId = '';
+  const userId = await getUserId();
   if (!userId) throw new Error('No autenticado');
 
   const slug = await generateSlug(data.name);
 
-  const business = await prisma
-    .business
-    .create({
-      data: {
-        name: data.name,
-        slug,
-        googleLink: data.googleLink ?? null,
-        userId,
-      },
-    });
+  const business = await prisma.business.create({
+    data: {
+      name: data.name,
+      slug,
+      googleLink: data.googleLink ?? null,
+      userId,
+    },
+  });
 
   return business;
 };
 
-/**
- * Obtiene todos los negocios del usuario autenticado,
- * incluyendo el conteo de clientes de cada uno.
- */
 export const getBusinesses = async () => {
-  // TODO: obtener userId de Supabase
-  const userId = '';
+  const userId = await getUserId();
   if (!userId) return [];
 
-  return prisma
-    .business
-    .findMany({
-      where: { userId },
-      include: {
-        _count: {
-          select: { customers: true },
-        },
-      },
-    });
+  return prisma.business.findMany({
+    where: { userId },
+    include: { _count: { select: { customers: true } } },
+  });
 };
 
 /**
