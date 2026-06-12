@@ -27,16 +27,20 @@ model User {
 // usa en la URL pública para que los clientes dejen
 // sus datos (revly.es/{slug}).
 // googleLink es opcional — enlace para reseña en Google.
+// emailTemplate es opcional — texto personalizado para
+// el email de invitación. Si está vacío se usa el
+// mensaje por defecto.
 // ──────────────────────────────────────────────
 model Business {
-  id         String     @id @default(uuid())
-  name       String
-  googleLink String?
-  slug       String?   @unique
-  userId     String
-  createdAt  DateTime   @default(now())
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customers  Customer[]
+  id            String     @id @default(uuid())
+  name          String
+  googleLink    String?
+  slug          String?   @unique
+  emailTemplate String?
+  userId        String
+  createdAt     DateTime   @default(now())
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers     Customer[]
 }
 
 // ──────────────────────────────────────────────
@@ -44,17 +48,23 @@ model Business {
 // público de un negocio. Solo se crea si el usuario
 // aceptó la política de privacidad (consent).
 // Cada cliente pertenece a un único negocio.
+// invitedCount: número de veces que se le ha enviado
+// la invitación. Se incrementa en cada envío.
+// lastInvitedAt: fecha del último envío.
 // ──────────────────────────────────────────────
 model Customer {
-  id         String   @id @default(uuid())
-  name       String?
-  email      String
-  phone      String
-  businessId String
-  source     String   @default("qr")
-  status     String   @default("pending")
-  createdAt  DateTime @default(now())
-  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  id            String    @id @default(uuid())
+  name          String?
+  email         String
+  phone         String
+  businessId    String
+  source        String    @default("qr")
+  status        String    @default("pending")
+  invitedCount  Int       @default(0)
+  lastInvitedAt DateTime?
+  rating        Int?
+  createdAt     DateTime  @default(now())
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@unique([email, businessId])
 }

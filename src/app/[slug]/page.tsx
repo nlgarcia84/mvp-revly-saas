@@ -30,7 +30,7 @@ const PublicBusinessPage = async ({
 
   if (!business) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950">
         <p className="text-neutral-500">Negocio no encontrado</p>
       </div>
     );
@@ -38,8 +38,8 @@ const PublicBusinessPage = async ({
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-        <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-md p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8 text-center">
           <h1 className="text-xl font-semibold mb-1">¡Gracias, {business.name}!</h1>
           <p className="text-sm text-neutral-500 mb-6">
             Tus datos han sido registrados correctamente.
@@ -54,8 +54,8 @@ const PublicBusinessPage = async ({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-100 p-4">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-md p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8">
         <h1 className="text-xl font-semibold mb-1">{business.name}</h1>
         <p className="text-xs text-neutral-400 mb-4">
           Déjanos tus datos y obtén un <strong>10% de descuento</strong> en tu próxima compra
@@ -83,7 +83,7 @@ const PublicBusinessPage = async ({
               name="name"
               type="text"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="Tu nombre"
             />
           </div>
@@ -95,18 +95,18 @@ const PublicBusinessPage = async ({
               name="email"
               type="email"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="tu@email.com"
             />
           </div>
           <div>
             <label className="block text-xs font-medium mb-[6px] text-neutral-500">
-              Teléfono <span className="text-neutral-300">(opcional)</span>
+              Teléfono <span className="text-neutral-300 dark:text-neutral-600">(opcional)</span>
             </label>
             <input
               name="phone"
               type="tel"
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="+34 600 000 000"
             />
           </div>
@@ -116,11 +116,11 @@ const PublicBusinessPage = async ({
               name="consent"
               type="checkbox"
               required
-              className="mt-0.5 w-4 h-4 border border-neutral-300 rounded-sm accent-neutral-950"
+              className="mt-0.5 w-4 h-4 border border-neutral-300 dark:border-neutral-600 rounded-sm accent-neutral-950 dark:accent-neutral-100"
             />
             <span className="text-xs text-neutral-400 leading-relaxed">
               He leído y acepto la{' '}
-              <a href="/privacidad" target="_blank" className="underline hover:text-neutral-950">
+              <a href="/privacidad" target="_blank" className="underline hover:text-neutral-950 dark:hover:text-neutral-100">
                 política de privacidad
               </a>{' '}
               y cedo mis datos para recibir comunicaciones comerciales de {business.name}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createBusiness, getBusinesses } from '@/actions/business';
 import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
@@ -43,7 +44,7 @@ const BusinessQR = ({ slug }: { slug: string }) => {
       {show && url && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShow(false)} />
-          <div className="absolute right-0 top-6 z-50 bg-white border border-neutral-200 rounded-xl shadow-lg p-3">
+          <div className="absolute right-0 top-6 z-50 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-lg p-3">
             <img src={url} alt={`QR para ${slug}`} className="w-44 h-44 object-contain" />
             <p className="text-[10px] text-neutral-400 text-center mt-1">revly.es/{slug}</p>
           </div>
@@ -96,7 +97,7 @@ const BusinessPage = () => {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-[400px] sm:w-[420px] p-6 sm:p-8"
+            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:w-[420px] p-6 sm:p-8"
             onClick={e => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold mb-6">Crear negocio</h2>
@@ -106,7 +107,7 @@ const BusinessPage = () => {
                   Nombre del negocio
                 </label>
                 <input
-                  className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
                   placeholder="Ej: Cafetería El Centro"
                   value={form.name}
                   onChange={e => setForm({ ...form, name: e.target.value })}
@@ -118,7 +119,7 @@ const BusinessPage = () => {
                   Enlace de Google Reviews
                 </label>
                 <input
-                  className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
                   placeholder="https://search.google.com/local/writereview?placeid=..."
                   value={form.googleLink}
                   onChange={e => setForm({ ...form, googleLink: e.target.value })}
@@ -141,7 +142,7 @@ const BusinessPage = () => {
       )}
 
       {businesses.length === 0 ? (
-        <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
           <p className="text-sm text-neutral-400 text-center py-12">
             Todavía no tienes negocios registrados
           </p>
@@ -149,9 +150,9 @@ const BusinessPage = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {businesses.map((b) => (
-            <div key={b.id} className="bg-white border border-neutral-200 rounded-xl shadow-sm flex items-center justify-between px-5 py-4">
+            <div key={b.id} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4">
               <div>
-                <span className="font-medium">{b.name}</span>
+                <Link href={`/business/${b.id}`} className="font-medium hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors">{b.name}</Link>
                 <span className="text-xs text-neutral-400 ml-3">
                   {b._count.customers} clientes
                 </span>
@@ -159,13 +160,14 @@ const BusinessPage = () => {
                   <a
                     href={`/${b.slug}`}
                     target="_blank"
-                    className="block text-xs text-neutral-400 hover:text-neutral-950 underline mt-1"
+                    className="block text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline mt-1"
                   >
                     revly.es/{b.slug}
                   </a>
                 )}
               </div>
               <div className="flex items-center gap-3">
+                <Link href={`/business/${b.id}/settings`} className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors">Configurar</Link>
                 <BusinessQR slug={b.slug ?? ''} />
               </div>
             </div>

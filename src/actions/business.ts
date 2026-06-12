@@ -136,3 +136,47 @@ export const addPublicCustomer = async (data: {
 
   return customer;
 };
+
+// ──────────────────────────────────────────────
+// updateBusiness (Server Action)
+// ──────────────────────────────────────────────
+// Actualiza los datos de un negocio: nombre,
+// enlace de Google, slug y plantilla de email.
+// Verifica que el slug sea único (si cambió).
+// ──────────────────────────────────────────────
+export const updateBusiness = async (
+  id: string,
+  data: {
+    name: string;
+    googleLink: string;
+    slug: string;
+    emailTemplate: string;
+  },
+) => {
+  const userId = await getUserId();
+  if (!userId) throw new Error('No autenticado');
+
+  // Verifica que el negocio pertenezca al usuario
+  const existing = await prisma.business.findFirst({
+    where: { id, userId },
+  });
+  if (!existing) throw new Error('Negocio no encontrado');
+
+  // Si el slug cambió, verifica que sea único
+  if (data.slug !== existing.slug) {
+    const slugExists = await prisma.business.findUnique({
+      where: { slug: data.slug },
+    });
+    if (slugExists) throw new Error('El slug ya está en uso');
+  }
+
+  return prisma.business.update({
+    where: { id },
+    data: {
+      name: data.name,
+      googleLink: data.googleLink || null,
+      slug: data.slug || null,
+      emailTemplate: data.emailTemplate || null,
+    },
+  });
+};

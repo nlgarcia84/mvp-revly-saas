@@ -4,9 +4,21 @@ import { useEffect, useState } from 'react';
 import { signOut } from '@/actions/auth';
 import DarkToggle from '@/components/ui/dark-toggle';
 
+// ──────────────────────────────────────────────
+// Navbar
+// ──────────────────────────────────────────────
+// Barra superior del dashboard con:
+//   - Hamburguesa para abrir/cerrar sidebar en mobile
+//   - Logo "Revly"
+//   - Reloj digital en vivo (Share Tech Mono)
+//   - Toggle de modo oscuro (DarkToggle)
+//   - Botón de cerrar sesión
+// ──────────────────────────────────────────────
+
 const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
   const [time, setTime] = useState('');
 
+  // Reloj que se actualiza cada 30 segundos
   useEffect(() => {
     const update = () => {
       const now = new Date();

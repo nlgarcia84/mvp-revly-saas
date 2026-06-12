@@ -32,8 +32,8 @@ const ProfilePage = async () => {
         </p>
       </div>
 
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm">
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-neutral-100">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-neutral-100 dark:border-neutral-800">
           <div className="w-10 h-10 rounded-full bg-neutral-950 text-white flex items-center justify-center text-sm font-semibold">
             {name.charAt(0).toUpperCase()}
           </div>

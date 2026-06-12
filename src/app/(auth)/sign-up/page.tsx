@@ -11,8 +11,8 @@ const SignUpPage = () => {
   // Si el registro fue exitoso, mostramos la pantalla de verificación
   if (state && 'success' in state && state.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-        <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8 text-center">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8 text-center">
           <h1 className="text-xl font-semibold mb-1">Revisa tu email</h1>
           <p className="text-sm text-neutral-500 mb-6">
             Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada
@@ -27,8 +27,8 @@ const SignUpPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
         <h1 className="text-xl font-semibold mb-1">Crear cuenta en Revly</h1>
         <p className="text-sm text-neutral-500 mb-6">Empieza a gestionar tus reseñas</p>
 
@@ -41,7 +41,7 @@ const SignUpPage = () => {
               name="name"
               type="text"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="Tu nombre"
             />
           </div>
@@ -54,7 +54,7 @@ const SignUpPage = () => {
               name="email"
               type="email"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="tu@email.com"
             />
           </div>
@@ -68,7 +68,7 @@ const SignUpPage = () => {
               type="password"
               required
               minLength={6}
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="Mínimo 6 caracteres"
             />
           </div>
@@ -84,7 +84,7 @@ const SignUpPage = () => {
 
         <p className="text-xs text-neutral-400 text-center mt-6">
           ¿Ya tienes cuenta?{' '}
-          <Link href="/sign-in" className="text-neutral-950 font-medium underline">
+          <Link href="/sign-in" className="text-neutral-950 dark:text-neutral-100 font-medium underline">
             Inicia sesión
           </Link>
         </p>

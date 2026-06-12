@@ -9,8 +9,8 @@ const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-      <div className="bg-white border border-neutral-200 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
         <h1 className="text-xl font-semibold mb-1">Iniciar sesión</h1>
         <p className="text-sm text-neutral-500 mb-6">accede a tu cuenta de Revly</p>
 
@@ -23,7 +23,7 @@ const SignInPage = () => {
               name="email"
               type="email"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="tu@email.com"
             />
           </div>
@@ -36,7 +36,7 @@ const SignInPage = () => {
               name="password"
               type="password"
               required
-              className="w-full px-3 py-2.5 border border-neutral-200 rounded-md text-sm text-neutral-950 bg-white outline-none transition-all duration-150 focus:border-neutral-950 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="••••••••"
             />
           </div>
@@ -52,7 +52,7 @@ const SignInPage = () => {
 
         <p className="text-xs text-neutral-400 text-center mt-6">
           ¿No tienes cuenta?{' '}
-          <Link href="/sign-up" className="text-neutral-950 font-medium underline">
+          <Link href="/sign-up" className="text-neutral-950 dark:text-neutral-100 font-medium underline">
             Regístrate
           </Link>
         </p>
