@@ -75,7 +75,10 @@ export const addPublicCustomer = async (data: {
   name: string;
   email: string;
   phone?: string;
+  consent: boolean;
 }) => {
+  if (!data.consent) throw new Error('Debes aceptar la política de privacidad');
+
   const business = await prisma.business.findUnique({
     where: { slug: data.slug },
   });
