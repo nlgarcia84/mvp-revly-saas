@@ -47,10 +47,14 @@ model Business {
 // ──────────────────────────────────────────────
 model Customer {
   id         String   @id @default(uuid())
-  name       String
+  name       String?
   email      String
-  phone      String?
+  phone      String
   businessId String
+  source     String   @default("qr")
+  status     String   @default("pending")
   createdAt  DateTime @default(now())
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([email, businessId])
 }

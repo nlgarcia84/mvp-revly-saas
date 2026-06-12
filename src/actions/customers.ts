@@ -1,15 +1,17 @@
 'use server';
 
 import prisma from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
 
-export async function addCustomer(data: {
+export const addCustomer = async (data: {
   businessId: string;
   name: string;
   email: string;
-  phone?: string;
-}) {
-  // TODO: obtener userId de Supabase
-  const userId = '';
+  phone: string;
+}) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -19,23 +21,23 @@ export async function addCustomer(data: {
 
   const customer = await prisma.customer.create({
     data: {
-      id: crypto.randomUUID(),
-      name: data.name,
+      name: data.name || null,
       email: data.email,
-      phone: data.phone ?? null,
+      phone: data.phone,
       businessId: data.businessId,
-    } as any,
+    },
   });
 
   return customer;
-}
+};
 
-export async function getCustomers(businessId: string) {
-  // TODO: obtener userId de Supabase
-  const userId = '';
+export const getCustomers = async (businessId: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
   if (!userId) return [];
 
   return prisma.customer.findMany({
     where: { businessId, business: { userId } },
   });
-}
+};

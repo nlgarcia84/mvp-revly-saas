@@ -1,16 +1,22 @@
+import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
-import Link from 'next/link';
 
 export default async function DashboardPage() {
-  // TODO: obtener userId de Supabase
-  const userId = '';
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
   const businesses = await prisma.business.findMany({
     where: { userId },
     include: { _count: { select: { customers: true } } },
   });
 
   const totalBusinesses = businesses.length;
-  const totalCustomers = businesses.reduce((acc, b) => acc + b._count.customers, 0);
+  const totalCustomers = businesses.reduce(
+    (acc, b) => acc + b._count.customers,
+    0,
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -29,7 +35,9 @@ export default async function DashboardPage() {
           <span className="text-4xl font-bold">{totalCustomers}</span>
         </div>
         <div className="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm flex flex-col gap-1">
-          <span className="text-xs text-neutral-500 font-medium">Reseñas solicitadas</span>
+          <span className="text-xs text-neutral-500 font-medium">
+            Reseñas solicitadas
+          </span>
           <span className="text-4xl font-bold">0</span>
         </div>
       </div>
@@ -43,7 +51,10 @@ export default async function DashboardPage() {
       ) : (
         <div className="flex flex-col gap-2">
           {businesses.map((b) => (
-            <div key={b.id} className="bg-white border border-neutral-200 rounded-xl shadow-sm flex items-center justify-between px-5 py-4">
+            <div
+              key={b.id}
+              className="bg-white border border-neutral-200 rounded-xl shadow-sm flex items-center justify-between px-5 py-4"
+            >
               <div>
                 <span className="font-medium">{b.name}</span>
                 <span className="text-xs text-neutral-400 ml-3">

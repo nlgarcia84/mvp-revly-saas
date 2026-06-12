@@ -70,7 +70,7 @@ const PublicBusinessPage = async ({
               slug,
               name: formData.get('name') as string,
               email: formData.get('email') as string,
-              phone: (formData.get('phone') as string) || undefined,
+              phone: (formData.get('phone') as string) || '',
               consent: formData.get('consent') === 'on',
             });
             redirect(`/${slug}?success=1`);

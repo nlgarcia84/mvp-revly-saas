@@ -114,7 +114,7 @@ export const addPublicCustomer = async (data: {
   slug: string;
   name: string;
   email: string;
-  phone?: string;
+  phone: string;
   consent: boolean;
 }) => {
   if (!data.consent) throw new Error('Debes aceptar la política de privacidad');
@@ -126,9 +126,10 @@ export const addPublicCustomer = async (data: {
 
   const customer = await prisma.customer.create({
     data: {
-      name: data.name,
+      name: data.name || null,
       email: data.email,
-      phone: data.phone ?? null,
+      phone: data.phone,
+      source: 'qr',
       businessId: business.id,
     },
   });
