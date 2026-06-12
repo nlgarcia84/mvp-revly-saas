@@ -150,10 +150,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
   const handleAddManual = async (e: React.FormEvent) => {
     e.preventDefault();
-    await addCustomerBatch(id, [{ ...addForm }]);
-    setAddForm({ name: '', email: '', phone: '' });
-    setShowAdd(false);
-    await load();
+    try {
+      const result = await addCustomerBatch(id, [{ ...addForm }]);
+      if (result.created === 0) {
+        alert('No se pudo crear: el email ya existe para este negocio');
+        return;
+      }
+      setAddForm({ name: '', email: '', phone: '' });
+      setShowAdd(false);
+      await load();
+    } catch (err) {
+      alert('Error al añadir cliente: ' + (err instanceof Error ? err.message : 'desconocido'));
+    }
   };
 
   const handleCsv = async (e: React.ChangeEvent<HTMLInputElement>) => {

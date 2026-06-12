@@ -114,8 +114,8 @@ export const addCustomerBatch = async (
         },
       });
       created++;
-    } catch {
-      // Error por unique constraint (email + businessId)
+    } catch (e) {
+      console.error('Error creando cliente:', e);
       skipped++;
     }
   }
