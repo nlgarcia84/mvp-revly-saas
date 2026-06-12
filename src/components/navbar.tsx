@@ -5,6 +5,7 @@ import { signOut } from '@/actions/auth';
 
 const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
   const [dark, setDark] = useState(false);
+  const [time, setTime] = useState('');
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -12,6 +13,20 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
     const isDark = stored ? stored === 'dark' : prefersDark;
     setDark(isDark);
     document.documentElement.classList.toggle('dark', isDark);
+  }, []);
+
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      setTime(now.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        hour: '2-digit',
+        minute: '2-digit',
+      }));
+    };
+    update();
+    const id = setInterval(update, 30_000);
+    return () => clearInterval(id);
   }, []);
 
   const toggle = () => {
@@ -34,6 +49,7 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
       </button>
 
       <span className="font-semibold text-base">Revly</span>
+      <span className="text-xs text-neutral-400 dark:text-neutral-500 ml-3 tabular-nums">{time}</span>
 
       <div className="ml-auto flex items-center gap-3">
         <button
