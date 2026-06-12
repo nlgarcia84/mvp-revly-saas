@@ -3,6 +3,9 @@
 import { signOut } from '@/actions/auth';
 
 const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
+  // ── Botón hamburguesa (solo visible en móvil, lg:hidden) ──
+  // Al hacer clic, llama a onMenuToggle del DashboardShell
+  // para abrir/cerrar el sidebar en pantallas pequeñas.
   return (
     <header className="h-14 border-b border-neutral-200 flex items-center px-4 sm:px-6 bg-white shrink-0">
       <button

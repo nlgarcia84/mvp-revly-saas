@@ -1,6 +1,21 @@
 import { getBusinessBySlug, addPublicCustomer } from '@/actions/business';
 import { redirect } from 'next/navigation';
 
+// ──────────────────────────────────────────────
+// PublicBusinessPage (Server Component)
+// ──────────────────────────────────────────────
+// Página pública visitada por los clientes del negocio
+// (revly.es/{slug}). Muestra un formulario para canjear
+// un 10% de descuento a cambio de datos de contacto.
+//
+// Flujo:
+//   1. Sin ?success → muestra formulario con nombre,
+//      email, teléfono y checkbox de privacidad.
+//   2. Al enviar → Server Action addPublicCustomer con
+//      consent validado. Si ok, redirect a ?success=1.
+//   3. Con ?success → pantalla de agradecimiento.
+//      El cliente presenta este mensaje para el descuento.
+// ──────────────────────────────────────────────
 const PublicBusinessPage = async ({
   params,
   searchParams,

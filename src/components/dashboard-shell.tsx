@@ -4,6 +4,14 @@ import { useState } from 'react';
 import Navbar from './navbar';
 import Sidebar from './sidebar';
 
+// ──────────────────────────────────────────────
+// DashboardShell
+// ──────────────────────────────────────────────
+// Layout principal del dashboard. Gestiona el estado
+// del sidebar móvil: sidebarOpen se alterna desde el
+// botón hamburguesa en Navbar y se cierra al hacer
+// clic fuera o navegar a otra ruta (onClose en Sidebar).
+// ──────────────────────────────────────────────
 const DashboardShell = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

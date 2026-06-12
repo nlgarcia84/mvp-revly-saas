@@ -69,9 +69,11 @@ export async function middleware(request: NextRequest) {
   // si el usuario tiene sesión. En rutas públicas (/, /api, ...)
   // nos saltamos la llamada HTTP a Supabase.
   //
-  // Usamos getSession() en lugar de getUser() porque lee las cookies
-  // localmente sin hacer una petición HTTP a Supabase. Esto es mucho
-  // más rápido (~0ms vs ~200ms) y suficiente para el middleware.
+  // getSession() vs getUser():
+  //   getSession() descifra la cookie localmente — instantáneo (~0ms).
+  //   getUser()   hace una petición HTTP a Supabase Auth (~200ms).
+  // En el middleware solo necesitamos saber SI hay sesión, no QUIÉN
+  // es el usuario. getSession() es suficiente y mucho más rápido.
   let session = null;
 
   if (isProtected || isAuth) {

@@ -3,6 +3,13 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 
+// ──────────────────────────────────────────────
+// slugify
+// ──────────────────────────────────────────────
+// Convierte un texto en un slug URL-friendly:
+// minúsculas, sin acentos, espacios → guiones.
+// Ej: "Cafetería El Centro" → "cafeteria-el-centro"
+// ──────────────────────────────────────────────
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -11,6 +18,13 @@ function slugify(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+// ──────────────────────────────────────────────
+// generateSlug
+// ──────────────────────────────────────────────
+// Genera un slug único. Si el slug base ya existe
+// en BD, añade un contador incremental:
+// "cafeteria-el-centro", "cafeteria-el-centro-1", ...
+// ──────────────────────────────────────────────
 async function generateSlug(name: string): Promise<string> {
   const base = slugify(name) || 'negocio';
   let slug = base;
@@ -21,12 +35,26 @@ async function generateSlug(name: string): Promise<string> {
   return slug;
 }
 
+// ──────────────────────────────────────────────
+// getUserId
+// ──────────────────────────────────────────────
+// Obtiene el ID del usuario autenticado leyendo
+// la cookie de sesión de Supabase. Devuelve string
+// vacío si no hay sesión activa.
+// ──────────────────────────────────────────────
 async function getUserId(): Promise<string> {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   return session?.user?.id ?? '';
 }
 
+// ──────────────────────────────────────────────
+// createBusiness (Server Action)
+// ──────────────────────────────────────────────
+// Crea un nuevo negocio para el usuario autenticado.
+// Genera el slug automáticamente desde el nombre y
+// valida que el usuario tenga sesión activa.
+// ──────────────────────────────────────────────
 export const createBusiness = async (data: {
   name: string;
   googleLink?: string;
@@ -48,6 +76,13 @@ export const createBusiness = async (data: {
   return business;
 };
 
+// ──────────────────────────────────────────────
+// getBusinesses
+// ──────────────────────────────────────────────
+// Devuelve todos los negocios del usuario autenticado.
+// Incluye el recuento de clientes (customers) para
+// mostrarlo en la lista del dashboard.
+// ──────────────────────────────────────────────
 export const getBusinesses = async () => {
   const userId = await getUserId();
   if (!userId) return [];
@@ -60,6 +95,8 @@ export const getBusinesses = async () => {
 
 /**
  * Busca un negocio por su slug para la página pública.
+ * Se usa en la ruta /[slug] para mostrar el formulario
+ * de descuento al cliente sin necesidad de autenticación.
  */
 export const getBusinessBySlug = async (slug: string) => {
   return prisma.business.findUnique({
@@ -69,6 +106,9 @@ export const getBusinessBySlug = async (slug: string) => {
 
 /**
  * Crea un cliente desde la página pública (sin autenticación).
+ * Valida que el usuario haya marcado consent (aceptar
+ * política de privacidad) antes de guardar en BD.
+ * Requiere el slug del negocio, no el ID.
  */
 export const addPublicCustomer = async (data: {
   slug: string;

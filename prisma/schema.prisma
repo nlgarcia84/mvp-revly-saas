@@ -6,6 +6,12 @@ datasource db {
   provider = "postgresql"
 }
 
+// ──────────────────────────────────────────────
+// User: Cuenta de usuario registrada con Supabase Auth.
+// Se crea automáticamente al registrarse (signUp).
+// Relación 1:N con Business — un usuario puede tener
+// varios negocios asociados.
+// ──────────────────────────────────────────────
 model User {
   id         String     @id @default(uuid())
   email      String     @unique
@@ -15,6 +21,13 @@ model User {
   businesses Business[]
 }
 
+// ──────────────────────────────────────────────
+// Business: Negocio registrado por un usuario.
+// slug se genera automáticamente desde el nombre y se
+// usa en la URL pública para que los clientes dejen
+// sus datos (revly.es/{slug}).
+// googleLink es opcional — enlace para reseña en Google.
+// ──────────────────────────────────────────────
 model Business {
   id         String     @id @default(uuid())
   name       String
@@ -26,6 +39,12 @@ model Business {
   customers  Customer[]
 }
 
+// ──────────────────────────────────────────────
+// Customer: Cliente que ha rellenado el formulario
+// público de un negocio. Solo se crea si el usuario
+// aceptó la política de privacidad (consent).
+// Cada cliente pertenece a un único negocio.
+// ──────────────────────────────────────────────
 model Customer {
   id         String   @id @default(uuid())
   name       String

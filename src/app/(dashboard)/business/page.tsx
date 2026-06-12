@@ -12,13 +12,21 @@ interface Business {
   _count: { customers: number };
 }
 
+// ──────────────────────────────────────────────
+// BusinessQR
+// ──────────────────────────────────────────────
+// Componente que genera un código QR para la URL
+// pública del negocio (revly.es/{slug}). Al hacer
+// clic en "QR" se muestra/oculta con un overlay
+// semitransparente de fondo.
+// ──────────────────────────────────────────────
 const BusinessQR = ({ slug }: { slug: string }) => {
   const [url, setUrl] = useState('');
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     QRCode.toDataURL(`https://revly.es/${slug}`, {
-      width: 180,
+      width: 176,
       margin: 1,
     }).then(setUrl);
   }, [slug]);
@@ -35,7 +43,7 @@ const BusinessQR = ({ slug }: { slug: string }) => {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShow(false)} />
           <div className="absolute right-0 top-6 z-50 bg-white border border-neutral-200 rounded-xl shadow-lg p-3">
-            <img src={url} alt={`QR para ${slug}`} className="w-[180px] h-[180px]" />
+            <img src={url} alt={`QR para ${slug}`} className="w-44 h-44 object-contain" />
             <p className="text-[10px] text-neutral-400 text-center mt-1">revly.es/{slug}</p>
           </div>
         </>
@@ -45,16 +53,22 @@ const BusinessQR = ({ slug }: { slug: string }) => {
 };
 
 const BusinessPage = () => {
+  // ── Modal de creación ──
   const [open, setOpen] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
 
+  // Carga la lista de negocios al montar el componente
+  // y después de crear uno nuevo.
   const load = async () => {
     setBusinesses(await getBusinesses());
   };
 
   useEffect(() => { load(); }, []);
 
+  // Al enviar el formulario: crea el negocio en BD,
+  // resetea el formulario, cierra el modal y recarga
+  // la lista para mostrar el nuevo slug y QR.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await createBusiness(form);

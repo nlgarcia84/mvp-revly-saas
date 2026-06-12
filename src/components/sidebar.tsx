@@ -9,6 +9,16 @@ const links = [
   { href: '/business', label: 'Negocios' },
 ];
 
+// ──────────────────────────────────────────────
+// Sidebar
+// ──────────────────────────────────────────────
+// Renderiza dos versiones del menú de navegación:
+//   • Móvil (lg:hidden) — overlay semitransparente +
+//     panel deslizante desde la izquierda. Se controla
+//     con mobileOpen/onClose desde DashboardShell.
+//   • Desktop (lg:block) — sidebar fijo de 220px.
+//     visible siempre, sin overlay.
+// ──────────────────────────────────────────────
 const Sidebar = ({
   mobileOpen,
   onClose,

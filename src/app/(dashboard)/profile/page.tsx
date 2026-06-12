@@ -1,6 +1,16 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
+// ──────────────────────────────────────────────
+// ProfilePage (Server Component)
+// ──────────────────────────────────────────────
+// 1. Obtiene la sesión desde Supabase (cookie HTTP).
+// 2. Usa el userId de la sesión para consultar los
+//    datos del usuario en nuestra tabla User (Prisma).
+// Separamos Supabase Auth (sesión) de nuestra BD
+// (nombre, email) porque la tabla User puede tener
+// datos adicionales que no están en Auth.
+// ──────────────────────────────────────────────
 const ProfilePage = async () => {
   const supabase = await createClient();
   const {

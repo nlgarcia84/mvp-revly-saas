@@ -1,3 +1,11 @@
+// ──────────────────────────────────────────────
+// DashboardLoading
+// ──────────────────────────────────────────────
+// Skeleton de carga para el dashboard (app router).
+// Se muestra mientras Next.js renderiza el layout
+// o las páginas hijas. Usa animate-pulse de Tailwind
+// para el efecto de "parpadeo" suave.
+// ──────────────────────────────────────────────
 const DashboardLoading = () => {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
