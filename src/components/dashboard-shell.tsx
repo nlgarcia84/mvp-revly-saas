@@ -23,7 +23,7 @@ const DashboardShell = ({ children }: { children: React.ReactNode }) => {
           mobileOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-neutral-100">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto bg-neutral-100 dark:bg-neutral-900 transition-colors">
           {children}
         </main>
       </div>

@@ -31,23 +31,21 @@ const Sidebar = ({
   const linkClass = (active: boolean) =>
     `px-3 py-2 rounded-md text-sm transition-all duration-150 ${
       active
-        ? 'font-medium bg-white border border-neutral-200 text-neutral-950'
-        : 'bg-transparent border border-transparent text-neutral-500'
+        ? 'font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-100'
+        : 'bg-transparent border border-transparent text-neutral-500 dark:text-neutral-400'
     }`;
 
   return (
     <>
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
-      {/* Mobile sidebar */}
       <aside
-        className={`fixed top-14 left-0 bottom-0 w-[250px] z-50 bg-neutral-100 p-4 pl-3 border-r border-neutral-200 transition-transform duration-200 lg:hidden ${
+        className={`fixed top-14 left-0 bottom-0 w-[250px] z-50 bg-neutral-100 dark:bg-neutral-950 p-4 pl-3 border-r border-neutral-200 dark:border-neutral-800 transition-transform duration-200 lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -63,8 +61,7 @@ const Sidebar = ({
         </nav>
       </aside>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-[220px] border-r border-neutral-200 h-full p-4 pl-3 bg-neutral-100 shrink-0">
+      <aside className="hidden lg:block w-[220px] border-r border-neutral-200 dark:border-neutral-800 h-full p-4 pl-3 bg-neutral-100 dark:bg-neutral-950 shrink-0 transition-colors">
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
             const active = pathname === link.href;
