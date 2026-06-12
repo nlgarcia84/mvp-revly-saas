@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createBusiness, getBusinesses } from '@/actions/business';
 import QRCode from 'qrcode';
+import Button from '@/components/ui/button';
 
 interface Business {
   id: string;
@@ -84,12 +85,9 @@ const BusinessPage = () => {
           <h1 className="text-xl sm:text-2xl font-semibold mb-1">Negocios</h1>
           <p className="text-xs sm:text-sm text-neutral-500">Gestiona tus negocios y sus enlaces de reseña</p>
         </div>
-        <button
-          className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium cursor-pointer border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 hover:border-neutral-800"
-          onClick={() => setOpen(true)}
-        >
+        <Button variant="primary" onClick={() => setOpen(true)}>
           + Nuevo negocio
-        </button>
+        </Button>
       </div>
 
       {open && (
@@ -130,19 +128,12 @@ const BusinessPage = () => {
                 </p>
               </div>
               <div className="flex gap-2 justify-end mt-2">
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium cursor-pointer border border-neutral-200 bg-white text-neutral-950 transition-all duration-150 hover:bg-neutral-100 hover:border-neutral-300"
-                  onClick={() => setOpen(false)}
-                >
+                <Button variant="secondary" type="button" onClick={() => setOpen(false)}>
                   Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 px-[18px] py-2 rounded-md text-sm font-medium cursor-pointer border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 hover:border-neutral-800"
-                >
+                </Button>
+                <Button variant="primary" type="submit">
                   Guardar
-                </button>
+                </Button>
               </div>
             </form>
           </div>

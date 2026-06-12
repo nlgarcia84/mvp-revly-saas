@@ -1,5 +1,6 @@
 import { getBusinessBySlug, addPublicCustomer } from '@/actions/business';
 import { redirect } from 'next/navigation';
+import Button from '@/components/ui/button';
 
 // ──────────────────────────────────────────────
 // PublicBusinessPage (Server Component)
@@ -44,12 +45,9 @@ const PublicBusinessPage = async ({
             Tus datos han sido registrados correctamente.
             Presenta este mensaje en tu próxima compra para obtener tu <strong>10% de descuento</strong>.
           </p>
-          <a
-            href={`/${slug}`}
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800"
-          >
+          <Button as="a" variant="primary" href={`/${slug}`}>
             Volver
-          </a>
+          </Button>
         </div>
       </div>
     );
@@ -129,12 +127,9 @@ const PublicBusinessPage = async ({
             </span>
           </label>
 
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800"
-          >
+          <Button type="submit">
             Obtener 10% de descuento
-          </button>
+          </Button>
         </form>
       </div>
     </div>

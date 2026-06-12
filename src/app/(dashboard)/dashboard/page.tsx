@@ -7,6 +7,8 @@ export default async function DashboardPage() {
     data: { session },
   } = await supabase.auth.getSession();
   const userId = session?.user?.id ?? '';
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const name = user?.name ?? '';
   const businesses = await prisma.business.findMany({
     where: { userId },
     include: { _count: { select: { customers: true } } },
@@ -21,8 +23,10 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold mb-1">Dashboard</h1>
-        <p className="text-sm text-neutral-500">Resumen de tu actividad</p>
+        <h1 className="text-2xl font-semibold mb-1">Hola, {name}</h1>
+        <p className="text-sm text-neutral-500">
+          Aquí tienes el resumen de tu actividad
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

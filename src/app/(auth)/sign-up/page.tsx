@@ -3,6 +3,7 @@
 import { signUp, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
+import Button from '@/components/ui/button';
 
 const SignUpPage = () => {
   const [state, action, pending] = useActionState(signUp, null as ActionResult);
@@ -17,12 +18,9 @@ const SignUpPage = () => {
             Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada
             (y la carpeta de spam) para activar tu cuenta.
           </p>
-          <Link
-            href="/sign-in"
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800"
-          >
+          <Button as="link" variant="primary" href="/sign-in">
             Ir a iniciar sesión
-          </Link>
+          </Button>
         </div>
       </div>
     );
@@ -79,13 +77,9 @@ const SignUpPage = () => {
             <p className="text-sm text-red-500">{state.error}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" disabled={pending}>
             {pending ? 'Creando cuenta...' : 'Crear cuenta'}
-          </button>
+          </Button>
         </form>
 
         <p className="text-xs text-neutral-400 text-center mt-6">

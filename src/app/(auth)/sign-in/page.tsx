@@ -3,6 +3,7 @@
 import { signIn, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
+import Button from '@/components/ui/button';
 
 const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
@@ -44,13 +45,9 @@ const SignInPage = () => {
             <p className="text-sm text-red-500">{state.error}</p>
           )}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-md text-sm font-medium border border-neutral-950 bg-neutral-950 text-white transition-all duration-150 hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button type="submit" disabled={pending}>
             {pending ? 'Entrando...' : 'Iniciar sesión'}
-          </button>
+          </Button>
         </form>
 
         <p className="text-xs text-neutral-400 text-center mt-6">
