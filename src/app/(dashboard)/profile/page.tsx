@@ -37,7 +37,9 @@ const ProfilePage = async () => {
             <p className="text-sm text-neutral-950">{name}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-400 mb-1">Correo electrónico</p>
+            <p className="text-xs font-medium text-neutral-400 mb-1">
+              Correo electrónico
+            </p>
             <p className="text-sm text-neutral-950">{email}</p>
           </div>
         </div>

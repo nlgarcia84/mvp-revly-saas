@@ -2,6 +2,23 @@
 
 import prisma from '@/lib/db';
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function generateSlug(name: string): Promise<string> {
+  const base = slugify(name);
+  let slug = base;
+  let counter = 1;
+  while (await prisma.business.findUnique({ where: { slug } })) {
+    slug = `${base}-${counter++}`;
+  }
+  return slug;
+}
+
 /**
  * Crea un negocio nuevo asociado al usuario autenticado.
  */
@@ -13,18 +30,16 @@ export const createBusiness = async (data: {
   const userId = '';
   if (!userId) throw new Error('No autenticado');
 
-  // ──────────────────────────────────────────────
-  // PRISMA (.business.create):
-  //   Inserta un registro en la tabla Business
-  //   con los datos del formulario + userId
-  // ──────────────────────────────────────────────
+  const slug = await generateSlug(data.name);
+
   const business = await prisma
-    .business                       // tabla Business
-    .create({                       // INSERT INTO business
+    .business
+    .create({
       data: {
-        name: data.name,            // nombre del negocio
-        googleLink: data.googleLink ?? null, // enlace de Google Reviews (opcional)
-        userId,                     // propietario del negocio
+        name: data.name,
+        slug,
+        googleLink: data.googleLink ?? null,
+        userId,
       },
     });
 
@@ -40,24 +55,49 @@ export const getBusinesses = async () => {
   const userId = '';
   if (!userId) return [];
 
-  // ──────────────────────────────────────────────
-  // PRISMA (.business.findMany):
-  //   SELECT * FROM Business WHERE userId = ?
-  //   Con INCLUDE para contar clientes relacionados
-  //   (equivale a un JOIN + COUNT)
-  // ──────────────────────────────────────────────
   return prisma
-    .business                       // tabla Business
-    .findMany({                     // SELECT
-      where: {                      // WHERE
-        userId,                     // userId = usuario actual
-      },
-      include: {                    // JOIN (incluir datos relacionados)
-        _count: {                   // COUNT(*)
-          select: {
-            customers: true,        // cuenta los Customer asociados a este Business
-          },
+    .business
+    .findMany({
+      where: { userId },
+      include: {
+        _count: {
+          select: { customers: true },
         },
       },
     });
+};
+
+/**
+ * Busca un negocio por su slug para la página pública.
+ */
+export const getBusinessBySlug = async (slug: string) => {
+  return prisma.business.findUnique({
+    where: { slug },
+  });
+};
+
+/**
+ * Crea un cliente desde la página pública (sin autenticación).
+ */
+export const addPublicCustomer = async (data: {
+  slug: string;
+  name: string;
+  email: string;
+  phone?: string;
+}) => {
+  const business = await prisma.business.findUnique({
+    where: { slug: data.slug },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  const customer = await prisma.customer.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      phone: data.phone ?? null,
+      businessId: business.id,
+    },
+  });
+
+  return customer;
 };

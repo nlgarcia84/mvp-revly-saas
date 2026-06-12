@@ -2,13 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { createBusiness, getBusinesses } from '@/actions/business';
+import QRCode from 'qrcode';
 
 interface Business {
   id: string;
   name: string;
+  slug: string | null;
   googleLink: string | null;
   _count: { customers: number };
 }
+
+const BusinessQR = ({ slug }: { slug: string }) => {
+  const [url, setUrl] = useState('');
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    QRCode.toDataURL(`https://revly.es/${slug}`, {
+      width: 180,
+      margin: 1,
+    }).then(setUrl);
+  }, [slug]);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShow(!show)}
+        className="text-xs text-neutral-400 hover:text-neutral-950 underline transition-colors"
+      >
+        QR
+      </button>
+      {show && url && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShow(false)} />
+          <div className="absolute right-0 top-6 z-50 bg-white border border-neutral-200 rounded-xl shadow-lg p-3">
+            <img src={url} alt={`QR para ${slug}`} className="w-[180px] h-[180px]" />
+            <p className="text-[10px] text-neutral-400 text-center mt-1">revly.es/{slug}</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const BusinessPage = () => {
   const [open, setOpen] = useState(false);
@@ -116,6 +150,18 @@ const BusinessPage = () => {
                 <span className="text-xs text-neutral-400 ml-3">
                   {b._count.customers} clientes
                 </span>
+                {b.slug && (
+                  <a
+                    href={`/${b.slug}`}
+                    target="_blank"
+                    className="block text-xs text-neutral-400 hover:text-neutral-950 underline mt-1"
+                  >
+                    revly.es/{b.slug}
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <BusinessQR slug={b.slug ?? ''} />
               </div>
             </div>
           ))}
