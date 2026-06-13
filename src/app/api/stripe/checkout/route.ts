@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +17,9 @@ export async function POST(request: Request) {
       include: { subscription: true },
     });
     if (!user) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+
+    const { default: Stripe } = await import('stripe');
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
     const customerId = user.subscription?.stripeCustomerId;
 

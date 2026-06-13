@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 export async function GET() {
   try {
@@ -19,6 +16,9 @@ export async function GET() {
 
     const customerId = user?.subscription?.stripeCustomerId;
     if (!customerId) return NextResponse.redirect('/pricing');
+
+    const { default: Stripe } = await import('stripe');
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,

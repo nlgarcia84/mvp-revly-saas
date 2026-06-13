@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import prisma from '@/lib/db';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: Request) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature') || '';
 
-  let event: Stripe.Event;
+  const { default: Stripe } = await import('stripe');
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+
+  let event: any;
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch {
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const userId = session.metadata?.userId || session.client_reference_id;
         if (!userId) break;
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const subEvent = event.data.object as any;
+        const subEvent = event.data.object;
         const customerId = subEvent.customer as string;
 
         const sub = await prisma.subscription.findFirst({
