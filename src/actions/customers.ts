@@ -79,10 +79,11 @@ export const updateCustomerStatus = async (customerId: string, status: string) =
 // ──────────────────────────────────────────────
 // addCustomerBatch
 // ──────────────────────────────────────────────
-// Crea múltiples clientes a la vez (desde CSV o
-// importación manual). Omite los que ya existen
-// (duplicados por email + businessId). Devuelve
-// cuántos se crearon y cuántos se omitieron.
+// Crea o actualiza múltiples clientes a la vez
+// (desde CSV o importación manual). Si el email
+// ya existe para el negocio, actualiza nombre y
+// teléfono (upsert). Devuelve cuántos se
+// procesaron y cuántos fallaron.
 // ──────────────────────────────────────────────
 export const addCustomerBatch = async (
   businessId: string,
@@ -93,32 +94,38 @@ export const addCustomerBatch = async (
   const userId = session?.user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
-  // Verifica que el negocio pertenezca al usuario
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
   });
   if (!business) throw new Error('Negocio no encontrado');
 
   let created = 0;
-  let skipped = 0;
+  let errors = 0;
 
   for (const c of customers) {
     try {
-      await prisma.customer.create({
-        data: {
+      await prisma.customer.upsert({
+        where: {
+          email_businessId: { email: c.email, businessId },
+        },
+        create: {
           name: c.name || null,
           email: c.email,
           phone: c.phone,
           businessId,
           source: 'manual',
         },
+        update: {
+          name: c.name || null,
+          phone: c.phone,
+        },
       });
       created++;
     } catch (e) {
-      console.error('Error creando cliente:', e);
-      skipped++;
+      console.error('Error procesando cliente:', e);
+      errors++;
     }
   }
 
-  return { created, skipped };
+  return { created, errors };
 };

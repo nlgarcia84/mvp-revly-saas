@@ -151,11 +151,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleAddManual = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const result = await addCustomerBatch(id, [{ ...addForm }]);
-      if (result.created === 0) {
-        alert('No se pudo crear: el email ya existe para este negocio');
-        return;
-      }
+      await addCustomerBatch(id, [{ ...addForm }]);
       setAddForm({ name: '', email: '', phone: '' });
       setShowAdd(false);
       await load();
@@ -189,7 +185,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }).filter((c) => c.email);
 
     const result = await addCustomerBatch(id, customers);
-    setCsvResult(`Importados ${result.created} cliente(s). ${result.skipped} omitido(s) por duplicado.`);
+    setCsvResult(`Importados ${result.created} cliente(s). ${result.errors} error(es).`);
     e.target.value = '';
     await load();
   };
