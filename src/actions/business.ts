@@ -62,6 +62,13 @@ export const createBusiness = async (data: {
   const userId = await getUserId();
   if (!userId) throw new Error('No autenticado');
 
+  // Verifica límite del plan
+  const { canCreateBusiness } = await import('@/lib/subscription');
+  const { allowed, count, limit } = await canCreateBusiness(userId);
+  if (!allowed) {
+    throw new Error(`Has alcanzado el límite de ${limit} negocio(s) de tu plan. Mejora a Pro en /pricing`);
+  }
+
   const slug = await generateSlug(data.name);
 
   const business = await prisma.business.create({

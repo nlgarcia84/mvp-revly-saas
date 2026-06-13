@@ -1,12 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id ?? '';
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { subscription: true },
+  });
   const name = user?.name ?? '';
+  const plan = user?.subscription?.plan ?? 'free';
 
   const businesses = await prisma.business.findMany({
     where: { userId },
@@ -73,7 +78,12 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold mb-1">Hola, {name}</h1>
+        <h1 className="text-2xl font-semibold mb-1 flex items-center gap-3">
+          Hola, {name}
+          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+            {plan === 'free' ? 'Gratis' : 'Pro'}
+          </span>
+        </h1>
         <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
       </div>
 

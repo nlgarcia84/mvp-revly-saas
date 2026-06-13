@@ -67,7 +67,12 @@ export const signUp = async (
     }
 
     await prisma.user.create({
-      data: { id: data.user.id, email, name },
+      data: {
+        id: data.user.id, email, name,
+        subscription: {
+          create: { plan: 'free', status: 'active' },
+        },
+      },
     });
   }
 

@@ -11,14 +11,36 @@ datasource db {
 // Se crea automáticamente al registrarse (signUp).
 // Relación 1:N con Business — un usuario puede tener
 // varios negocios asociados.
+// subscription vincula su plan de pago.
 // ──────────────────────────────────────────────
 model User {
-  id         String     @id @default(uuid())
-  email      String     @unique
-  name       String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  businesses Business[]
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  businesses   Business[]
+  subscription Subscription?
+}
+
+// ──────────────────────────────────────────────
+// Subscription: Plan de pago asociado a un usuario.
+// stripeCustomerId — ID del cliente en Stripe.
+// stripeSubscriptionId — ID de la suscripción en Stripe.
+// plan — "free" | "pro".
+// status — "active" | "inactive" | "past_due" | "canceled".
+// ──────────────────────────────────────────────
+model Subscription {
+  id                   String   @id @default(uuid())
+  plan                 String   @default("free")
+  status               String   @default("active")
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  currentPeriodEnd     DateTime?
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 // ──────────────────────────────────────────────
