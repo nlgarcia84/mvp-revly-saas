@@ -4,13 +4,14 @@ import { signIn, type ActionResult } from '@/actions/auth';
 import { useActionState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/button';
+import AuthBackground from '@/components/auth-background';
 
 const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
+    <AuthBackground>
+      <div className="bg-neutral-900/80 backdrop-blur-xl border border-neutral-800 rounded-xl shadow-sm w-full max-w-[400px] sm:max-w-[420px] p-6 sm:p-8">
         <h1 className="text-xl font-semibold mb-1">Iniciar sesión</h1>
         <p className="text-sm text-neutral-500 mb-6">accede a tu cuenta de Revly</p>
 
@@ -57,7 +58,7 @@ const SignInPage = () => {
           </Link>
         </p>
       </div>
-    </div>
+    </AuthBackground>
   );
 };
 
