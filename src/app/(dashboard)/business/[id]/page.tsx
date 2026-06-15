@@ -75,7 +75,7 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
             <div className="flex justify-between">
               <dt className="text-neutral-500">Valoración</dt>
               <dd className="flex items-center gap-1">
-                <span style={{ color: '#f59e0b' }}>{'★'.repeat((customer as any).rating)}</span>
+                <span style={{ color: (customer as any).rating < 4 ? '#ef4444' : '#f59e0b' }}>{'★'.repeat((customer as any).rating)}</span>
                 <span className="text-neutral-400">{'☆'.repeat(5 - (customer as any).rating)}</span>
               </dd>
             </div>
@@ -350,7 +350,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   </td>
                   <td className="py-3 pr-4 text-neutral-500 hidden lg:table-cell">
                     {c.rating ? (
-                      <span style={{ color: '#f59e0b' }}>{'★'.repeat(c.rating)}</span>
+                      <span style={{ color: c.rating < 4 ? '#ef4444' : '#f59e0b' }}>{'★'.repeat(c.rating)}</span>
                     ) : (
                       <span className="text-neutral-300">—</span>
                     )}
