@@ -72,17 +72,17 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
 
       {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-3">
-        {/* LED verde de sesión activa */}
+        {/* LED verde de sesión activa → oculto texto en mobile */}
         <span className="flex items-center gap-1.5 text-[11px] text-neutral-400">
           <span className="relative flex w-2 h-2">
             <span className="absolute inline-flex w-full h-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
             <span className="relative inline-flex w-2 h-2 rounded-full bg-emerald-500" />
           </span>
-          Conectado
+          <span className="hidden sm:inline">Conectado</span>
         </span>
-        {/* Reloj digital con tipografía monoespaciada */}
+        {/* Reloj digital con tipografía monoespaciada — oculto en mobile */}
         <span
-          className="text-xs text-neutral-400 dark:text-neutral-500"
+          className="hidden sm:inline text-xs text-neutral-400 dark:text-neutral-500"
           style={{ fontFamily: "'Share Tech Mono', monospace" }}
         >
           {time}

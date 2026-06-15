@@ -61,27 +61,27 @@ describe('DarkToggle', () => {
 
   // ─── Iconos según estado ────────────────────
 
-  it('renders moon icon when dark mode is off', () => {
-    // Por defecto (dark=false) debe mostrar el icono de luna
-    // El path de la luna contiene "20.354" en su atributo d
+  it('renders sun icon by default (dark mode default)', () => {
+    // Por defecto (sin localStorage) el tema es oscuro → icono de sol
+    // El path del sol contiene "M12 3" en su atributo d
     render(<DarkToggle />);
     const svg = screen.getByRole('button').querySelector('svg');
     expect(svg).toBeInTheDocument();
     const path = svg!.querySelector('path');
     expect(path).toHaveAttribute(
       'd',
-      expect.stringContaining('20.354'),
+      expect.stringContaining('M12 3'),
     );
   });
 
-  it('renders sun icon when dark mode is on', () => {
-    // Si localStorage tiene "dark", al montar debe mostrar el icono de sol
-    // El path del sol contiene "M12 3" en su atributo d
-    mockStorage.getItem.mockReturnValue('dark');
+  it('renders moon icon when light mode is set', () => {
+    // Si localStorage tiene "light", al montar debe mostrar el icono de luna
+    // El path de la luna contiene "20.354" en su atributo d
+    mockStorage.getItem.mockReturnValue('light');
     render(<DarkToggle />);
     const svg = screen.getByRole('button').querySelector('svg');
     const path = svg!.querySelector('path');
-    expect(path).toHaveAttribute('d', expect.stringContaining('M12 3'));
+    expect(path).toHaveAttribute('d', expect.stringContaining('20.354'));
   });
 
   // ─── Lectura de localStorage ────────────────
