@@ -11,9 +11,9 @@ type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
 
 const statusLabel: Record<string, string> = {
-  pending: 'Pendiente',
-  invited: 'Invitado',
-  completed: 'Completado',
+  pending: 'P',
+  invited: 'I',
+  completed: 'C',
 };
 
 const statusColor: Record<string, string> = {
@@ -289,7 +289,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
               }`}
             >
-              {f === 'all' ? 'Todos' : statusLabel[f] ?? f}
+              {f === 'all' ? 'Todos' : { pending: 'Pendiente', invited: 'Invitado', completed: 'Completado' }[f] ?? f}
             </button>
           ))}
         </div>
