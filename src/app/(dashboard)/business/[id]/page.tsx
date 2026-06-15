@@ -358,13 +358,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <td className="py-3 pr-4 whitespace-nowrap">
                     <button onClick={() => setDetail(c)} className="flex items-center gap-1.5 text-xs">
                       {(c as any).feedback && c.rating != null && c.rating < 4 ? (
-                        <>
-                          <span className="relative flex w-2 h-2">
-                            <span className="absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-75 animate-ping" />
-                            <span className="relative inline-flex w-2 h-2 rounded-full bg-red-500" />
-                          </span>
-                          <span className="font-medium text-neutral-950 dark:text-neutral-100">Sí</span>
-                        </>
+                        <span className="flex items-center gap-1 font-medium text-neutral-950 dark:text-neutral-100">
+                          <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
+                          </svg>
+                          Sí
+                        </span>
                       ) : (
                         <span className="text-neutral-300">—</span>
                       )}
