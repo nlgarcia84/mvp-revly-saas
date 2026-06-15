@@ -334,7 +334,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+                <tr key={c.id} className={`border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse bg-red-50 dark:bg-red-950/20' : ''}`}>
                   <td className="py-3 pr-2">
                     <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 accent-neutral-950" />
                   </td>
@@ -356,14 +356,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     )}
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">
-                    <button onClick={() => setDetail(c)} className="flex items-center gap-1.5 text-xs">
+                    <button onClick={() => setDetail(c)} className="text-xs">
                       {(c as any).feedback && c.rating != null && c.rating < 4 ? (
-                        <span className="flex items-center gap-1 font-medium text-neutral-950 dark:text-neutral-100">
-                          <svg className="w-4 h-4 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
-                          </svg>
-                          Sí
-                        </span>
+                        <span className="font-medium text-red-600 dark:text-red-400">Sí</span>
                       ) : (
                         <span className="text-neutral-300">—</span>
                       )}
