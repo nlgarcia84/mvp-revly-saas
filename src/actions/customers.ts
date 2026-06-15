@@ -129,3 +129,33 @@ export const addCustomerBatch = async (
 
   return { created, errors };
 };
+
+export const deleteCustomer = async (customerId: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, business: { userId } },
+  });
+  if (!customer) throw new Error('Cliente no encontrado');
+
+  await prisma.customer.delete({ where: { id: customerId } });
+  return { success: true };
+};
+
+export const clearCustomers = async (businessId: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  await prisma.customer.deleteMany({ where: { businessId } });
+  return { success: true };
+};

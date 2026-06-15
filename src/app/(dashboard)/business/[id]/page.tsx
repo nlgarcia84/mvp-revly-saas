@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { getBusinesses } from '@/actions/business';
-import { getCustomers, addCustomerBatch } from '@/actions/customers';
+import { getCustomers, addCustomerBatch, deleteCustomer, clearCustomers } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
 
@@ -159,6 +159,26 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
+  const handleDelete = async (customerId: string) => {
+    if (!confirm('¿Eliminar este cliente?')) return;
+    try {
+      await deleteCustomer(customerId);
+      setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+    } catch (e) {
+      alert('Error al eliminar: ' + (e instanceof Error ? e.message : 'desconocido'));
+    }
+  };
+
+  const handleClear = async () => {
+    if (!confirm(`¿Eliminar todos los clientes (${customers.length})? Esta acción no se puede deshacer.`)) return;
+    try {
+      await clearCustomers(id);
+      setCustomers([]);
+    } catch (e) {
+      alert('Error al limpiar: ' + (e instanceof Error ? e.message : 'desconocido'));
+    }
+  };
+
   const handleAddManual = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -260,11 +280,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </button>
           ))}
         </div>
-        {selected.size > 0 && (
-          <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={handleBatchSend} disabled={batchSending}>
-            {batchSending ? 'Enviando...' : `Enviar a ${selected.size} cliente${selected.size !== 1 ? 's' : ''}`}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {customers.length > 0 && (
+            <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={handleClear}>
+              Limpiar lista
+            </Button>
+          )}
+          {selected.size > 0 && (
+            <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={handleBatchSend} disabled={batchSending}>
+              {batchSending ? 'Enviando...' : `Enviar a ${selected.size} cliente${selected.size !== 1 ? 's' : ''}`}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Tabla */}
@@ -315,19 +342,22 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     )}
                   </td>
                   <td className="py-3 whitespace-nowrap">
-                    {c.status === 'pending' && (
-                      <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
-                        {sendingId === c.id ? '...' : 'Enviar'}
-                      </Button>
-                    )}
-                    {c.status === 'invited' && (
-                      <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
-                        {sendingId === c.id ? '...' : 'Reenviar'}
-                      </Button>
-                    )}
-                    {c.status === 'completed' && (
-                      <span className="text-xs text-emerald-500">Reseña hecha</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {c.status === 'pending' && (
+                        <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
+                          {sendingId === c.id ? '...' : 'Enviar'}
+                        </Button>
+                      )}
+                      {c.status === 'invited' && (
+                        <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
+                          {sendingId === c.id ? '...' : 'Reenviar'}
+                        </Button>
+                      )}
+                      {c.status === 'completed' && (
+                        <span className="text-xs text-emerald-500">Reseña hecha</span>
+                      )}
+                      <button onClick={() => handleDelete(c.id)} className="text-neutral-300 hover:text-red-500 transition-colors text-lg leading-none" title="Eliminar cliente">&times;</button>
+                    </div>
                   </td>
                 </tr>
               ))}
