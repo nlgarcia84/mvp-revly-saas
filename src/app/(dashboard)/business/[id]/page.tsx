@@ -80,6 +80,14 @@ const CustomerDetail = ({ customer, onClose }: { customer: Customer; onClose: ()
               </dd>
             </div>
           )}
+          {(customer as any).feedback && (
+            <div className="flex flex-col gap-1 pt-2 border-t border-neutral-100 dark:border-neutral-800 mt-2">
+              <dt className="text-neutral-500 text-xs">Feedback</dt>
+              <dd className="text-sm text-neutral-950 dark:text-neutral-100 leading-relaxed">
+                {(customer as any).feedback}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
     </div>
@@ -117,7 +125,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         prev.map((c) => c.id === customerId ? { ...c, status: 'invited' } : c),
       );
     } catch (e) {
-      console.error(e);
+      alert('Error al enviar: ' + (e instanceof Error ? e.message : 'desconocido'));
     }
     setSendingId(null);
   };
@@ -142,10 +150,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const handleBatchSend = async () => {
     setBatchSending(true);
     const ids = Array.from(selected);
-    await sendBatchInvitations(ids);
+    const { sent, failed } = await sendBatchInvitations(ids);
     await load();
     setSelected(new Set());
     setBatchSending(false);
+    if (failed > 0) {
+      alert(`Enviados: ${sent} | Fallos: ${failed}. Revisa la consola para más detalles.`);
+    }
   };
 
   const handleAddManual = async (e: React.FormEvent) => {

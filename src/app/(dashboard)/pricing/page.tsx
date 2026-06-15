@@ -10,7 +10,12 @@ const plans = [
     name: 'Gratis',
     price: '0 €',
     period: '',
-    features: ['1 negocio', 'Clientes ilimitados', 'QR y email', 'Analytics básico'],
+    features: [
+      '1 negocio',
+      'Clientes ilimitados',
+      'QR y email',
+      'Analytics básico',
+    ],
     cta: 'Tu plan actual',
     disabled: true,
   },
@@ -61,7 +66,9 @@ export default function PricingPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-2xl font-semibold mb-1">Planes</h1>
-        <p className="text-sm text-neutral-500">Elige el plan que mejor se adapte a tu negocio</p>
+        <p className="text-sm text-neutral-500">
+          Elige el plan que mejor se adapte a tu negocio
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
@@ -88,8 +95,21 @@ export default function PricingPage() {
             </div>
             <ul className="flex flex-col gap-2">
               {plan.features.map((f) => (
-                <li key={f} className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <li
+                  key={f}
+                  className="text-sm text-neutral-600 dark:text-neutral-400 flex items-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   {f}
                 </li>
               ))}

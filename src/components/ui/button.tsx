@@ -28,6 +28,8 @@ type ButtonProps = {
   children: React.ReactNode;
 };
 
+// Cada modo extiende las props nativas del elemento que renderiza,
+// permitiendo pasar onClick, href, target, disabled, etc. directamente.
 type ButtonAsButton = ButtonProps &
   React.ButtonHTMLAttributes<HTMLButtonElement> & { as?: 'button' };
 
@@ -37,9 +39,12 @@ type ButtonAsLink = ButtonProps &
 type ButtonAsAnchor = ButtonProps &
   React.AnchorHTMLAttributes<HTMLAnchorElement> & { as: 'a' };
 
+// La unión de tipos hace que TS infiera automáticamente qué props
+// son válidas según el valor de `as`.
 type Props = ButtonAsButton | ButtonAsLink | ButtonAsAnchor;
 
 const Button = (props: Props) => {
+  // Extrae las props comunes y el resto se pasa al elemento nativo
   const {
     variant = 'primary',
     className = '',
@@ -47,9 +52,11 @@ const Button = (props: Props) => {
     ...rest
   } = props;
 
+  // Combina clases base + variante + clases personalizadas
   const cls = `${baseClass} ${variantClass[variant]} ${className}`;
 
-  // Render como Link de Next.js
+  // Render como Link de Next.js (navegación interna)
+  // Descarta as, variant y className para no pasarlos al DOM
   if (props.as === 'link') {
     const { as: _, variant: _v, className: _c, ...linkRest } = props as ButtonAsLink;
     return (
@@ -59,7 +66,7 @@ const Button = (props: Props) => {
     );
   }
 
-  // Render como <a> nativo (links externos)
+  // Render como <a> nativo (links externos, target="_blank", etc.)
   if (props.as === 'a') {
     const { as: _, variant: _v, className: _c, ...anchorRest } = props as ButtonAsAnchor;
     return (
@@ -70,6 +77,7 @@ const Button = (props: Props) => {
   }
 
   // Render como <button> (formularios, modales, etc.)
+  // Es el caso por defecto cuando as no se especifica
   const { as: _, variant: _v, className: _c, ...buttonRest } = props as ButtonAsButton;
   return (
     <button className={cls} {...buttonRest}>

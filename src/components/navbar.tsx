@@ -20,26 +20,33 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
 
   // Reloj que se actualiza cada 30 segundos
   useEffect(() => {
+    // Función que obtiene la fecha/hora actual en formato local
     const update = () => {
       const now = new Date();
+      // Fecha: "14 ene 2025"
       const date = now.toLocaleDateString('es-ES', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
       });
+      // Hora: "14:30"
       const hour = now.toLocaleTimeString('es-ES', {
         hour: '2-digit',
         minute: '2-digit',
       });
       setTime(`${date} · ${hour}`);
     };
+    // Ejecuta inmediatamente al montar
     update();
+    // Actualiza cada 30 segundos
     const id = setInterval(update, 30_000);
+    // Limpia el intervalo al desmontar para evitar memory leaks
     return () => clearInterval(id);
   }, []);
 
   return (
     <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 sm:px-6 bg-white dark:bg-neutral-950 shrink-0 transition-colors">
+      {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
         className="lg:hidden mr-3 p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
@@ -50,12 +57,17 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
         </svg>
       </button>
 
+      {/* Logo de la aplicación */}
       <span className="font-semibold text-base">Revly</span>
 
+      {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-3">
+        {/* Reloj digital con tipografía monoespaciada */}
         <span className="text-xs text-neutral-400 dark:text-neutral-500" style={{ fontFamily: "'Share Tech Mono', monospace" }}>{time}</span>
+        {/* Toggle de modo oscuro */}
         <DarkToggle />
 
+        {/* Formulario de cierre de sesión usando Server Action de Next.js */}
         <form action={signOut}>
           <button
             type="submit"

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
+import GoogleReviewsSection from '@/components/google-reviews-section';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -178,6 +179,9 @@ export default async function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Reseñas de Google */}
+      <GoogleReviewsSection />
 
       {/* Lista de negocios */}
       {totalBusinesses === 0 ? (

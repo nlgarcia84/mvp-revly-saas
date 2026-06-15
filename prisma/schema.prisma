@@ -85,6 +85,7 @@ model Customer {
   invitedCount  Int       @default(0)
   lastInvitedAt DateTime?
   rating        Int?
+  feedback      String?
   createdAt     DateTime  @default(now())
   business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
