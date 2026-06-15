@@ -354,14 +354,16 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     )}
                   </td>
                   <td className="py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {c.status !== 'completed' && (
-                        <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
-                          {sendingId === c.id ? '...' : c.status === 'invited' ? 'Reenviar mail' : 'Enviar mail'}
+                        <Button variant="primary" className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
+                          {sendingId === c.id ? '...' : (
+                            <><span className="sm:hidden">Mail</span><span className="hidden sm:inline">{c.status === 'invited' ? 'Reenviar mail' : 'Enviar mail'}</span></>
+                          )}
                         </Button>
                       )}
                       {c.status === 'completed' && (
-                        <span className="text-xs text-emerald-500">Reseña hecha</span>
+                        <span className="text-[10px] sm:text-xs text-emerald-500">Reseña hecha</span>
                       )}
                       {c.phone && business?.googleLink && c.status !== 'completed' && (
                         <a
@@ -370,13 +372,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] px-2.5 py-1.5 rounded-md font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                          className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
                           title="Enviar por WhatsApp"
                         >
-                          Enviar WhatsApp
+                          <span className="sm:hidden">WA</span><span className="hidden sm:inline">Enviar WhatsApp</span>
                         </a>
                       )}
-                      <button onClick={() => handleDelete(c.id)} className="text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
+                      <button onClick={() => handleDelete(c.id)} className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                     </div>
                   </td>
                 </tr>
