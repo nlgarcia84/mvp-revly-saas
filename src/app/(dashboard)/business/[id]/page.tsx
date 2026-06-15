@@ -327,6 +327,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden md:table-cell">Email</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">Estado</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden lg:table-cell">Valoración</th>
+                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">Feedback</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap">Envío</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap pl-2">Acciones</th>
               </tr>
@@ -353,6 +354,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     ) : (
                       <span className="text-neutral-300">—</span>
                     )}
+                  </td>
+                  <td className="py-3 pr-4 whitespace-nowrap">
+                    <button onClick={() => setDetail(c)} className="text-xs">
+                      {(c as any).feedback ? (
+                        <span className="text-emerald-500 font-medium">Sí</span>
+                      ) : (
+                        <span className="text-neutral-300">No</span>
+                      )}
+                    </button>
                   </td>
                   <td className="py-3 whitespace-nowrap">
                     <div className="flex items-center gap-1 sm:gap-2">
