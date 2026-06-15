@@ -49,7 +49,7 @@ const SignInPage = () => {
               <p className="text-sm text-red-400">{state.error}</p>
             )}
 
-            <Button type="submit" disabled={pending} className="bg-white text-neutral-950 border-white hover:bg-neutral-200 hover:border-neutral-200">
+            <Button type="submit" variant="secondary" disabled={pending}>
               {pending ? 'Entrando...' : 'Iniciar sesión'}
             </Button>
           </form>

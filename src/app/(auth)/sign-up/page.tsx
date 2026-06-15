@@ -21,7 +21,7 @@ const SignUpPage = () => {
               Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada
               (y la carpeta de spam) para activar tu cuenta.
             </p>
-            <Button as="link" variant="primary" href="/sign-in" className="bg-white text-neutral-950 border-white hover:bg-neutral-200 hover:border-neutral-200">
+            <Button as="link" variant="secondary" href="/sign-in">
               Ir a iniciar sesión
             </Button>
           </div>
@@ -84,7 +84,7 @@ const SignUpPage = () => {
               <p className="text-sm text-red-400">{state.error}</p>
             )}
 
-            <Button type="submit" disabled={pending} className="bg-white text-neutral-950 border-white hover:bg-neutral-200 hover:border-neutral-200">
+            <Button type="submit" variant="secondary" disabled={pending}>
               {pending ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
           </form>
