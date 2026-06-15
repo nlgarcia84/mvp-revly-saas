@@ -356,11 +356,17 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     )}
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">
-                    <button onClick={() => setDetail(c)} className="text-xs">
+                    <button onClick={() => setDetail(c)} className="flex items-center gap-1.5 text-xs">
                       {(c as any).feedback ? (
-                        <span className="text-emerald-500 font-medium">Sí</span>
+                        <>
+                          <span className="relative flex w-2 h-2">
+                            <span className="absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-75 animate-ping" />
+                            <span className="relative inline-flex w-2 h-2 rounded-full bg-red-500" />
+                          </span>
+                          <span className="font-medium text-neutral-950 dark:text-neutral-100">Sí</span>
+                        </>
                       ) : (
-                        <span className="text-neutral-300">No</span>
+                        <span className="text-neutral-300">—</span>
                       )}
                     </button>
                   </td>
