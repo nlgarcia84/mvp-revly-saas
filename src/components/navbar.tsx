@@ -68,7 +68,7 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
       </button>
 
       {/* Logo de la aplicación */}
-      <span className="font-semibold text-base">Revly</span>
+      <span className="font-semibold text-xl sm:text-2xl">Revly</span>
 
       {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-3">
