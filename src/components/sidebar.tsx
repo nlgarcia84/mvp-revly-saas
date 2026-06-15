@@ -60,7 +60,7 @@ const Sidebar = ({
           translate-x-0 → visible. -translate-x-full → oculto.
           Los links tienen onClick={onClose} para cerrar al navegar. */}
       <aside
-        className={`fixed top-14 left-0 bottom-0 w-[250px] z-50 bg-neutral-100 dark:bg-neutral-950 p-4 pl-3 border-r border-neutral-200 dark:border-neutral-800 transition-transform duration-200 lg:hidden ${
+        className={`fixed top-16 left-0 bottom-0 w-[250px] z-50 bg-neutral-100 dark:bg-neutral-950 p-4 pl-3 border-r border-neutral-200 dark:border-neutral-800 transition-transform duration-200 lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

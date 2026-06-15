@@ -45,7 +45,7 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
   }, []);
 
   return (
-    <header className="h-14 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-4 sm:px-6 bg-white dark:bg-neutral-950 shrink-0 transition-colors">
+    <header className="h-16 border-b border-neutral-200 dark:border-neutral-800 flex items-center px-6 sm:px-8 bg-white dark:bg-neutral-950 shrink-0 transition-colors">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
