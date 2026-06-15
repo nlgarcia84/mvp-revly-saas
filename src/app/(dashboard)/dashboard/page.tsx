@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
 import GoogleReviewsSection from '@/components/google-reviews-section';
-import { ChartBar, ChartLine, ChartPie } from '@/components/ui/chart';
+import { ChartBar } from '@/components/ui/chart';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -28,7 +28,6 @@ export default async function DashboardPage() {
   });
 
   const totalCustomers = allCustomers.length;
-  const pending = allCustomers.filter((c) => c.status === 'pending').length;
   const invited = allCustomers.filter((c) => c.status === 'invited').length;
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
   const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
@@ -61,27 +60,10 @@ export default async function DashboardPage() {
     });
   }
 
-  // Monthly reviews
-  const monthMap = new Map<string, number>();
-  for (const c of completedCustomers) {
-    const key = c.createdAt.toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
-    monthMap.set(key, (monthMap.get(key) ?? 0) + 1);
-  }
-  const monthlyData = Array.from(monthMap.entries()).map(([label, value]) => ({ label, value }));
-
-  // Status distribution for donut
-  const statusData = [
-    { name: 'Pendiente', value: pending, color: '#f59e0b' },
-    { name: 'Invitado', value: invited, color: '#3b82f6' },
-    { name: 'Completado', value: completed, color: '#10b981' },
-  ].filter((s) => s.value > 0);
-
-  // Rating colors
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold mb-1 flex items-center gap-3">
           Hola, {name}
@@ -92,7 +74,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
       </div>
 
-      {/* Main stats */}
+      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Negocios</span>
@@ -112,9 +94,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Charts row 1: conversion + avg rating + status donut */}
+      {/* Conversion + Rating + Daily */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Conversion rate */}
+        {/* Conversion */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversión</span>
           <div className="flex items-baseline gap-2">
@@ -137,15 +119,6 @@ export default async function DashboardPage() {
             <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
             <span className="text-xs text-neutral-400">({rated.length} reseña{rated.length !== 1 ? 's' : ''})</span>
           </div>
-          <ChartBar
-            data={ratingDist}
-            bars={ratingDist.map((r, i) => ({
-              key: 'value' as const,
-              color: ratingColors[i],
-              name: `${r.label} estrella${r.label !== '1' ? 's' : ''}`,
-            })).slice(0, 1)}
-            height={120}
-          />
           <div className="flex flex-col gap-1">
             {ratingDist.map((r, i) => {
               const maxVal = Math.max(...ratingDist.map((d) => d.value), 1);
@@ -163,24 +136,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Status distribution */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
-          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Estado clientes</span>
-          <ChartPie data={statusData} height={180} />
-          <div className="flex flex-wrap gap-3 justify-center text-xs">
-            {statusData.map((s) => (
-              <div key={s.name} className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-                <span className="text-neutral-500">{s.name}</span>
-                <span className="font-medium">{s.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Charts row 2: daily + monthly */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Daily reviews */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas (7 días)</span>
@@ -189,21 +144,6 @@ export default async function DashboardPage() {
             bars={[{ key: 'value', color: '#0a0a0a', name: 'Reseñas' }]}
             height={180}
           />
-        </div>
-
-        {/* Monthly reviews */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
-          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas por mes</span>
-          {monthlyData.length > 1 ? (
-            <ChartLine data={monthlyData} height={180} />
-          ) : (
-            <div className="flex items-center justify-center h-[180px] text-sm text-neutral-400">
-              {monthlyData.length === 0
-                ? 'Aún no hay reseñas completadas'
-                : 'Se necesitan al menos 2 meses para mostrar la tendencia'
-              }
-            </div>
-          )}
         </div>
       </div>
 

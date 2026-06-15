@@ -327,7 +327,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden md:table-cell">Email</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">Estado</th>
                 <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden lg:table-cell">Valoración</th>
-                <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap">Acción</th>
+                <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap">Envío</th>
+                <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap pl-2">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -372,14 +373,16 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
+                          className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
                           title="Enviar por WhatsApp"
                         >
                           <span className="sm:hidden">WA</span><span className="hidden sm:inline">Enviar WhatsApp</span>
                         </a>
                       )}
-                      <button onClick={() => handleDelete(c.id)} className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                     </div>
+                  </td>
+                  <td className="py-3 whitespace-nowrap pl-2">
+                    <button onClick={() => handleDelete(c.id)} className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                   </td>
                 </tr>
               ))}
