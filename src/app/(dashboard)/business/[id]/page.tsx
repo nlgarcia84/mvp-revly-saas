@@ -378,7 +378,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         </Button>
                       )}
                       {c.status === 'completed' && (
-                        <span className="text-[10px] sm:text-xs text-emerald-500">Reseña hecha</span>
+                        <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       )}
                       {c.phone && business?.googleLink && c.status !== 'completed' && (
                         <a
