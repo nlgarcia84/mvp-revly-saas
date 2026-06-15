@@ -357,7 +357,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">
                     <button onClick={() => setDetail(c)} className="flex items-center gap-1.5 text-xs">
-                      {(c as any).feedback ? (
+                      {(c as any).feedback && c.rating != null && c.rating < 4 ? (
                         <>
                           <span className="relative flex w-2 h-2">
                             <span className="absolute inline-flex w-full h-full rounded-full bg-red-400 opacity-75 animate-ping" />
