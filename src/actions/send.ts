@@ -165,3 +165,45 @@ export const sendBatchInvitations = async (customerIds: string[]) => {
 
   return { sent, failed };
 };
+
+export const getWhatsAppLink = async (customerId: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, business: { userId } },
+    include: { business: true },
+  });
+  if (!customer) throw new Error('Cliente no encontrado');
+  if (!customer.phone) throw new Error('El cliente no tiene teléfono');
+
+  const { name, phone, business } = customer;
+  const googleLink = business.googleLink;
+  const businessName = business.name;
+  const customerName = name ?? '';
+
+  if (!googleLink) {
+    throw new Error('El negocio no tiene enlace de Google Reviews configurado');
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const reviewUrl = `${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=5&redirect=${encodeURIComponent(googleLink)}`;
+
+  // Limpia el teléfono: elimina espacios, guiones, paréntesis y el prefijo +
+  const cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+  // Si empieza por 00, lo reemplaza por el código de país (34 para España)
+  const waPhone = cleanPhone.startsWith('00')
+    ? cleanPhone.replace(/^00/, '')
+    : cleanPhone.startsWith('34') || cleanPhone.startsWith('+34')
+    ? cleanPhone.replace(/^\+/, '')
+    : cleanPhone;
+
+  const message = `Hola ${customerName ? `${customerName}, ` : ''}¿cómo valorarías tu experiencia en ${businessName}?\n\n${reviewUrl}`;
+
+  return {
+    waLink: `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`,
+    reviewUrl,
+  };
+};

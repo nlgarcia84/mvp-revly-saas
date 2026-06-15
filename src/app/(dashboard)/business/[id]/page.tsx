@@ -369,6 +369,19 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       {c.status === 'completed' && (
                         <span className="text-xs text-emerald-500">Reseña hecha</span>
                       )}
+                      {c.phone && business?.googleLink && (
+                        <a
+                          href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, '')}?text=${encodeURIComponent(
+                            `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${business.name}?`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-emerald-500 hover:text-emerald-600 transition-colors"
+                          title="Enviar por WhatsApp"
+                        >
+                          WhatsApp
+                        </a>
+                      )}
                       <button onClick={() => handleDelete(c.id)} className="text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                     </div>
                   </td>
