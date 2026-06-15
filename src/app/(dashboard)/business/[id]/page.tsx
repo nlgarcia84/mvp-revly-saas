@@ -344,7 +344,11 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <td className="py-3 pr-4 text-neutral-500 hidden sm:table-cell">{c.phone}</td>
                   <td className="py-3 pr-4 text-neutral-500 hidden md:table-cell">{c.email}</td>
                   <td className="py-3 pr-4">
-                    <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${statusColor[c.status] ?? 'bg-neutral-100 text-neutral-500'}`}>
+                    <span className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      c.status === 'completed' && c.rating != null && c.rating < 4
+                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                        : statusColor[c.status] ?? 'bg-neutral-100 text-neutral-500'
+                    }`}>
                       {statusLabel[c.status] ?? c.status}
                     </span>
                   </td>
