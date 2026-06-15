@@ -159,3 +159,36 @@ export const clearCustomers = async (businessId: string) => {
   await prisma.customer.deleteMany({ where: { businessId } });
   return { success: true };
 };
+
+export const clearCompletedCustomers = async (businessId: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  const { count } = await prisma.customer.deleteMany({
+    where: { businessId, status: 'completed' },
+  });
+  return { count };
+};
+
+export const deleteSelectedCustomers = async (ids: string[]) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  const customers = await prisma.customer.findMany({
+    where: { id: { in: ids }, business: { userId } },
+    select: { id: true },
+  });
+  const validIds = customers.map((c) => c.id);
+
+  await prisma.customer.deleteMany({ where: { id: { in: validIds } } });
+  return { deleted: validIds.length };
+};

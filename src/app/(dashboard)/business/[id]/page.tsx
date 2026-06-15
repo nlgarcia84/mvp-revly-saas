@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { getBusinesses } from '@/actions/business';
-import { getCustomers, addCustomerBatch, deleteCustomer, clearCustomers } from '@/actions/customers';
+import { getCustomers, addCustomerBatch, deleteCustomer, clearCompletedCustomers, deleteSelectedCustomers } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
 
@@ -169,13 +169,27 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  const handleClear = async () => {
-    if (!confirm(`¿Eliminar todos los clientes (${customers.length})? Esta acción no se puede deshacer.`)) return;
+  const handleClearCompleted = async () => {
+    const completedCount = customers.filter((c) => c.status === 'completed').length;
+    if (completedCount === 0) return;
+    if (!confirm(`¿Eliminar los ${completedCount} cliente${completedCount !== 1 ? 's' : ''} completado${completedCount !== 1 ? 's' : ''}?`)) return;
     try {
-      await clearCustomers(id);
-      setCustomers([]);
+      await clearCompletedCustomers(id);
+      setCustomers((prev) => prev.filter((c) => c.status !== 'completed'));
     } catch (e) {
       alert('Error al limpiar: ' + (e instanceof Error ? e.message : 'desconocido'));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    const ids = Array.from(selected);
+    if (!confirm(`¿Eliminar ${ids.length} cliente${ids.length !== 1 ? 's' : ''} seleccionado${ids.length !== 1 ? 's' : ''}?`)) return;
+    try {
+      await deleteSelectedCustomers(ids);
+      setCustomers((prev) => prev.filter((c) => !selected.has(c.id)));
+      setSelected(new Set());
+    } catch (e) {
+      alert('Error al eliminar: ' + (e instanceof Error ? e.message : 'desconocido'));
     }
   };
 
@@ -239,6 +253,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <p className="text-xs sm:text-sm text-neutral-500">{total} cliente{total !== 1 ? 's' : ''} registrado{total !== 1 ? 's' : ''}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => {
+            if (selected.size > 0) {
+              handleDeleteSelected();
+            } else {
+              alert('Selecciona uno o más clientes de la tabla para eliminar');
+            }
+          }}>Eliminar</Button>
           <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => setShowAdd(true)}>+ Añadir cliente</Button>
           <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => setShowCsv(true)}>Importar CSV</Button>
           <Link href={`/business/${id}/settings`} className="text-xs sm:text-sm px-3 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors">
@@ -281,9 +302,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           ))}
         </div>
         <div className="flex gap-2">
-          {customers.length > 0 && (
-            <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={handleClear}>
-              Limpiar lista
+          {customers.filter((c) => c.status === 'completed').length > 0 && (
+            <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={handleClearCompleted}>
+              Completados ({customers.filter((c) => c.status === 'completed').length})
             </Button>
           )}
           {selected.size > 0 && (
@@ -356,7 +377,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       {c.status === 'completed' && (
                         <span className="text-xs text-emerald-500">Reseña hecha</span>
                       )}
-                      <button onClick={() => handleDelete(c.id)} className="text-neutral-300 hover:text-red-500 transition-colors text-lg leading-none" title="Eliminar cliente">&times;</button>
+                      <button onClick={() => handleDelete(c.id)} className="text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                     </div>
                   </td>
                 </tr>
