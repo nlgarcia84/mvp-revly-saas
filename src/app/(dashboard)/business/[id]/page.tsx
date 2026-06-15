@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { getBusinesses } from '@/actions/business';
-import { getCustomers, addCustomerBatch, deleteCustomer, clearCompletedCustomers, deleteSelectedCustomers } from '@/actions/customers';
+import { getCustomers, addCustomerBatch, deleteCustomer, deleteSelectedCustomers } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
 
@@ -169,16 +169,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     }
   };
 
-  const handleClearCompleted = async () => {
-    const completedCount = customers.filter((c) => c.status === 'completed').length;
-    if (completedCount === 0) return;
-    if (!confirm(`¿Eliminar los ${completedCount} cliente${completedCount !== 1 ? 's' : ''} completado${completedCount !== 1 ? 's' : ''}?`)) return;
-    try {
-      await clearCompletedCustomers(id);
-      setCustomers((prev) => prev.filter((c) => c.status !== 'completed'));
-    } catch (e) {
-      alert('Error al limpiar: ' + (e instanceof Error ? e.message : 'desconocido'));
-    }
+  const handleClearCompleted = () => {
+    setFilter('pending');
   };
 
   const handleDeleteSelected = async () => {
@@ -302,9 +294,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           ))}
         </div>
         <div className="flex gap-2">
-          {customers.filter((c) => c.status === 'completed').length > 0 && (
+          {customers.filter((c) => c.status === 'completed').length > 0 && filter !== 'pending' && (
             <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={handleClearCompleted}>
-              Completados ({customers.filter((c) => c.status === 'completed').length})
+              Ocultar completados
             </Button>
           )}
           {selected.size > 0 && (
