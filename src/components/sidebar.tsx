@@ -39,8 +39,8 @@ const Sidebar = ({
   const linkClass = (active: boolean) =>
     `px-3 py-2 rounded-md text-sm transition-all duration-150 ${
       active
-        ? 'font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-100'
-        : 'bg-transparent border border-transparent text-neutral-500 dark:text-neutral-400'
+        ? 'font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800'
+        : 'bg-transparent border border-transparent text-neutral-500 dark:text-neutral-400 hover:bg-white/60 dark:hover:bg-neutral-800/60 hover:border-neutral-200/50 dark:hover:border-neutral-700/50 hover:text-neutral-950 dark:hover:text-neutral-100'
     }`;
 
   return (
