@@ -338,7 +338,6 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   </td>
                   <td className="py-3 pr-4">
                     <button onClick={() => setDetail(c)} className="font-medium hover:underline text-left">{c.name ?? '—'}</button>
-                    <span className="text-xs text-neutral-400 block sm:hidden">{c.phone}</span>
                   </td>
                   <td className="py-3 pr-4 text-neutral-500 hidden sm:table-cell">{c.phone}</td>
                   <td className="py-3 pr-4 text-neutral-500 hidden md:table-cell">{c.email}</td>
@@ -356,30 +355,25 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   </td>
                   <td className="py-3 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      {c.status === 'pending' && (
+                      {c.status !== 'completed' && (
                         <Button variant="primary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
-                          {sendingId === c.id ? '...' : 'Enviar'}
-                        </Button>
-                      )}
-                      {c.status === 'invited' && (
-                        <Button variant="secondary" className="!px-3 !py-1.5 text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
-                          {sendingId === c.id ? '...' : 'Reenviar'}
+                          {sendingId === c.id ? '...' : c.status === 'invited' ? 'Reenviar mail' : 'Enviar mail'}
                         </Button>
                       )}
                       {c.status === 'completed' && (
                         <span className="text-xs text-emerald-500">Reseña hecha</span>
                       )}
-                      {c.phone && business?.googleLink && (
+                      {c.phone && business?.googleLink && c.status !== 'completed' && (
                         <a
                           href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, '')}?text=${encodeURIComponent(
                             `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${business.name}?`
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[11px] text-emerald-500 hover:text-emerald-600 transition-colors"
+                          className="text-[11px] px-2.5 py-1.5 rounded-md font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
                           title="Enviar por WhatsApp"
                         >
-                          WhatsApp
+                          Enviar WhatsApp
                         </a>
                       )}
                       <button onClick={() => handleDelete(c.id)} className="text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
