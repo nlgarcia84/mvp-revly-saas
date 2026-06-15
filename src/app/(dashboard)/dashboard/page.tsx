@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
 import GoogleReviewsSection from '@/components/google-reviews-section';
+import { ChartBar, ChartLine, ChartPie } from '@/components/ui/chart';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -21,14 +22,13 @@ export default async function DashboardPage() {
 
   const totalBusinesses = businesses.length;
 
-  // ─── Consulta agregada de clientes ──────
-  // Datos globales y semanales para analytics
   const allCustomers = await prisma.customer.findMany({
     where: { business: { userId } },
     select: { status: true, createdAt: true, rating: true },
   });
 
   const totalCustomers = allCustomers.length;
+  const pending = allCustomers.filter((c) => c.status === 'pending').length;
   const invited = allCustomers.filter((c) => c.status === 'invited').length;
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
   const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
@@ -36,22 +36,17 @@ export default async function DashboardPage() {
   const avgRating = rated.length > 0
     ? (rated.reduce((s, c) => s + (c.rating ?? 0), 0) / rated.length).toFixed(1)
     : '—';
-  const ratingDist = [5, 4, 3, 2, 1].map((n) => ({
-    stars: n,
-    count: rated.filter((c) => c.rating === n).length,
-  }));
-  const maxRatingCount = Math.max(...ratingDist.map((r) => r.count), 1);
 
-  // Filtramos los que completaron reseña
+  const ratingDist = [5, 4, 3, 2, 1].map((n) => ({
+    label: String(n),
+    value: rated.filter((c) => c.rating === n).length,
+  }));
+
   const completedCustomers = allCustomers.filter((c) => c.status === 'completed');
 
-  // ─── Datos diarios: reseñas completadas ────
-  // Muestra el total de clientes que completaron
-  // reseña en los últimos 7 días. Usamos createdAt
-  // como aproximación (no tenemos completedAt).
+  // Daily reviews (last 7 days)
   const today = new Date();
-  const days: { label: string; count: number }[] = [];
-
+  const dailyData: { label: string; value: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
@@ -60,24 +55,33 @@ export default async function DashboardPage() {
     const count = completedCustomers.filter(
       (c) => c.createdAt >= dayStart && c.createdAt < dayEnd,
     ).length;
-    days.push({
+    dailyData.push({
       label: d.toLocaleDateString('es-ES', { weekday: 'short' }),
-      count,
+      value: count,
     });
   }
 
-  const maxCount = Math.max(...days.map((d) => d.count), 1);
-
-  // ─── Datos mensuales ───────────────────────
+  // Monthly reviews
   const monthMap = new Map<string, number>();
   for (const c of completedCustomers) {
-    const key = c.createdAt.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
+    const key = c.createdAt.toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
     monthMap.set(key, (monthMap.get(key) ?? 0) + 1);
   }
-  const months = Array.from(monthMap.entries()).map(([label, count]) => ({ label, count }));
+  const monthlyData = Array.from(monthMap.entries()).map(([label, value]) => ({ label, value }));
+
+  // Status distribution for donut
+  const statusData = [
+    { name: 'Pendiente', value: pending, color: '#f59e0b' },
+    { name: 'Invitado', value: invited, color: '#3b82f6' },
+    { name: 'Completado', value: completed, color: '#10b981' },
+  ].filter((s) => s.value > 0);
+
+  // Rating colors
+  const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold mb-1 flex items-center gap-3">
           Hola, {name}
@@ -88,7 +92,7 @@ export default async function DashboardPage() {
         <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
       </div>
 
-      {/* Stats principales */}
+      {/* Main stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Negocios</span>
@@ -108,9 +112,9 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Conversión + valoraciones */}
+      {/* Charts row 1: conversion + avg rating + status donut */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Tasa de conversión */}
+        {/* Conversion rate */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversión</span>
           <div className="flex items-baseline gap-2">
@@ -125,7 +129,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Valoración media */}
+        {/* Average rating */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Valoración media</span>
           <div className="flex items-baseline gap-2">
@@ -133,57 +137,80 @@ export default async function DashboardPage() {
             <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
             <span className="text-xs text-neutral-400">({rated.length} reseña{rated.length !== 1 ? 's' : ''})</span>
           </div>
-          <div className="flex flex-col gap-1 mt-1">
-            {ratingDist.map((r) => (
-              <div key={r.stars} className="flex items-center gap-2 text-xs">
-                <span className="w-3 text-neutral-500">{r.stars}</span>
-                <span style={{ color: '#f59e0b' }}>★</span>
-                <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-400 rounded-full" style={{ width: `${(r.count / maxRatingCount) * 100}%` }} />
+          <ChartBar
+            data={ratingDist}
+            bars={ratingDist.map((r, i) => ({
+              key: 'value' as const,
+              color: ratingColors[i],
+              name: `${r.label} estrella${r.label !== '1' ? 's' : ''}`,
+            })).slice(0, 1)}
+            height={120}
+          />
+          <div className="flex flex-col gap-1">
+            {ratingDist.map((r, i) => {
+              const maxVal = Math.max(...ratingDist.map((d) => d.value), 1);
+              return (
+                <div key={r.label} className="flex items-center gap-2 text-xs">
+                  <span className="w-3 text-neutral-500">{r.label}</span>
+                  <span style={{ color: ratingColors[i] }}>★</span>
+                  <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${(r.value / maxVal) * 100}%`, backgroundColor: ratingColors[i] }} />
+                  </div>
+                  <span className="w-5 text-neutral-400 text-right">{r.value}</span>
                 </div>
-                <span className="w-5 text-neutral-400 text-right">{r.count}</span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Status distribution */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
+          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Estado clientes</span>
+          <ChartPie data={statusData} height={180} />
+          <div className="flex flex-wrap gap-3 justify-center text-xs">
+            {statusData.map((s) => (
+              <div key={s.name} className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.color }} />
+                <span className="text-neutral-500">{s.name}</span>
+                <span className="font-medium">{s.value}</span>
               </div>
             ))}
           </div>
         </div>
+      </div>
 
-        {/* Reseñas últimos 7 días */}
-        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
+      {/* Charts row 2: daily + monthly */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Daily reviews */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas (7 días)</span>
-          <div className="flex items-end gap-2 sm:gap-3 h-24">
-            {days.map((day) => (
-              <div key={day.label} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-t-md relative" style={{ height: '100%' }}>
-                  <div
-                    className="absolute bottom-0 w-full bg-neutral-950 dark:bg-neutral-100 rounded-t-md transition-all"
-                    style={{ height: `${(day.count / maxCount) * 100}%` }}
-                  />
-                </div>
-                <span className="text-[10px] text-neutral-400">{day.label}</span>
-                <span className="text-[10px] font-medium text-neutral-500">{day.count}</span>
-              </div>
-            ))}
-          </div>
+          <ChartBar
+            data={dailyData}
+            bars={[{ key: 'value', color: '#0a0a0a', name: 'Reseñas' }]}
+            height={180}
+          />
         </div>
-      </div>
 
-      {/* Reseñas por mes */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
-        <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas por mes</span>
-        <div className="flex flex-wrap gap-2">
-          {months.map((m) => (
-            <div key={m.label} className="flex items-baseline gap-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2">
-              <span className="text-sm font-medium">{m.count}</span>
-              <span className="text-xs text-neutral-400">{m.label}</span>
+        {/* Monthly reviews */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
+          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas por mes</span>
+          {monthlyData.length > 1 ? (
+            <ChartLine data={monthlyData} height={180} />
+          ) : (
+            <div className="flex items-center justify-center h-[180px] text-sm text-neutral-400">
+              {monthlyData.length === 0
+                ? 'Aún no hay reseñas completadas'
+                : 'Se necesitan al menos 2 meses para mostrar la tendencia'
+              }
             </div>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Reseñas de Google */}
+      {/* Google Reviews */}
       <GoogleReviewsSection />
 
-      {/* Lista de negocios */}
+      {/* Business list */}
       {totalBusinesses === 0 ? (
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
           <p className="text-sm text-neutral-400 text-center py-12">Crea tu primer negocio para empezar a recibir reseñas</p>
@@ -192,12 +219,13 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-neutral-500">Tus negocios</h2>
           {businesses.map((b) => (
-            <div key={b.id} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4">
+            <Link key={b.id} href={`/business/${b.id}`} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
               <div>
                 <span className="font-medium">{b.name}</span>
                 <span className="text-xs text-neutral-400 ml-3">{b._count.customers} clientes</span>
               </div>
-            </div>
+              <span className="text-xs text-neutral-300">&rarr;</span>
+            </Link>
           ))}
         </div>
       )}
