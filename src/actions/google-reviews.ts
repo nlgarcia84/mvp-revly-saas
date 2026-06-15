@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { extractPlaceId, fetchPlaceDetails } from '@/lib/google-places';
+import { extractPlaceId, fetchPlaceDetails, type GoogleReview } from '@/lib/google-places';
 
 export const getBusinessGoogleReviews = async (businessId: string) => {
   const supabase = await createClient();
