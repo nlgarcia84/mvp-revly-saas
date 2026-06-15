@@ -38,21 +38,21 @@ const ProfilePage = async () => {
             {name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-medium">{name}</p>
-            <p className="text-xs text-neutral-400">{email}</p>
+            <p className="text-sm font-medium text-neutral-500">{name}</p>
+            <p className="text-xs text-neutral-500">{email}</p>
           </div>
         </div>
 
         <div className="p-6 flex flex-col gap-5">
           <div>
             <p className="text-xs font-medium text-neutral-400 mb-1">Nombre</p>
-            <p className="text-sm text-neutral-950">{name}</p>
+            <p className="text-sm font-medium text-neutral-500">{name}</p>
           </div>
           <div>
             <p className="text-xs font-medium text-neutral-400 mb-1">
               Correo electrónico
             </p>
-            <p className="text-sm text-neutral-950">{email}</p>
+            <p className="text-sm font-medium text-neutral-500">{email}</p>
           </div>
         </div>
       </div>
