@@ -336,12 +336,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.id} className={`border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}>
-                  <td className="py-3 pr-2">
+                <tr key={c.id} onClick={() => setDetail(c)} className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}>
+                  <td className="py-3 pr-2" onClick={(e) => e.stopPropagation()}>
                     <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 accent-neutral-950" />
                   </td>
                   <td className="py-3 pr-4">
-                    <button onClick={() => setDetail(c)} className="font-medium hover:underline text-left">{c.name ?? '—'}</button>
+                    <span className="font-medium">{c.name ?? '—'}</span>
                   </td>
                   <td className="py-3 pr-4 text-neutral-500 hidden sm:table-cell">{c.phone}</td>
                   <td className="py-3 pr-4 text-neutral-500 hidden md:table-cell">{c.email}</td>
@@ -362,16 +362,16 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     )}
                   </td>
                   <td className="py-3 pr-4 whitespace-nowrap">
-                    <button onClick={() => setDetail(c)} className="text-xs">
+                    <span className="text-xs">
                       {(c as any).feedback && c.rating != null && c.rating < 4 ? (
                         <span className="font-medium text-red-600 dark:text-red-400">Sí</span>
                       ) : (
                         <span className="text-neutral-300">—</span>
                       )}
-                    </button>
+                    </span>
                   </td>
                   <td className="py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1 sm:gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2" onClick={(e) => e.stopPropagation()}>
                       {c.status !== 'completed' && (
                         <Button variant="primary" className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]" onClick={() => handleSend(c.id)} disabled={sendingId === c.id}>
                           {sendingId === c.id ? '...' : (
@@ -397,7 +397,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       )}
                     </div>
                   </td>
-                  <td className="py-3 whitespace-nowrap pl-2">
+                  <td className="py-3 whitespace-nowrap pl-2" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => handleDelete(c.id)} className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors">Eliminar</button>
                   </td>
                 </tr>
