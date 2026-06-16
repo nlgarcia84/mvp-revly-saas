@@ -449,7 +449,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       )}
 
       {/* Reseñas de Google */}
-      <GoogleReviewsSection businessId={id} />
+      <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ''} />
     </div>
   );
 };

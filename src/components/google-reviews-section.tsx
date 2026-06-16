@@ -93,7 +93,7 @@ const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => vo
   );
 };
 
-const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
+const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; googleLink?: string }) => {
   const [data, setData] = useState<GoogleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -270,7 +270,7 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                       <>
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
                         <a
-                          href={`https://www.google.com/maps/place/?q=place_id:${data.placeId}`}
+                          href={googleLink || `https://www.google.com/maps/place/?q=place_id:${data.placeId}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
