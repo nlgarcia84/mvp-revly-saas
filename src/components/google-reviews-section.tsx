@@ -113,8 +113,8 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
       await navigator.clipboard.writeText(response);
       setCopied(key);
       setTimeout(() => setCopied(null), 3000);
-    } catch {
-      alert('Error al generar respuesta');
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Error al generar respuesta');
     }
     setGenerating(null);
   };
