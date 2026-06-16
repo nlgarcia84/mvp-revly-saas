@@ -187,7 +187,7 @@ const BusinessPage = () => {
             >
               {b.image && (
                 <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                  <Image src={b.image} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                  <Image src={b.image} alt={b.name} width={40} height={40} className="object-cover w-full h-full" />
                 </div>
               )}
               <div>
