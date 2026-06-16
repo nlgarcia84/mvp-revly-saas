@@ -7,19 +7,18 @@ import { useEffect, useState } from 'react';
 // ──────────────────────────────────────────────
 // Botón de cambio de modo oscuro/claro que se
 // sincroniza con localStorage y la clase .dark
-// en <html>. No usa preferencia del sistema: por
-// defecto siempre light a menos que el usuario
-// haya elegido explícitamente dark antes.
+// en <html>. Por defecto oscuro a menos que el
+// usuario haya elegido explícitamente light.
 // ──────────────────────────────────────────────
 
 const DarkToggle = () => {
-  // Estado local: ¿está en modo oscuro?
-  const [dark, setDark] = useState(false);
+  // Estado local: ¿está en modo oscuro? Por defecto true
+  const [dark, setDark] = useState(true);
 
   // Al montar, lee el tema guardado en localStorage y lo aplica
   useEffect(() => {
     const stored = localStorage.getItem('theme');
-    const isDark = stored === 'dark';
+    const isDark = stored !== 'light';
     setDark(isDark);
     // Sincroniza la clase .dark en <html> para que Tailwind la reconozca
     document.documentElement.classList.toggle('dark', isDark);

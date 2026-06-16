@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { getBusinesses, updateBusiness } from '@/actions/business';
 import Button from '@/components/ui/button';
+import { nCard } from '@/components/ui/card';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 
@@ -57,7 +58,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6 flex flex-col gap-5">
+        <div className={`${nCard} p-6 flex flex-col gap-5`}>
           <h2 className="text-sm font-semibold">Información del negocio</h2>
 
           <div>
@@ -95,7 +96,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6 flex flex-col gap-5">
+        <div className={`${nCard} p-6 flex flex-col gap-5`}>
           <div>
             <h2 className="text-sm font-semibold mb-1">Plantilla del email</h2>
             <p className="text-xs text-neutral-400">

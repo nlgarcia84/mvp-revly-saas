@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button';
+import { nCard } from '@/components/ui/card';
 
 const plans = [
   {
@@ -75,10 +76,10 @@ export default function PricingPage() {
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className={`bg-white dark:bg-neutral-900 border rounded-xl p-6 shadow-sm flex flex-col gap-5 ${
+            className={`${nCard} p-6 flex flex-col gap-5 ${
               plan.popular
-                ? 'border-neutral-950 dark:border-neutral-100 ring-1 ring-neutral-950/10 dark:ring-neutral-100/20'
-                : 'border-neutral-200 dark:border-neutral-800'
+                ? 'ring-1 ring-neutral-950/10 dark:ring-neutral-100/20'
+                : ''
             }`}
           >
             {plan.popular && (

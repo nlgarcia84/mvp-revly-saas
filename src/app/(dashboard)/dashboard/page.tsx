@@ -3,8 +3,7 @@ import prisma from '@/lib/db';
 import Link from 'next/link';
 import { ChartLine } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
-
-const nCard = 'bg-neutral-100 dark:bg-neutral-900 rounded-2xl shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#d4d4d4] dark:shadow-[-5px_-5px_10px_#222222,5px_5px_10px_#0c0c0c]';
+import { nCard } from '@/components/ui/card';
 
 const indicator: Record<string, string> = {
   blue: 'bg-blue-500',

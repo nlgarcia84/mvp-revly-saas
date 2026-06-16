@@ -7,6 +7,7 @@ import { getCustomers, addCustomerBatch, deleteCustomer, deleteSelectedCustomers
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
 import GoogleReviewsSection from '@/components/google-reviews-section';
+import { Card } from '@/components/ui/card';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
@@ -263,18 +264,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Registrados</span>
           <span className="text-2xl sm:text-3xl font-bold">{total}</span>
-        </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        </Card>
+        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Invitados</span>
           <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
-        </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        </Card>
+        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Completados</span>
           <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
-        </div>
+        </Card>
       </div>
 
       {/* Filtros + batch */}
@@ -310,11 +311,11 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {/* Tabla */}
       {filtered.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
+        <Card neumorphic className="p-6">
           <p className="text-sm text-neutral-400 text-center py-8">
             {customers.length === 0 ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.' : 'No hay clientes con este estado.'}
           </p>
-        </div>
+        </Card>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

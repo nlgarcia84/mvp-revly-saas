@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createBusiness, getBusinesses } from '@/actions/business';
 import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
+import { nCard } from '@/components/ui/card';
 
 interface Business {
   id: string;
@@ -142,7 +143,7 @@ const BusinessPage = () => {
       )}
 
       {businesses.length === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
+        <div className={`${nCard} p-6`}>
           <p className="text-sm text-neutral-400 text-center py-12">
             Todavía no tienes negocios registrados
           </p>
@@ -150,7 +151,7 @@ const BusinessPage = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {businesses.map((b) => (
-            <div key={b.id} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4">
+            <div key={b.id} className={`${nCard} flex items-center justify-between px-5 py-4`}>
               <div>
                 <Link href={`/business/${b.id}`} className="font-medium hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors">{b.name}</Link>
                 <span className="text-xs text-neutral-400 ml-3">
