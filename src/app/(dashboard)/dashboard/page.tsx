@@ -3,7 +3,15 @@ import prisma from '@/lib/db';
 import Link from 'next/link';
 import { ChartLine } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+const nCard = 'bg-neutral-100 dark:bg-neutral-900 rounded-2xl shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#d4d4d4] dark:shadow-[-5px_-5px_10px_#222222,5px_5px_10px_#0c0c0c]';
+
+const indicator: Record<string, string> = {
+  blue: 'bg-blue-500',
+  violet: 'bg-violet-500',
+  amber: 'bg-amber-500',
+  emerald: 'bg-emerald-500',
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -74,19 +82,12 @@ export default async function DashboardPage() {
 
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
-  const accentColors = {
-    blue: 'border-l-blue-500 dark:border-l-blue-400',
-    violet: 'border-l-violet-500 dark:border-l-violet-400',
-    amber: 'border-l-amber-500 dark:border-l-amber-400',
-    emerald: 'border-l-emerald-500 dark:border-l-emerald-400',
-  };
-
   return (
     <div className="flex flex-col gap-8 sm:gap-6">
       <div>
         <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3">
           Hola, {name}
-          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
             {plan === 'free' ? 'Gratis' : 'Pro'}
           </span>
         </h1>
@@ -95,51 +96,45 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className={`border-l-4 ${accentColors.blue} flex flex-col gap-1.5 p-5`}>
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Negocios</span>
-          <span className="text-2xl sm:text-3xl font-bold">{totalBusinesses}</span>
-        </Card>
-        <Card className={`border-l-4 ${accentColors.violet} flex flex-col gap-1.5 p-5`}>
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Clientes</span>
-          <span className="text-2xl sm:text-3xl font-bold">{totalCustomers}</span>
-        </Card>
-        <Card className={`border-l-4 ${accentColors.amber} flex flex-col gap-1.5 p-5`}>
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Invitados</span>
-          <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
-        </Card>
-        <Card className={`border-l-4 ${accentColors.emerald} flex flex-col gap-1.5 p-5`}>
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Completados</span>
-          <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
-        </Card>
+        {[
+          { label: 'Negocios', value: totalBusinesses, color: 'blue' },
+          { label: 'Clientes', value: totalCustomers, color: 'violet' },
+          { label: 'Invitados', value: invited, color: 'amber' },
+          { label: 'Completados', value: completed, color: 'emerald' },
+        ].map((s) => (
+          <div key={s.label} className={`${nCard} flex flex-col gap-1.5 p-5`}>
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${indicator[s.color]}`} />
+              <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">{s.label}</span>
+            </div>
+            <span className="text-2xl sm:text-3xl font-bold">{s.value}</span>
+          </div>
+        ))}
       </div>
 
       {/* Conversion + Rating + Daily */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-4">
         {/* Conversion */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Conversión</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+        <div className={`${nCard} flex flex-col gap-4 p-5 sm:p-6`}>
+          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversión</span>
+          <div className="flex flex-col gap-3">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold">{conversionRate}%</span>
               <span className="text-xs text-neutral-400">completados / invitados</span>
             </div>
-            <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
               <div
                 className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
                 style={{ width: `${conversionRate}%` }}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Average rating */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Valoración media</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+        <div className={`${nCard} flex flex-col gap-4 p-5 sm:p-6`}>
+          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Valoración media</span>
+          <div className="flex flex-col gap-3">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold">{avgRating}</span>
               <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
@@ -155,7 +150,7 @@ export default async function DashboardPage() {
                   <div key={r.label} className="flex items-center gap-2 text-xs">
                     <span className="w-3 text-neutral-500">{r.label}</span>
                     <span style={{ color: ratingColors[i] }}>★</span>
-                    <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
                       <div className="h-full rounded-full" style={{ width: `${(r.value / maxVal) * 100}%`, backgroundColor: ratingColors[i] }} />
                     </div>
                     <span className="w-5 text-neutral-400 text-right">{r.value}</span>
@@ -164,34 +159,30 @@ export default async function DashboardPage() {
               })}
             </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Daily reviews */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Reseñas (7 días)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ChartLine
-              data={dailyData}
-              height={180}
-              color="#6366f1"
-            />
-          </CardContent>
-        </Card>
+        <div className={`${nCard} flex flex-col gap-4 p-5 sm:p-6`}>
+          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas (7 días)</span>
+          <ChartLine
+            data={dailyData}
+            height={180}
+            color="#6366f1"
+          />
+        </div>
       </div>
 
       {/* Business list */}
       {totalBusinesses === 0 ? (
-        <Card className="p-6 sm:p-8">
+        <div className={`${nCard} p-6 sm:p-8`}>
           <p className="text-sm text-neutral-400 text-center py-12">Crea tu primer negocio para empezar a recibir reseñas</p>
-        </Card>
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-neutral-500">Tus negocios</h2>
           {businesses.map((b) => (
-            <Link key={b.id} href={`/business/${b.id}`} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4 sm:py-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+            <Link key={b.id} href={`/business/${b.id}`} className={`${nCard} flex items-center justify-between px-5 py-4 sm:py-5 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:shadow-[-5px_-5px_10px_#2a2a2a,5px_5px_10px_#0a0a0a]`}>
               <div>
                 <span className="font-medium">{b.name}</span>
                 <span className="text-xs text-neutral-400 ml-3">{b._count.customers} clientes</span>
