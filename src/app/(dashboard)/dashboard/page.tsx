@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import Link from 'next/link';
 import GoogleReviewsSection from '@/components/google-reviews-section';
 import { ChartBar } from '@/components/ui/chart';
+import { getAllGoogleReviews } from '@/actions/google-reviews';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -31,15 +32,28 @@ export default async function DashboardPage() {
   const invited = allCustomers.filter((c) => c.status === 'invited').length;
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
   const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
-  const rated = allCustomers.filter((c) => c.rating != null);
-  const avgRating = rated.length > 0
-    ? (rated.reduce((s, c) => s + (c.rating ?? 0), 0) / rated.length).toFixed(1)
-    : '—';
 
-  const ratingDist = [5, 4, 3, 2, 1].map((n) => ({
-    label: String(n),
-    value: rated.filter((c) => c.rating === n).length,
-  }));
+  // Valoración media desde Google Places
+  let googleAvg: string | null = null;
+  let googleTotal = 0;
+  try {
+    const googleData = await getAllGoogleReviews();
+    if (googleData && googleData.length > 0) {
+      const ratings = googleData.map((g) => g.rating).filter((r) => r > 0);
+      if (ratings.length > 0) {
+        googleAvg = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+        googleTotal = googleData.reduce((s, g) => s + g.userRatingsTotal, 0);
+      }
+    }
+  } catch {}
+  const avgRating = googleAvg ?? '—';
+
+  const ratingDist = googleAvg
+    ? []
+    : [5, 4, 3, 2, 1].map((n) => ({
+        label: String(n),
+        value: allCustomers.filter((c) => c.status === 'completed' && c.rating === n).length,
+      }));
 
   const completedCustomers = allCustomers.filter((c) => c.status === 'completed');
 
@@ -117,8 +131,11 @@ export default async function DashboardPage() {
           <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold">{avgRating}</span>
             <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
-            <span className="text-xs text-neutral-400">({rated.length} reseña{rated.length !== 1 ? 's' : ''})</span>
+            <span className="text-xs text-neutral-400">
+              {googleAvg ? `(${googleTotal} en Google)` : `(${allCustomers.filter((c) => c.rating != null).length} reseña${allCustomers.filter((c) => c.rating != null).length !== 1 ? 's' : ''})`}
+            </span>
           </div>
+          {ratingDist.length > 0 && (
           <div className="flex flex-col gap-1">
             {ratingDist.map((r, i) => {
               const maxVal = Math.max(...ratingDist.map((d) => d.value), 1);
@@ -134,6 +151,7 @@ export default async function DashboardPage() {
               );
             })}
           </div>
+          )}
         </div>
 
         {/* Daily reviews */}
