@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
-import { ChartBar } from '@/components/ui/chart';
+import { ChartLine } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -173,9 +173,8 @@ export default async function DashboardPage() {
             <CardTitle>Reseñas (7 días)</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartBar
+            <ChartLine
               data={dailyData}
-              bars={[{ key: 'value', color: '#0a0a0a', name: 'Reseñas' }]}
               height={180}
             />
           </CardContent>
