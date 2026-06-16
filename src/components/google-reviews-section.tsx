@@ -5,6 +5,7 @@ import { getBusinessGoogleReviews } from '@/actions/google-reviews';
 import { nCard } from '@/components/ui/card';
 
 type GoogleData = {
+  placeId: string;
   name: string;
   rating: number;
   userRatingsTotal: number;
@@ -266,7 +267,17 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                       {'★'.repeat(review.rating)}
                     </span>
                     {review.rating < 4 && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
+                      <>
+                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
+                        <a
+                          href={`https://www.google.com/maps/place/?q=place_id:${data.placeId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
+                        >
+                          Responder
+                        </a>
+                      </>
                     )}
                     <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
                       {fmtDate(review.time)}

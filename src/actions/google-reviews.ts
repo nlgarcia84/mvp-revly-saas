@@ -21,7 +21,9 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
   const placeId = extractPlaceId(business.googleLink);
   if (!placeId) return null;
 
-  return fetchPlaceDetails(placeId, business.name);
+  const details = await fetchPlaceDetails(placeId, business.name);
+  if (!details) return null;
+  return { ...details, placeId };
 };
 
 export const getAllGoogleReviews = async () => {
