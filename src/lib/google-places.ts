@@ -34,10 +34,13 @@ export function extractPlaceId(url: string): string | null {
     const ftid = u.searchParams.get('ftid');
     if (ftid) return ftid;
 
-    // Format 5: google.com/maps/place/Name/@lat,lng,data=!3m...!1s0xhex:0xCID!8m2...
-    // Extract CID from the data parameter (second hex number after !1s)
+    // Format 5: google.com/maps/place/Name/@lat,lng,data=!3m...!1s...!16s/place_id!8m2...
+    // The !16s value is the real Google place_id (e.g. /g/11t6_7v1vn or ChIJ...)
     const data = u.searchParams.get('data') || u.pathname.match(/\/data=([^?]+)/)?.[1];
     if (data) {
+      const p16 = data.match(/!16s([^!]+)/)?.[1];
+      if (p16 && !/^\d+$/.test(p16)) return p16;
+      // Fallback: extract CID from !1s (second hex number)
       const cidHex = data.match(/!1s0x[0-9a-f]+:0x([0-9a-f]+)/)?.[1];
       if (cidHex) return BigInt(`0x${cidHex}`).toString();
     }
