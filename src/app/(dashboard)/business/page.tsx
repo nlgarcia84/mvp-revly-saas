@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { createBusiness, getBusinesses } from '@/actions/business';
 import QRCode from 'qrcode';
@@ -192,6 +193,11 @@ const BusinessPage = () => {
               key={b.id}
               className={`${nCard} flex items-center justify-between px-5 py-4`}
             >
+              {b.image && (
+                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                  <Image src={b.image} alt="" width={40} height={40} className="object-cover w-full h-full" />
+                </div>
+              )}
               <div>
                 <Link
                   href={`/business/${b.id}`}
