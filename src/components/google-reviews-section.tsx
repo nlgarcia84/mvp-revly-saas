@@ -94,6 +94,49 @@ const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => vo
   );
 };
 
+const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { text: string; authorName: string; placeId: string; googleLink?: string; onClose: () => void }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Respuesta para {authorName}</h3>
+            <button onClick={onClose} className="text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 text-lg leading-none">&times;</button>
+          </div>
+          <div className={`${nCard} p-4 mb-4 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto`}>
+            {text}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleCopy}
+              className="text-xs font-medium px-4 py-2 rounded-lg bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity"
+            >
+              {copied ? 'Copiado' : 'Copiar respuesta'}
+            </button>
+            <a
+              href={googleLink || `https://www.google.com/maps/place/?q=place_id:${placeId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              Ir a Google a responder
+            </a>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; googleLink?: string }) => {
   const [data, setData] = useState<GoogleData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -102,17 +145,15 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
   const [ratingFilter, setRatingFilter] = useState<'all' | 'positive' | 'negative'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
   const [generating, setGenerating] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string } | null>(null);
+  const [modalCopied, setModalCopied] = useState(false);
 
   const handleGenerate = async (review: { authorName: string; text: string; rating: number }, placeId: string) => {
     const key = `${review.authorName}|${review.text.slice(0, 20)}`;
     setGenerating(key);
-    setCopied(null);
     try {
       const response = await generateReviewResponse(review.text, data?.name ?? '', review.rating);
-      await navigator.clipboard.writeText(response);
-      setCopied(key);
-      setTimeout(() => setCopied(null), 3000);
+      setResponseModal({ text: response, authorName: review.authorName, placeId });
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Error al generar respuesta');
     }
@@ -295,20 +336,12 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                     {review.rating < 4 && (
                       <>
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
-                        <a
-                          href={googleLink || `https://www.google.com/maps/place/?q=place_id:${data.placeId}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors"
-                        >
-                          Responder
-                        </a>
                         <button
                           onClick={() => handleGenerate(review, data.placeId)}
                           disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
-                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-colors disabled:opacity-50"
+                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
                         >
-                          {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? '...' : copied === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Copiado' : 'Generar'}
+                          {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
                         </button>
                       </>
                     )}
