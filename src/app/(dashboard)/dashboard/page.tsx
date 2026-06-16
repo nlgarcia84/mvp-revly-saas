@@ -82,9 +82,9 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 sm:gap-6">
       <div>
-        <h1 className="text-2xl font-semibold mb-1 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3">
           Hola, {name}
           <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
             {plan === 'free' ? 'Gratis' : 'Pro'}
@@ -94,27 +94,27 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={`border-l-4 ${accentColors.blue} flex flex-col gap-1 p-4 sm:p-5`}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className={`border-l-4 ${accentColors.blue} flex flex-col gap-1.5 p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Negocios</span>
           <span className="text-2xl sm:text-3xl font-bold">{totalBusinesses}</span>
         </Card>
-        <Card className={`border-l-4 ${accentColors.violet} flex flex-col gap-1 p-4 sm:p-5`}>
+        <Card className={`border-l-4 ${accentColors.violet} flex flex-col gap-1.5 p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Clientes</span>
           <span className="text-2xl sm:text-3xl font-bold">{totalCustomers}</span>
         </Card>
-        <Card className={`border-l-4 ${accentColors.amber} flex flex-col gap-1 p-4 sm:p-5`}>
+        <Card className={`border-l-4 ${accentColors.amber} flex flex-col gap-1.5 p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Invitados</span>
           <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
         </Card>
-        <Card className={`border-l-4 ${accentColors.emerald} flex flex-col gap-1 p-4 sm:p-5`}>
+        <Card className={`border-l-4 ${accentColors.emerald} flex flex-col gap-1.5 p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Completados</span>
           <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
         </Card>
       </div>
 
       {/* Conversion + Rating + Daily */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-4">
         {/* Conversion */}
         <Card>
           <CardHeader>
@@ -184,14 +184,14 @@ export default async function DashboardPage() {
 
       {/* Business list */}
       {totalBusinesses === 0 ? (
-        <Card className="p-6">
+        <Card className="p-6 sm:p-8">
           <p className="text-sm text-neutral-400 text-center py-12">Crea tu primer negocio para empezar a recibir reseñas</p>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-neutral-500">Tus negocios</h2>
           {businesses.map((b) => (
-            <Link key={b.id} href={`/business/${b.id}`} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+            <Link key={b.id} href={`/business/${b.id}`} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm flex items-center justify-between px-5 py-4 sm:py-5 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
               <div>
                 <span className="font-medium">{b.name}</span>
                 <span className="text-xs text-neutral-400 ml-3">{b._count.customers} clientes</span>
