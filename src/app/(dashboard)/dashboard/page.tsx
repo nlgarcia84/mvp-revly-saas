@@ -36,9 +36,10 @@ export default async function DashboardPage() {
   });
 
   const totalCustomers = allCustomers.length;
+  const pending = allCustomers.filter((c) => c.status === 'pending').length;
   const invited = allCustomers.filter((c) => c.status === 'invited').length;
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
-  const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
+  const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : null;
 
   let googleAvg: string | null = null;
   let googleTotal = 0;
@@ -118,15 +119,30 @@ export default async function DashboardPage() {
           <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversión</span>
           <div className="flex flex-col gap-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold">{conversionRate}%</span>
-              <span className="text-xs text-neutral-400">completados / invitados</span>
+              {conversionRate !== null ? (
+                <>
+                  <span className="text-4xl font-bold">{conversionRate}%</span>
+                  <span className="text-xs text-neutral-400">{completed} completados / {invited} invitados</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-4xl font-bold text-neutral-300">&mdash;</span>
+                  <span className="text-xs text-neutral-400">
+                    {completed > 0
+                      ? `${completed} completados sin invitación`
+                      : 'Envía tu primera invitación'}
+                  </span>
+                </>
+              )}
             </div>
-            <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
-              <div
-                className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
-                style={{ width: `${conversionRate}%` }}
-              />
-            </div>
+            {conversionRate !== null && (
+              <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
+                <div
+                  className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
+                  style={{ width: `${conversionRate}%` }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
