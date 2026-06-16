@@ -57,6 +57,7 @@ model Business {
   id            String     @id @default(uuid())
   name          String
   googleLink    String?
+  image         String?
   slug          String?   @unique
   emailTemplate String?
   userId        String
