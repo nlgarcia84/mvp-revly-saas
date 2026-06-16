@@ -2,6 +2,7 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 // ──────────────────────────────────────────────
 // slugify
@@ -186,4 +187,53 @@ export const updateBusiness = async (
       emailTemplate: data.emailTemplate || null,
     },
   });
+};
+
+export const uploadBusinessImage = async (businessId: string, formData: FormData) => {
+  const userId = await getUserId();
+  if (!userId) throw new Error('No autenticado');
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  const file = formData.get('file') as File | null;
+  if (!file) throw new Error('No se recibió ningún archivo');
+
+  const allowed = ['image/png', 'image/jpeg', 'image/webp'];
+  if (!allowed.includes(file.type)) {
+    throw new Error('Formato no permitido. Usa PNG, JPEG o WebP');
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('El archivo no puede superar los 5MB');
+  }
+
+  const ext = file.type.split('/')[1];
+  const fileName = `${businessId}/${Date.now()}.${ext}`;
+
+  const supabase = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error: uploadError } = await supabase.storage
+    .from('business-logos')
+    .upload(fileName, file, { upsert: true });
+
+  if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`);
+
+  const { data: urlData } = supabase.storage
+    .from('business-logos')
+    .getPublicUrl(fileName);
+
+  const imageUrl = urlData.publicUrl;
+
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { image: imageUrl },
+  });
+
+  return imageUrl;
 };

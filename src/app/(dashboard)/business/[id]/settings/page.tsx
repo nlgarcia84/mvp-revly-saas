@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getBusinesses, updateBusiness } from '@/actions/business';
+import { getBusinesses, updateBusiness, uploadBusinessImage } from '@/actions/business';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 
@@ -14,7 +15,13 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [business, setBusiness] = useState<Business | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
-  const [form, setForm] = useState({ name: '', googleLink: '', slug: '', emailTemplate: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [form, setForm] = useState({
+    name: '',
+    googleLink: '',
+    slug: '',
+    emailTemplate: '',
+  });
 
   useEffect(() => {
     getBusinesses().then((list) => {
@@ -37,6 +44,12 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setMsg('');
     try {
       await updateBusiness(id, form);
+      if (logoFile) {
+        const fd = new FormData();
+        fd.append('file', logoFile);
+        await uploadBusinessImage(id, fd);
+      }
+      setLogoFile(null);
       setMsg('Guardado correctamente');
     } catch (err: any) {
       setMsg(err.message);
@@ -53,7 +66,9 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
         >
           &larr; Volver a clientes
         </button>
-        <h1 className="text-xl sm:text-2xl font-semibold mb-1">Configuración</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold mb-1">
+          Configuración
+        </h1>
         <p className="text-xs sm:text-sm text-neutral-500">{business?.name}</p>
       </div>
 
@@ -62,7 +77,9 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <h2 className="text-sm font-semibold">Información del negocio</h2>
 
           <div>
-            <label className="block text-xs font-medium mb-[6px] text-neutral-500">Nombre</label>
+            <label className="block text-xs font-medium mb-[6px] text-neutral-500">
+              Nombre
+            </label>
             <input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -84,7 +101,9 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-[6px] text-neutral-500">Slug (URL pública)</label>
+            <label className="block text-xs font-medium mb-[6px] text-neutral-500">
+              Slug (URL pública)
+            </label>
             <div className="flex items-center gap-2">
               <span className="text-sm text-neutral-400">revly.es/</span>
               <input
@@ -94,18 +113,50 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
               />
             </div>
           </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-[6px] text-neutral-500">
+              Logo del negocio
+            </label>
+            {business?.image && !logoFile && (
+              <div className="w-16 h-16 rounded-lg overflow-hidden mb-3">
+                <Image src={business.image} alt={business.name} width={64} height={64} className="object-cover w-full h-full" />
+              </div>
+            )}
+            <label className="flex items-center gap-2 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-400 bg-white dark:bg-neutral-800 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors">
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)} />
+              <svg
+                className="w-4 h-4 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>{logoFile ? logoFile.name : 'Seleccionar archivo'}</span>
+            </label>
+          </div>
         </div>
 
         <div className={`${nCard} p-6 flex flex-col gap-5`}>
           <div>
             <h2 className="text-sm font-semibold mb-1">Plantilla del email</h2>
             <p className="text-xs text-neutral-400">
-            Puedes usar las variables: {'{'}nombre{'}'}, {'{'}negocio{'}'}, {'{'}link{'}'}, {'{'}confirmar{'}'}. Si está vacío se usa el mensaje por defecto.
+              Puedes usar las variables: {'{'}nombre{'}'}, {'{'}negocio{'}'},{' '}
+              {'{'}link{'}'}, {'{'}confirmar{'}'}. Si está vacío se usa el
+              mensaje por defecto.
             </p>
           </div>
           <textarea
             value={form.emailTemplate}
-            onChange={(e) => setForm({ ...form, emailTemplate: e.target.value })}
+            onChange={(e) =>
+              setForm({ ...form, emailTemplate: e.target.value })
+            }
             rows={6}
             className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 resize-y font-mono"
             placeholder={`<h1>Hola, {{nombre}}</h1>\n<p>Gracias por visitar {{negocio}}...</p>`}
@@ -113,10 +164,14 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
 
         {msg && (
-          <p className={`text-sm ${msg === 'Guardado correctamente' ? 'text-emerald-500' : 'text-red-500'}`}>{msg}</p>
+          <p
+            className={`text-sm ${msg === 'Guardado correctamente' ? 'text-emerald-500' : 'text-red-500'}`}
+          >
+            {msg}
+          </p>
         )}
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center">
           <Button type="submit" disabled={saving}>
             {saving ? 'Guardando...' : 'Guardar cambios'}
           </Button>
