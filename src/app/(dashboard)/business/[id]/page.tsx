@@ -778,6 +778,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </>
       )}
+      </div>
 
       {/* Reseñas de Google */}
       <GoogleReviewsSection
