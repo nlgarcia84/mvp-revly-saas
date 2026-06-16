@@ -336,7 +336,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </thead>
             <tbody>
               {filtered.map((c) => (
-                <tr key={c.id} className={`border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse bg-red-50 dark:bg-red-950/20' : ''}`}>
+                <tr key={c.id} className={`border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}>
                   <td className="py-3 pr-2">
                     <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggleSelect(c.id)} className="w-4 h-4 accent-neutral-950" />
                   </td>
