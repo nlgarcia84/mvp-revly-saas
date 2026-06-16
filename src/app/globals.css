@@ -9,19 +9,10 @@
 
 @keyframes pulse-bg {
   0%, 100% {
-    background-color: rgba(239, 68, 68, 0.05);
+    background-color: color-mix(in srgb, rgb(239 68 68), transparent 90%);
   }
   50% {
-    background-color: rgba(239, 68, 68, 0.15);
-  }
-}
-
-.dark @keyframes pulse-bg {
-  0%, 100% {
-    background-color: rgba(239, 68, 68, 0.08);
-  }
-  50% {
-    background-color: rgba(239, 68, 68, 0.2);
+    background-color: color-mix(in srgb, rgb(239 68 68), transparent 75%);
   }
 }
 
