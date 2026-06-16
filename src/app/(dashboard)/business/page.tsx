@@ -8,14 +8,7 @@ import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 
-interface Business {
-  id: string;
-  name: string;
-  slug: string | null;
-  googleLink: string | null;
-  image: string | null;
-  _count: { customers: number };
-}
+type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 
 // ──────────────────────────────────────────────
 // BusinessQR
