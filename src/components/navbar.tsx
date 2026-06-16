@@ -94,7 +94,7 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
         <form action={signOut}>
           <button
             type="submit"
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+            className="text-xs px-3 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
           >
             Cerrar sesión
           </button>
