@@ -114,7 +114,7 @@ const BusinessPage = () => {
             <h2 className="text-lg font-semibold mb-6">Crear negocio</h2>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
-                <label className="block text-xs font-bold mb-[6px] text-neutral-200">
+                <label className="block text-xs font-bold mb-[6px] text-neutral-500 dark:text-neutral-400">
                   Nombre del negocio
                 </label>
                 <input
@@ -126,7 +126,7 @@ const BusinessPage = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold mb-[6px] text-neutral-200">
+                <label className="block text-xs font-bold mb-[6px] text-neutral-500 dark:text-neutral-400">
                   Enlace de Google Reviews
                 </label>
                 <input
@@ -139,14 +139,28 @@ const BusinessPage = () => {
                 />
               </div>
 
-              <label className="block text-xs font-bold mb-[6px] text-neutral-500 dark:text-neutral-400">
-                Foto del negocio
-              </label>
-              <label className="flex items-center gap-2 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-400 bg-white dark:bg-neutral-800 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors">
-                <input type="file" accept="image/*" className="hidden" />
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span>Seleccionar archivo</span>
-              </label>
+              <div>
+                <label className="block text-xs font-bold mb-[6px] text-neutral-500 dark:text-neutral-400">
+                  Logo del negocio
+                </label>
+                <label className="flex items-center gap-2 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-400 bg-white dark:bg-neutral-800 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors">
+                  <input type="file" accept="image/*" className="hidden" />
+                  <svg
+                    className="w-4 h-4 shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  <span>Seleccionar archivo</span>
+                </label>
+              </div>
 
               <div className="flex gap-2 justify-end mt-2">
                 <Button
