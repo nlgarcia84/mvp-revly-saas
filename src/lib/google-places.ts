@@ -42,7 +42,8 @@ export function extractPlaceId(url: string): string | null {
       const p16 = raw.match(/!16s([^!]+)/)?.[1];
       if (p16) {
         const clean = p16.replace(/^\//, '');
-        if (/^(ChIJ|g\/)/.test(clean)) return clean;
+        if (/^ChIJ/.test(clean)) return clean;
+      // g/... format is not accepted by the legacy Places API → fall through to CID
       }
       // Fallback: extract CID from !1s (second hex number)
       const cidHex = raw.match(/!1s0x[0-9a-f]+:0x([0-9a-f]+)/)?.[1];
@@ -80,7 +81,9 @@ async function resolvePlaceId(
     if (res.ok) {
       const data = await res.json();
       if (data.status === 'OK' && data.results?.length > 0) {
-        return data.results[0].place_id;
+        const pid = data.results[0].place_id;
+        if (/^ChIJ/.test(pid)) return pid;
+        return null; // g/... format not accepted by legacy API
       }
     }
     return null; // Could not resolve CID → no results
@@ -97,7 +100,7 @@ export async function fetchPlaceDetails(
   if (!apiKey) throw new Error('Falta GOOGLE_MAPS_API_KEY en .env.local');
 
   const resolved = await resolvePlaceId(placeId, queryName, url);
-  if (!resolved) return null;
+  if (!resolved || !/^ChIJ/.test(resolved)) return null;
   const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
 
   const res = await fetch(apiUrl);
