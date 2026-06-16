@@ -397,7 +397,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Estadísticas</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Resumen de clientes registrados, invitaciones enviadas y reseñas completadas.</p>
+        </div>
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
             Registrados
@@ -416,9 +421,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </span>
           <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
         </Card>
+        </div>
       </div>
 
       {/* Filtros + batch */}
+      <div className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Clientes</h2>
+          <p className="text-xs text-neutral-400 mt-0.5">Gestiona los clientes de tu negocio. Selecciona varios para enviar invitaciones en lote o eliminar.</p>
+        </div>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex gap-2">
           {['all', 'pending', 'invited', 'completed'].map((f) => (
