@@ -176,6 +176,7 @@ export default async function DashboardPage() {
             <ChartLine
               data={dailyData}
               height={180}
+              color="#6366f1"
             />
           </CardContent>
         </Card>
