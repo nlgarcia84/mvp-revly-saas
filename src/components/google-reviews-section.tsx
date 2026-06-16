@@ -27,6 +27,13 @@ type BadReview = {
 
 const seenKey = (businessId: string) => `gr_seen_${businessId}`;
 
+const fmtDate = (ts: number) =>
+  new Date(ts * 1000).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
 const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => void }) => {
   const [visible, setVisible] = useState(false);
 
@@ -90,7 +97,8 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [alerts, setAlerts] = useState<BadReview[]>([]);
-  const [reviewFilter, setReviewFilter] = useState<'all' | 'positive' | 'negative'>('all');
+  const [ratingFilter, setRatingFilter] = useState<'all' | 'positive' | 'negative'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -127,6 +135,16 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
   useEffect(() => {
     load();
   }, [load]);
+
+  const now = Date.now() / 1000;
+  const filtered = data?.reviews.filter((r) => {
+    if (ratingFilter === 'positive' && r.rating < 4) return false;
+    if (ratingFilter === 'negative' && r.rating >= 4) return false;
+    if (dateFilter === '1m' && now - r.time > 2_592_000) return false;
+    if (dateFilter === '3m' && now - r.time > 7_776_000) return false;
+    if (dateFilter === '6m' && now - r.time > 15_552_000) return false;
+    return true;
+  }) ?? [];
 
   if (loading) {
     return (
@@ -180,18 +198,32 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
           </button>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(['all', 'positive', 'negative'] as const).map((f) => (
             <button
               key={f}
-              onClick={() => setReviewFilter(f)}
+              onClick={() => setRatingFilter(f)}
               className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-                reviewFilter === f
+                ratingFilter === f
                   ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
               }`}
             >
               {f === 'all' ? 'Todas' : f === 'positive' ? 'Positivas' : 'Críticas'}
+            </button>
+          ))}
+          <span className="w-px bg-neutral-200 dark:bg-neutral-700 mx-1" />
+          {(['all', '1m', '3m', '6m'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setDateFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                dateFilter === f
+                  ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+              }`}
+            >
+              {f === 'all' ? 'Siempre' : f === '1m' ? '1 mes' : f === '3m' ? '3 meses' : '6 meses'}
             </button>
           ))}
         </div>
@@ -209,17 +241,12 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                 </span>
               </div>
             </div>
+            <span className="text-xs text-neutral-400">{filtered.length} mostradas</span>
           </div>
 
-          {data.reviews.length > 0 && (
+          {filtered.length > 0 ? (
             <div className="flex flex-col gap-3">
-              {data.reviews
-                .filter((r) => {
-                  if (reviewFilter === 'positive') return r.rating >= 4;
-                  if (reviewFilter === 'negative') return r.rating < 4;
-                  return true;
-                })
-                .slice(0, 5).map((review, i) => (
+              {filtered.slice(0, 10).map((review, i) => (
                 <div
                   key={i}
                   className="border-t border-neutral-200 dark:border-neutral-800 pt-3"
@@ -241,7 +268,10 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                     {review.rating < 4 && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
                     )}
-                    <span className="text-xs text-neutral-400 ml-auto">
+                    <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
+                      {fmtDate(review.time)}
+                    </span>
+                    <span className="text-xs text-neutral-400 ml-1">
                       {review.relativeTimeDescription}
                     </span>
                   </div>
@@ -253,6 +283,8 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-neutral-400 text-center py-6">No hay reseñas con estos filtros</p>
           )}
         </div>
       </div>
