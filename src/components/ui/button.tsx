@@ -8,9 +8,9 @@ type Variant = 'primary' | 'secondary';
 
 const variantClass: Record<Variant, string> = {
   primary:
-    'border-neutral-950 bg-neutral-950 text-white hover:bg-neutral-800 hover:border-neutral-800',
+    'border-neutral-950 bg-neutral-950 text-white hover:bg-neutral-800 hover:border-neutral-800 dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-300 dark:hover:border-neutral-300',
   secondary:
-    'border-neutral-200 bg-white text-neutral-950 hover:bg-neutral-100 hover:border-neutral-300',
+    'border-neutral-200 bg-white text-neutral-950 hover:bg-neutral-100 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700',
 };
 
 // ─── Clases base comunes a todas las variantes ───
