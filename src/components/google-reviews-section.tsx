@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { getBusinessGoogleReviews } from '@/actions/google-reviews';
+import { generateReviewResponse } from '@/actions/generate-response';
 import { nCard } from '@/components/ui/card';
 
 type GoogleData = {
@@ -100,6 +101,23 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
   const [alerts, setAlerts] = useState<BadReview[]>([]);
   const [ratingFilter, setRatingFilter] = useState<'all' | 'positive' | 'negative'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const handleGenerate = async (review: { authorName: string; text: string; rating: number }, placeId: string) => {
+    const key = `${review.authorName}|${review.text.slice(0, 20)}`;
+    setGenerating(key);
+    setCopied(null);
+    try {
+      const response = await generateReviewResponse(review.text, data?.name ?? '', review.rating);
+      await navigator.clipboard.writeText(response);
+      setCopied(key);
+      setTimeout(() => setCopied(null), 3000);
+    } catch {
+      alert('Error al generar respuesta');
+    }
+    setGenerating(null);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -285,6 +303,13 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                         >
                           Responder
                         </a>
+                        <button
+                          onClick={() => handleGenerate(review, data.placeId)}
+                          disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
+                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-colors disabled:opacity-50"
+                        >
+                          {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? '...' : copied === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Copiado' : 'Generar'}
+                        </button>
                       </>
                     )}
                     <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
