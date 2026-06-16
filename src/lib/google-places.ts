@@ -65,7 +65,7 @@ async function resolvePlaceId(
   placeId: string,
   queryName?: string,
   url?: string,
-): Promise<string> {
+): Promise<string | null> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
   // Numeric CID → Text Search with location bias if available
   if (/^\d+$/.test(placeId) && queryName) {
@@ -83,6 +83,7 @@ async function resolvePlaceId(
         return data.results[0].place_id;
       }
     }
+    return null; // Could not resolve CID → no results
   }
   return placeId;
 }
@@ -96,6 +97,7 @@ export async function fetchPlaceDetails(
   if (!apiKey) throw new Error('Falta GOOGLE_MAPS_API_KEY en .env.local');
 
   const resolved = await resolvePlaceId(placeId, queryName, url);
+  if (!resolved) return null;
   const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
 
   const res = await fetch(apiUrl);
