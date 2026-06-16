@@ -34,19 +34,45 @@ export function extractPlaceId(url: string): string | null {
     const ftid = u.searchParams.get('ftid');
     if (ftid) return ftid;
 
+    // Format 5: google.com/maps/place/Name/@lat,lng,data=!3m...!1s0xhex:0xCID!8m2...
+    // Extract CID from the data parameter (second hex number after !1s)
+    const data = u.searchParams.get('data') || u.pathname.match(/\/data=([^?]+)/)?.[1];
+    if (data) {
+      const cidHex = data.match(/!1s0x[0-9a-f]+:0x([0-9a-f]+)/)?.[1];
+      if (cidHex) return BigInt(`0x${cidHex}`).toString();
+    }
+
     return null;
   } catch {
     return null;
   }
 }
 
+async function resolvePlaceId(placeId: string, queryName?: string): Promise<string> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
+  // If it's a numeric CID, use Text Search to find the actual place_id
+  if (/^\d+$/.test(placeId) && queryName) {
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(queryName)}&key=${apiKey}`;
+    const res = await fetch(searchUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === 'OK' && data.results?.length > 0) {
+        return data.results[0].place_id;
+      }
+    }
+  }
+  return placeId;
+}
+
 export async function fetchPlaceDetails(
   placeId: string,
+  queryName?: string,
 ): Promise<PlaceDetails | null> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) throw new Error('Falta GOOGLE_MAPS_API_KEY en .env.local');
 
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
+  const resolved = await resolvePlaceId(placeId, queryName);
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
 
   const res = await fetch(url);
   if (!res.ok) return null;
