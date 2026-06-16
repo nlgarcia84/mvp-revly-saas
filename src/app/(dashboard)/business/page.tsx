@@ -13,6 +13,7 @@ interface Business {
   name: string;
   slug: string | null;
   googleLink: string | null;
+  image: string | null;
   _count: { customers: number };
 }
 
