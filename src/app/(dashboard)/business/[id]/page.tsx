@@ -6,6 +6,7 @@ import { getBusinesses } from '@/actions/business';
 import { getCustomers, addCustomerBatch, deleteCustomer, deleteSelectedCustomers } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
+import GoogleReviewsSection from '@/components/google-reviews-section';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
@@ -289,7 +290,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
               }`}
             >
-              {f === 'all' ? 'Todos' : { pending: 'Pendiente', invited: 'Invitado', completed: 'Completado' }[f] ?? f}
+              {f === 'all' ? 'Todos' : { pending: 'P Pendiente', invited: 'I Invitado', completed: 'C Completado' }[f] ?? f}
             </button>
           ))}
         </div>
@@ -445,6 +446,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </>
       )}
+
+      {/* Reseñas de Google */}
+      <GoogleReviewsSection businessId={id} />
     </div>
   );
 };

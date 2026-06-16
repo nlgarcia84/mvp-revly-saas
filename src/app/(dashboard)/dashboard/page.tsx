@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import Link from 'next/link';
-import GoogleReviewsSection from '@/components/google-reviews-section';
 import { ChartBar } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
 
@@ -164,9 +163,6 @@ export default async function DashboardPage() {
           />
         </div>
       </div>
-
-      {/* Google Reviews */}
-      <GoogleReviewsSection />
 
       {/* Business list */}
       {totalBusinesses === 0 ? (
