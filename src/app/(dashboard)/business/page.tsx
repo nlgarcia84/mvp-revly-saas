@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createBusiness, getBusinesses } from '@/actions/business';
@@ -69,15 +69,13 @@ const BusinessPage = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
 
-  // Carga la lista de negocios al montar el componente
-  // y después de crear uno nuevo.
-  const load = async () => {
+  const load = useCallback(async () => {
     setBusinesses(await getBusinesses());
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   // Al enviar el formulario: crea el negocio en BD,
   // resetea el formulario, cierra el modal y recarga
