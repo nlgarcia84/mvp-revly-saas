@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createBusiness, getBusinesses, uploadBusinessImage } from '@/actions/business';
+import { createBusiness, getBusinesses } from '@/actions/business';
 import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
@@ -61,7 +61,6 @@ const BusinessPage = () => {
   const [open, setOpen] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
-  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const load = useCallback(async () => {
     setBusinesses(await getBusinesses());
@@ -76,14 +75,8 @@ const BusinessPage = () => {
   // la lista para mostrar el nuevo slug y QR.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const business = await createBusiness(form);
-    if (logoFile) {
-      const fd = new FormData();
-      fd.append('file', logoFile);
-      await uploadBusinessImage(business.id, fd).catch(() => {});
-    }
+    await createBusiness(form);
     setForm({ name: '', googleLink: '' });
-    setLogoFile(null);
     setOpen(false);
     await load();
   };
@@ -144,7 +137,7 @@ const BusinessPage = () => {
                   Logo del negocio
                 </label>
                 <label className="flex items-center gap-2 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-400 bg-white dark:bg-neutral-800 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors">
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)} />
+                  <input type="file" accept="image/*" className="hidden" />
                   <svg
                     className="w-4 h-4 shrink-0"
                     fill="none"
@@ -158,7 +151,7 @@ const BusinessPage = () => {
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>{logoFile ? logoFile.name : 'Seleccionar archivo'}</span>
+                  <span>Seleccionar archivo</span>
                 </label>
               </div>
 
@@ -188,51 +181,54 @@ const BusinessPage = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {businesses.map((b) => (
-            <div
-              key={b.id}
-              className={`${nCard} flex items-center justify-between px-5 py-4`}
+            <Link
+              href={`/business/${b.id}`}
+              className="font-medium hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
             >
-              {b.image && (
-                <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                  <Image
-                    src={b.image}
-                    alt={b.name}
-                    width={40}
-                    height={40}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              )}
               <div>
-                <Link
-                  href={`/business/${b.id}`}
-                  className="font-medium hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                <div
+                  key={b.id}
+                  className={`${nCard} flex items-center justify-between px-5 py-4`}
                 >
-                  {b.name}
-                </Link>
-                <span className="text-xs text-neutral-400 ml-3">
-                  {b._count.customers} clientes
-                </span>
-                {b.slug && (
-                  <a
-                    href={`/${b.slug}`}
-                    target="_blank"
-                    className="block text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline mt-1"
-                  >
-                    revly.es/{b.slug}
-                  </a>
-                )}
+                  <div className="flex items-center gap-3 min-w-0">
+                    {b.image && (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                        <Image
+                          src={b.image}
+                          alt={b.name}
+                          width={40}
+                          height={40}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <span className="font-medium truncate block">
+                        {b.name}
+                      </span>
+                      {b.slug && (
+                        <a
+                          href={`/${b.slug}`}
+                          target="_blank"
+                          className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline truncate block"
+                        >
+                          revly.es/{b.slug}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Link
+                      href={`/business/${b.id}/settings`}
+                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
+                    >
+                      Configurar
+                    </Link>
+                    <BusinessQR slug={b.slug ?? ''} />
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/business/${b.id}/settings`}
-                  className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
-                >
-                  Configurar
-                </Link>
-                <BusinessQR slug={b.slug ?? ''} />
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
