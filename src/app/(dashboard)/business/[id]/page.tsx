@@ -238,7 +238,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const completed = customers.filter((c) => c.status === 'completed').length;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 sm:gap-10">
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
         <div>
