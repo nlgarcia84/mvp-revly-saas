@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import Link from 'next/link';
 import { ChartBar } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -32,7 +33,6 @@ export default async function DashboardPage() {
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
   const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : 0;
 
-  // Valoración media desde Google Places
   let googleAvg: string | null = null;
   let googleTotal = 0;
   try {
@@ -56,7 +56,6 @@ export default async function DashboardPage() {
 
   const completedCustomers = allCustomers.filter((c) => c.status === 'completed');
 
-  // Daily reviews (last 7 days)
   const today = new Date();
   const dailyData: { label: string; value: number }[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -75,6 +74,13 @@ export default async function DashboardPage() {
 
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
+  const accentColors = {
+    blue: 'border-l-blue-500 dark:border-l-blue-400',
+    violet: 'border-l-violet-500 dark:border-l-violet-400',
+    amber: 'border-l-amber-500 dark:border-l-amber-400',
+    emerald: 'border-l-emerald-500 dark:border-l-emerald-400',
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -89,86 +95,98 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        <Card className={`border-l-4 ${accentColors.blue} flex flex-col gap-1 p-4 sm:p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Negocios</span>
           <span className="text-2xl sm:text-3xl font-bold">{totalBusinesses}</span>
-        </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        </Card>
+        <Card className={`border-l-4 ${accentColors.violet} flex flex-col gap-1 p-4 sm:p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Clientes</span>
           <span className="text-2xl sm:text-3xl font-bold">{totalCustomers}</span>
-        </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        </Card>
+        <Card className={`border-l-4 ${accentColors.amber} flex flex-col gap-1 p-4 sm:p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Invitados</span>
           <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
-        </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 sm:p-5 shadow-sm flex flex-col gap-0.5">
+        </Card>
+        <Card className={`border-l-4 ${accentColors.emerald} flex flex-col gap-1 p-4 sm:p-5`}>
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">Completados</span>
           <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
-        </div>
+        </Card>
       </div>
 
       {/* Conversion + Rating + Daily */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Conversion */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
-          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Conversión</span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold">{conversionRate}%</span>
-            <span className="text-xs text-neutral-400">completados / invitados</span>
-          </div>
-          <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
-              style={{ width: `${conversionRate}%` }}
-            />
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Conversión</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold">{conversionRate}%</span>
+              <span className="text-xs text-neutral-400">completados / invitados</span>
+            </div>
+            <div className="w-full h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
+                style={{ width: `${conversionRate}%` }}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Average rating */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-3">
-          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Valoración media</span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-bold">{avgRating}</span>
-            <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
-            <span className="text-xs text-neutral-400">
-              {googleAvg ? `(${googleTotal} en Google)` : `(${allCustomers.filter((c) => c.rating != null).length} reseña${allCustomers.filter((c) => c.rating != null).length !== 1 ? 's' : ''})`}
-            </span>
-          </div>
-          {ratingDist.length > 0 && (
-          <div className="flex flex-col gap-1">
-            {ratingDist.map((r, i) => {
-              const maxVal = Math.max(...ratingDist.map((d) => d.value), 1);
-              return (
-                <div key={r.label} className="flex items-center gap-2 text-xs">
-                  <span className="w-3 text-neutral-500">{r.label}</span>
-                  <span style={{ color: ratingColors[i] }}>★</span>
-                  <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${(r.value / maxVal) * 100}%`, backgroundColor: ratingColors[i] }} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Valoración media</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-4xl font-bold">{avgRating}</span>
+              <span className="text-lg" style={{ color: '#f59e0b' }}>{'★'.repeat(Math.round(Number(avgRating) || 0))}</span>
+              <span className="text-xs text-neutral-400">
+                {googleAvg ? `(${googleTotal} en Google)` : `(${allCustomers.filter((c) => c.rating != null).length} reseña${allCustomers.filter((c) => c.rating != null).length !== 1 ? 's' : ''})`}
+              </span>
+            </div>
+            {ratingDist.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {ratingDist.map((r, i) => {
+                const maxVal = Math.max(...ratingDist.map((d) => d.value), 1);
+                return (
+                  <div key={r.label} className="flex items-center gap-2 text-xs">
+                    <span className="w-3 text-neutral-500">{r.label}</span>
+                    <span style={{ color: ratingColors[i] }}>★</span>
+                    <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${(r.value / maxVal) * 100}%`, backgroundColor: ratingColors[i] }} />
+                    </div>
+                    <span className="w-5 text-neutral-400 text-right">{r.value}</span>
                   </div>
-                  <span className="w-5 text-neutral-400 text-right">{r.value}</span>
-                </div>
-              );
-            })}
-          </div>
-          )}
-        </div>
+                );
+              })}
+            </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Daily reviews */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5 sm:p-6 shadow-sm flex flex-col gap-4">
-          <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Reseñas (7 días)</span>
-          <ChartBar
-            data={dailyData}
-            bars={[{ key: 'value', color: '#0a0a0a', name: 'Reseñas' }]}
-            height={180}
-          />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Reseñas (7 días)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartBar
+              data={dailyData}
+              bars={[{ key: 'value', color: '#0a0a0a', name: 'Reseñas' }]}
+              height={180}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Business list */}
       {totalBusinesses === 0 ? (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-6 shadow-sm">
+        <Card className="p-6">
           <p className="text-sm text-neutral-400 text-center py-12">Crea tu primer negocio para empezar a recibir reseñas</p>
-        </div>
+        </Card>
       ) : (
         <div className="flex flex-col gap-2">
           <h2 className="text-sm font-medium text-neutral-500">Tus negocios</h2>
