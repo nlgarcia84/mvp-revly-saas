@@ -357,7 +357,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2.5 sm:gap-3">
           <Button
             variant="secondary"
             className="!px-3 !py-1.5 text-[11px]"
@@ -397,25 +397,25 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Stats */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 sm:gap-5">
         <div>
           <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Estadísticas</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Resumen de clientes registrados, invitaciones enviadas y reseñas completadas.</p>
+          <p className="text-xs text-neutral-400 mt-1.5">Resumen de clientes registrados, invitaciones enviadas y reseñas completadas.</p>
         </div>
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
+        <div className="grid grid-cols-3 gap-4 sm:gap-5">
+        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
             Registrados
           </span>
           <span className="text-2xl sm:text-3xl font-bold">{total}</span>
         </Card>
-        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
+        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
             Invitados
           </span>
           <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
         </Card>
-        <Card neumorphic className="flex flex-col gap-1 p-4 sm:p-5">
+        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
           <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
             Completados
           </span>
@@ -425,13 +425,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Filtros + batch */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4 sm:gap-5">
         <div>
           <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Clientes</h2>
-          <p className="text-xs text-neutral-400 mt-0.5">Gestiona los clientes de tu negocio. Selecciona varios para enviar invitaciones en lote o eliminar.</p>
+          <p className="text-xs text-neutral-400 mt-1.5">Gestiona los clientes de tu negocio. Selecciona varios para enviar invitaciones en lote o eliminar.</p>
         </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex gap-3">
           {['all', 'pending', 'invited', 'completed'].map((f) => (
             <button
               key={f}
@@ -492,7 +492,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                <th className="pb-3 pr-2 w-8">
+                <th className="pb-4 pr-2 w-8">
                   <input
                     type="checkbox"
                     onChange={toggleAll}
@@ -502,28 +502,28 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     className="w-4 h-4 accent-neutral-950"
                   />
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
                   Cliente
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden sm:table-cell">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
                   Teléfono
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden md:table-cell">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden md:table-cell">
                   Email
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
                   Estado
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden lg:table-cell">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
                   Valoración
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
+                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
                   Feedback
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap">
+                <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap">
                   Envío
                 </th>
-                <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap pl-2">
+                <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap pl-2">
                   Acciones
                 </th>
               </tr>
@@ -536,7 +536,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}
                 >
                   <td
-                    className="py-3 pr-2"
+                    className="py-3.5 pr-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <input
@@ -546,16 +546,16 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       className="w-4 h-4 accent-neutral-950"
                     />
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3.5 pr-4">
                     <span className="font-medium">{c.name ?? '—'}</span>
                   </td>
-                  <td className="py-3 pr-4 text-neutral-500 hidden sm:table-cell">
+                  <td className="py-3.5 pr-4 text-neutral-500 hidden sm:table-cell">
                     {c.phone}
                   </td>
-                  <td className="py-3 pr-4 text-neutral-500 hidden md:table-cell">
+                  <td className="py-3.5 pr-4 text-neutral-500 hidden md:table-cell">
                     {c.email}
                   </td>
-                  <td className="py-3 pr-4">
+                  <td className="py-3.5 pr-4">
                     <span
                       className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
                         c.status === 'completed' &&
@@ -569,7 +569,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       {statusLabel[c.status] ?? c.status}
                     </span>
                   </td>
-                  <td className="py-3 pr-4 text-neutral-500 hidden lg:table-cell">
+                  <td className="py-3.5 pr-4 text-neutral-500 hidden lg:table-cell">
                     {c.rating ? (
                       <span
                         style={{ color: c.rating < 4 ? '#ef4444' : '#f59e0b' }}
@@ -580,7 +580,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       <span className="text-neutral-300">—</span>
                     )}
                   </td>
-                  <td className="py-3 pr-4 whitespace-nowrap">
+                  <td className="py-3.5 pr-4 whitespace-nowrap">
                     <span className="text-xs">
                       {(c as any).feedback &&
                       c.rating != null &&
@@ -593,9 +593,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       )}
                     </span>
                   </td>
-                  <td className="py-3 whitespace-nowrap">
+                  <td className="py-3.5 whitespace-nowrap">
                     <div
-                      className="flex items-center gap-1 sm:gap-2"
+                      className="flex items-center gap-1.5 sm:gap-3"
                       onClick={(e) => e.stopPropagation()}
                     >
                       {c.status !== 'completed' && (
@@ -655,7 +655,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     </div>
                   </td>
                   <td
-                    className="py-3 whitespace-nowrap pl-2"
+                    className="py-3.5 whitespace-nowrap pl-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
