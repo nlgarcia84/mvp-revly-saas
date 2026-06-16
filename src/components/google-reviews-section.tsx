@@ -90,6 +90,7 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [alerts, setAlerts] = useState<BadReview[]>([]);
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'positive' | 'negative'>('all');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -179,6 +180,22 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
           </button>
         </div>
 
+        <div className="flex gap-2">
+          {(['all', 'positive', 'negative'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setReviewFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                reviewFilter === f
+                  ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+              }`}
+            >
+              {f === 'all' ? 'Todas' : f === 'positive' ? 'Positivas' : 'Críticas'}
+            </button>
+          ))}
+        </div>
+
         <div className={`${nCard} p-5 sm:p-6 flex flex-col gap-4`}>
           <div className="flex items-center justify-between">
             <div>
@@ -196,7 +213,13 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
 
           {data.reviews.length > 0 && (
             <div className="flex flex-col gap-3">
-              {data.reviews.slice(0, 5).map((review, i) => (
+              {data.reviews
+                .filter((r) => {
+                  if (reviewFilter === 'positive') return r.rating >= 4;
+                  if (reviewFilter === 'negative') return r.rating < 4;
+                  return true;
+                })
+                .slice(0, 5).map((review, i) => (
                 <div
                   key={i}
                   className="border-t border-neutral-200 dark:border-neutral-800 pt-3"
@@ -212,9 +235,12 @@ const GoogleReviewsSection = ({ businessId }: { businessId: string }) => {
                     <span className="text-sm font-medium">
                       {review.authorName}
                     </span>
-                    <span className="text-xs" style={{ color: '#f59e0b' }}>
+                    <span className="text-xs" style={{ color: review.rating < 4 ? '#ef4444' : '#f59e0b' }}>
                       {'★'.repeat(review.rating)}
                     </span>
+                    {review.rating < 4 && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
+                    )}
                     <span className="text-xs text-neutral-400 ml-auto">
                       {review.relativeTimeDescription}
                     </span>
