@@ -70,7 +70,11 @@ export const signUp = async (
       data: {
         id: data.user.id, email, name,
         subscription: {
-          create: { plan: 'free', status: 'active' },
+          create: {
+            plan: 'free',
+            status: 'active',
+            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          },
         },
       },
     });

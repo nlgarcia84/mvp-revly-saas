@@ -31,16 +31,17 @@ model User {
 // status — "active" | "inactive" | "past_due" | "canceled".
 // ──────────────────────────────────────────────
 model Subscription {
-  id                   String   @id @default(uuid())
-  plan                 String   @default("free")
-  status               String   @default("active")
+  id                   String    @id @default(uuid())
+  plan                 String    @default("free")
+  status               String    @default("active")
   stripeCustomerId     String?
   stripeSubscriptionId String?
   currentPeriodEnd     DateTime?
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  trialEndsAt          DateTime?
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }
 
 // ──────────────────────────────────────────────

@@ -3,6 +3,7 @@ import prisma from '@/lib/db';
 import Link from 'next/link';
 import { ChartLine } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
+import { getPlan } from '@/lib/subscription';
 import { nCard } from '@/components/ui/card';
 
 const indicator: Record<string, string> = {
@@ -21,7 +22,9 @@ export default async function DashboardPage() {
     include: { subscription: true },
   });
   const name = user?.name ?? '';
-  const plan = user?.subscription?.plan ?? 'free';
+  const planData = await getPlan(userId);
+  const plan = planData.plan;
+  const trialDaysLeft = planData.trialDaysLeft;
 
   const businesses = await prisma.business.findMany({
     where: { userId },
@@ -85,11 +88,21 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-8 sm:gap-6">
       <div>
-        <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3">
+        <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3 flex-wrap">
           Hola, {name}
-          <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
-            {plan === 'free' ? 'Gratis' : 'Pro'}
-          </span>
+          {trialDaysLeft > 0 ? (
+            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wider whitespace-nowrap">
+              Prueba · {trialDaysLeft} día{trialDaysLeft !== 1 ? 's' : ''}
+            </span>
+          ) : plan === 'pro' ? (
+            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+              Pro
+            </span>
+          ) : (
+            <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+              Gratis
+            </span>
+          )}
         </h1>
         <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
       </div>
