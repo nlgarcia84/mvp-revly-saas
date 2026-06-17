@@ -54,7 +54,7 @@ const HomePage = () => {
 
         <div className="w-full max-w-[90%] sm:max-w-xl lg:max-w-3xl text-center relative z-10">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] mb-4">
-            Gestiona la voz de tus clientes
+            Consigue más reseñas en Google
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-neutral-500 leading-relaxed mb-8">
             Ayuda a tu negocio a conseguir reseñas en Google de forma

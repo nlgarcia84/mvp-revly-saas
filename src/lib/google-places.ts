@@ -18,24 +18,18 @@ export function extractPlaceId(url: string): string | null {
   try {
     const u = new URL(url);
 
-    // Format 1: search.google.com/local/writereview?placeid=ChIJ...
     const placeid = u.searchParams.get('placeid') || u.searchParams.get('place_id');
     if (placeid) return placeid;
 
-    // Format 2: google.com/maps/place/?q=place_id:ChIJ...
     const q = u.searchParams.get('q');
     if (q?.startsWith('place_id:')) return q.slice(9);
 
-    // Format 3: google.com/maps?cid=...
     const cid = u.searchParams.get('cid');
     if (cid) return cid;
 
-    // Format 4: /maps/place/SomePlace/@data=... or /maps?ftid=...
     const ftid = u.searchParams.get('ftid');
     if (ftid) return ftid;
 
-    // Format 5: google.com/maps/place/Name/@lat,lng,zoom/data=...
-    // Try !16s first (modern place_id e.g. /g/11t6_7v1vn or ChIJ...)
     const data = u.searchParams.get('data') || u.href.match(/data=([^&?]+)/)?.[1];
     if (data) {
       const raw = decodeURIComponent(data);
@@ -43,9 +37,7 @@ export function extractPlaceId(url: string): string | null {
       if (p16) {
         const clean = p16.replace(/^\//, '');
         if (/^ChIJ/.test(clean)) return clean;
-      // g/... format is not accepted by the legacy Places API → fall through to CID
       }
-      // Fallback: extract CID from !1s (second hex number)
       const cidHex = raw.match(/!1s0x[0-9a-f]+:0x([0-9a-f]+)/)?.[1];
       if (cidHex) return BigInt(`0x${cidHex}`).toString();
     }
@@ -62,31 +54,54 @@ function extractLatLng(url: string): { lat: number; lng: number } | null {
   return null;
 }
 
+function nameMatches(resultName: string, queryName: string): boolean {
+  const a = resultName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const b = queryName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return a.includes(b) || b.includes(a);
+}
+
+async function resolveWithTextSearch(queryName: string, url?: string): Promise<string | null> {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
+  const coords = url ? extractLatLng(url) : null;
+
+  // Try 3 strategies in order: with coords, without coords, with more specific name
+  const searches: { query: string; coordBias: boolean }[] = [
+    { query: queryName, coordBias: true },
+    { query: queryName, coordBias: false },
+  ];
+
+  for (const s of searches) {
+    let searchUrl: string;
+    if (s.coordBias && coords) {
+      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(s.query)}&location=${coords.lat},${coords.lng}&radius=200&key=${apiKey}`;
+    } else {
+      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(s.query)}&key=${apiKey}`;
+    }
+
+    const res = await fetch(searchUrl);
+    if (!res.ok) continue;
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.results?.length) continue;
+
+    // Prefer result whose name matches the business name
+    for (const result of data.results) {
+      if (nameMatches(result.name, queryName)) {
+        const pid = result.place_id;
+        if (/^ChIJ/.test(pid)) return pid;
+      }
+    }
+  }
+
+  return null;
+}
+
 async function resolvePlaceId(
   placeId: string,
   queryName?: string,
   url?: string,
 ): Promise<string | null> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
-  // Numeric CID → Text Search with location bias if available
   if (/^\d+$/.test(placeId) && queryName) {
-    const coords = url ? extractLatLng(url) : null;
-    let searchUrl: string;
-    if (coords) {
-      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(queryName)}&location=${coords.lat},${coords.lng}&radius=50&key=${apiKey}`;
-    } else {
-      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(queryName)}&key=${apiKey}`;
-    }
-    const res = await fetch(searchUrl);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.status === 'OK' && data.results?.length > 0) {
-        const pid = data.results[0].place_id;
-        if (/^ChIJ/.test(pid)) return pid;
-        return null; // g/... format not accepted by legacy API
-      }
-    }
-    return null; // Could not resolve CID → no results
+    return resolveWithTextSearch(queryName, url);
   }
   return placeId;
 }

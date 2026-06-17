@@ -1,41 +1,48 @@
 'use server';
 
-const API_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent';
+const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export async function generateReviewResponse(
   reviewText: string,
   businessName: string,
   rating: number,
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Falta GEMINI_API_KEY en .env.local');
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error('Falta GROQ_API_KEY en .env.local');
 
-  const prompt =
-    rating <= 2
-      ? `Eres el dueño de "${businessName}". Un cliente te ha dejado una reseña negativa (${rating}★) en Google. Genera una respuesta profesional, empática y educada en español (máx 150 palabras) que agradezca el feedback, pida disculpas si es necesario e invite al cliente a contactaros en privado para resolver el problema. Reseña: "${reviewText}"`
-      : `Eres el dueño de "${businessName}". Un cliente te ha dejado una reseña con ${rating}★ en Google. Genera una respuesta profesional y amable en español (máx 100 palabras) que agradezca la reseña y exprese compromiso con la mejora continua. Reseña: "${reviewText}"`;
+  const system = rating <= 2
+    ? `Eres el dueño de "${businessName}". Responde a esta reseña de Google en castellano. Escribe un texto completo de entre 100 y 200 palabras, en párrafos. Menciona los puntos concretos de la reseña. Sé empático, discúlpate si toca e invita a contactar en privado. No seas genérico.`
+    : `Eres el dueño de "${businessName}". Responde a esta reseña de Google en castellano. Escribe un texto completo de entre 80 y 150 palabras, en párrafos. Agradece y menciona algo concreto de la reseña. No seas genérico.`;
+
+  const prompt = `Cliente: "${reviewText}" (${rating}★)
+
+Escribe solo la respuesta, sin presentaciones ni despedidas adicionales. Empieza directamente con "Estimado/a" o similar.`;
 
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-goog-api-key': apiKey,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 300, temperature: 0.7 },
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user', content: prompt },
+      ],
+      max_tokens: 400,
+      temperature: 0.8,
     }),
   });
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${body}`);
+    throw new Error(`Groq API error ${res.status}: ${body}`);
   }
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Gemini no devolvió contenido');
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Groq no devolvió contenido');
 
   return text.trim();
 }

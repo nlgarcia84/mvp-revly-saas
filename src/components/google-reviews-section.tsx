@@ -112,7 +112,7 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
             <h3 className="text-sm font-semibold">Respuesta para {authorName}</h3>
             <button onClick={onClose} className="text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 text-lg leading-none">&times;</button>
           </div>
-          <div className={`${nCard} p-4 mb-4 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-60 overflow-y-auto`}>
+          <div className={`${nCard} p-4 mb-4 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto`}>
             {text}
           </div>
           <div className="flex items-center gap-3">
@@ -146,16 +146,18 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
   const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
   const [generating, setGenerating] = useState<string | null>(null);
   const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string } | null>(null);
-  const [modalCopied, setModalCopied] = useState(false);
+  const [generateError, setGenerateError] = useState('');
 
   const handleGenerate = async (review: { authorName: string; text: string; rating: number }, placeId: string) => {
     const key = `${review.authorName}|${review.text.slice(0, 20)}`;
     setGenerating(key);
+    setGenerateError('');
     try {
       const response = await generateReviewResponse(review.text, data?.name ?? '', review.rating);
       setResponseModal({ text: response, authorName: review.authorName, placeId });
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'Error al generar respuesta');
+      const msg = e instanceof Error ? e.message : 'Error al generar respuesta';
+      setGenerateError(msg);
     }
     setGenerating(null);
   };
@@ -296,6 +298,12 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
           ))}
         </div>
 
+        {generateError && (
+          <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 rounded-lg border border-red-200 dark:border-red-800">
+            {generateError}
+          </div>
+        )}
+
         <div className={`${nCard} p-5 sm:p-6 flex flex-col gap-4`}>
           <div className="flex items-center justify-between">
             <div>
@@ -365,6 +373,16 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
           )}
         </div>
       </div>
+
+      {responseModal && (
+        <ResponseModal
+          text={responseModal.text}
+          authorName={responseModal.authorName}
+          placeId={responseModal.placeId}
+          googleLink={googleLink}
+          onClose={() => setResponseModal(null)}
+        />
+      )}
     </>
   );
 };

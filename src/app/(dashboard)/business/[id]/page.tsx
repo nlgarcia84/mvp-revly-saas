@@ -399,385 +399,400 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Stats */}
       <div className="flex flex-col gap-4 sm:gap-5">
         <div>
-          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Estadísticas</h2>
-          <p className="text-xs text-neutral-400 mt-1.5">Resumen de clientes registrados, invitaciones enviadas y reseñas completadas.</p>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+            Estadísticas
+          </h2>
+          <p className="text-xs text-neutral-400 mt-1.5">
+            Resumen de clientes registrados, invitaciones enviadas y reseñas
+            completadas.
+          </p>
         </div>
         <div className="grid grid-cols-3 gap-4 sm:gap-5">
-        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
-            Registrados
-          </span>
-          <span className="text-2xl sm:text-3xl font-bold">{total}</span>
-        </Card>
-        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
-            Invitados
-          </span>
-          <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
-        </Card>
-        <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-          <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
-            Completados
-          </span>
-          <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
-        </Card>
+          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
+            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+              Registrados
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold">{total}</span>
+          </Card>
+          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
+            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+              Invitados
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
+          </Card>
+          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
+            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+              Completados
+            </span>
+            <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
+          </Card>
         </div>
       </div>
 
       {/* Filtros + batch */}
       <div className="flex flex-col gap-4 sm:gap-5">
         <div>
-          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Clientes</h2>
-          <p className="text-xs text-neutral-400 mt-1.5">Gestiona los clientes de tu negocio. Selecciona varios para enviar invitaciones en lote o eliminar.</p>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+            CLIENTES BD PROPIA
+          </h2>
+          <p className="text-xs text-neutral-400 mt-1.5">
+            Gestiona los clientes de tu negocio. Selecciona varios para enviar
+            invitaciones en lote o eliminar.
+          </p>
         </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex gap-3">
-          {['all', 'pending', 'invited', 'completed'].map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`text-xs sm:text-sm px-3 py-1.5 rounded-md border transition-colors ${
-                filter === f
-                  ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-              }`}
-            >
-              {f === 'all'
-                ? 'Todos'
-                : ({
-                    pending: 'P Pendiente',
-                    invited: 'I Invitado',
-                    completed: 'C Completado',
-                  }[f] ?? f)}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          {customers.filter((c) => c.status === 'completed').length > 0 &&
-            filter !== 'pending' && (
-              <Button
-                variant="secondary"
-                className="!px-3 !py-1.5 text-[11px]"
-                onClick={handleClearCompleted}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex gap-3">
+            {['all', 'pending', 'invited', 'completed'].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-xs sm:text-sm px-3 py-1.5 rounded-md border transition-colors ${
+                  filter === f
+                    ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+                }`}
               >
-                Ocultar completados
+                {f === 'all'
+                  ? 'Todos'
+                  : ({
+                      pending: 'P Pendiente',
+                      invited: 'I Invitado',
+                      completed: 'C Completado',
+                    }[f] ?? f)}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            {customers.filter((c) => c.status === 'completed').length > 0 &&
+              filter !== 'pending' && (
+                <Button
+                  variant="secondary"
+                  className="!px-3 !py-1.5 text-[11px]"
+                  onClick={handleClearCompleted}
+                >
+                  Ocultar completados
+                </Button>
+              )}
+            {selected.size > 0 && (
+              <Button
+                variant="primary"
+                className="!px-3 !py-1.5 text-[11px]"
+                onClick={handleBatchSend}
+                disabled={batchSending}
+              >
+                {batchSending
+                  ? 'Enviando...'
+                  : `Enviar a ${selected.size} cliente${selected.size !== 1 ? 's' : ''}`}
               </Button>
             )}
-          {selected.size > 0 && (
-            <Button
-              variant="primary"
-              className="!px-3 !py-1.5 text-[11px]"
-              onClick={handleBatchSend}
-              disabled={batchSending}
-            >
-              {batchSending
-                ? 'Enviando...'
-                : `Enviar a ${selected.size} cliente${selected.size !== 1 ? 's' : ''}`}
-            </Button>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* Tabla */}
-      {filtered.length === 0 ? (
-        <Card neumorphic className="p-6">
-          <p className="text-sm text-neutral-400 text-center py-8">
-            {customers.length === 0
-              ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.'
-              : 'No hay clientes con este estado.'}
-          </p>
-        </Card>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                <th className="pb-4 pr-2 w-8">
-                  <input
-                    type="checkbox"
-                    onChange={toggleAll}
-                    checked={
-                      selected.size === filtered.length && filtered.length > 0
-                    }
-                    className="w-4 h-4 accent-neutral-950"
-                  />
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
-                  Cliente
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
-                  Teléfono
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden md:table-cell">
-                  Email
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
-                  Estado
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
-                  Valoración
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
-                  Feedback
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap">
-                  Envío
-                </th>
-                <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap pl-2">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr
-                  key={c.id}
-                  onClick={() => setDetail(c)}
-                  className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}
-                >
-                  <td
-                    className="py-3.5 pr-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+        {/* Tabla */}
+        {filtered.length === 0 ? (
+          <Card neumorphic className="p-6">
+            <p className="text-sm text-neutral-400 text-center py-8">
+              {customers.length === 0
+                ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.'
+                : 'No hay clientes con este estado.'}
+            </p>
+          </Card>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-200 dark:border-neutral-800">
+                  <th className="pb-4 pr-2 w-8">
                     <input
                       type="checkbox"
-                      checked={selected.has(c.id)}
-                      onChange={() => toggleSelect(c.id)}
+                      onChange={toggleAll}
+                      checked={
+                        selected.size === filtered.length && filtered.length > 0
+                      }
                       className="w-4 h-4 accent-neutral-950"
                     />
-                  </td>
-                  <td className="py-3.5 pr-4">
-                    <span className="font-medium">{c.name ?? '—'}</span>
-                  </td>
-                  <td className="py-3.5 pr-4 text-neutral-500 hidden sm:table-cell">
-                    {c.phone}
-                  </td>
-                  <td className="py-3.5 pr-4 text-neutral-500 hidden md:table-cell">
-                    {c.email}
-                  </td>
-                  <td className="py-3.5 pr-4">
-                    <span
-                      className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                        c.status === 'completed' &&
-                        c.rating != null &&
-                        c.rating < 4
-                          ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                          : (statusColor[c.status] ??
-                            'bg-neutral-100 text-neutral-500')
-                      }`}
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                    Cliente
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
+                    Teléfono
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden md:table-cell">
+                    Email
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                    Estado
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
+                    Valoración
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                    Feedback
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap">
+                    Envío
+                  </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap pl-2">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c) => (
+                  <tr
+                    key={c.id}
+                    onClick={() => setDetail(c)}
+                    className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}
+                  >
+                    <td
+                      className="py-3.5 pr-2"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {statusLabel[c.status] ?? c.status}
-                    </span>
-                  </td>
-                  <td className="py-3.5 pr-4 text-neutral-500 hidden lg:table-cell">
-                    {c.rating ? (
+                      <input
+                        type="checkbox"
+                        checked={selected.has(c.id)}
+                        onChange={() => toggleSelect(c.id)}
+                        className="w-4 h-4 accent-neutral-950"
+                      />
+                    </td>
+                    <td className="py-3.5 pr-4">
+                      <span className="font-medium">{c.name ?? '—'}</span>
+                    </td>
+                    <td className="py-3.5 pr-4 text-neutral-500 hidden sm:table-cell">
+                      {c.phone}
+                    </td>
+                    <td className="py-3.5 pr-4 text-neutral-500 hidden md:table-cell">
+                      {c.email}
+                    </td>
+                    <td className="py-3.5 pr-4">
                       <span
-                        style={{ color: c.rating < 4 ? '#ef4444' : '#f59e0b' }}
+                        className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                          c.status === 'completed' &&
+                          c.rating != null &&
+                          c.rating < 4
+                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            : (statusColor[c.status] ??
+                              'bg-neutral-100 text-neutral-500')
+                        }`}
                       >
-                        {'★'.repeat(c.rating)}
+                        {statusLabel[c.status] ?? c.status}
                       </span>
-                    ) : (
-                      <span className="text-neutral-300">—</span>
-                    )}
-                  </td>
-                  <td className="py-3.5 pr-4 whitespace-nowrap">
-                    <span className="text-xs">
-                      {(c as any).feedback &&
-                      c.rating != null &&
-                      c.rating < 4 ? (
-                        <span className="font-medium text-red-600 dark:text-red-400">
-                          Sí
+                    </td>
+                    <td className="py-3.5 pr-4 text-neutral-500 hidden lg:table-cell">
+                      {c.rating ? (
+                        <span
+                          style={{
+                            color: c.rating < 4 ? '#ef4444' : '#f59e0b',
+                          }}
+                        >
+                          {'★'.repeat(c.rating)}
                         </span>
                       ) : (
                         <span className="text-neutral-300">—</span>
                       )}
-                    </span>
-                  </td>
-                  <td className="py-3.5 whitespace-nowrap">
-                    <div
-                      className="flex items-center gap-1.5 sm:gap-3"
+                    </td>
+                    <td className="py-3.5 pr-4 whitespace-nowrap">
+                      <span className="text-xs">
+                        {(c as any).feedback &&
+                        c.rating != null &&
+                        c.rating < 4 ? (
+                          <span className="font-medium text-red-600 dark:text-red-400">
+                            Sí
+                          </span>
+                        ) : (
+                          <span className="text-neutral-300">—</span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="py-3.5 whitespace-nowrap">
+                      <div
+                        className="flex items-center gap-1.5 sm:gap-3"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {c.status !== 'completed' && (
+                          <Button
+                            variant="primary"
+                            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                            onClick={() => handleSend(c.id)}
+                            disabled={sendingId === c.id}
+                          >
+                            {sendingId === c.id ? (
+                              '...'
+                            ) : (
+                              <>
+                                <span className="sm:hidden">Mail</span>
+                                <span className="hidden sm:inline">
+                                  {c.status === 'invited'
+                                    ? 'Reenviar mail'
+                                    : 'Enviar mail'}
+                                </span>
+                              </>
+                            )}
+                          </Button>
+                        )}
+                        {c.status === 'completed' && (
+                          <svg
+                            className="w-4 h-4 text-emerald-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                        {c.phone &&
+                          business?.googleLink &&
+                          c.status !== 'completed' && (
+                            <a
+                              href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, '')}?text=${encodeURIComponent(
+                                `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${business.name}?`,
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
+                              title="Enviar por WhatsApp"
+                            >
+                              <span className="sm:hidden">WA</span>
+                              <span className="hidden sm:inline">
+                                Enviar WhatsApp
+                              </span>
+                            </a>
+                          )}
+                      </div>
+                    </td>
+                    <td
+                      className="py-3.5 whitespace-nowrap pl-2"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      {c.status !== 'completed' && (
-                        <Button
-                          variant="primary"
-                          className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                          onClick={() => handleSend(c.id)}
-                          disabled={sendingId === c.id}
-                        >
-                          {sendingId === c.id ? (
-                            '...'
-                          ) : (
-                            <>
-                              <span className="sm:hidden">Mail</span>
-                              <span className="hidden sm:inline">
-                                {c.status === 'invited'
-                                  ? 'Reenviar mail'
-                                  : 'Enviar mail'}
-                              </span>
-                            </>
-                          )}
-                        </Button>
-                      )}
-                      {c.status === 'completed' && (
-                        <svg
-                          className="w-4 h-4 text-emerald-500"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      )}
-                      {c.phone &&
-                        business?.googleLink &&
-                        c.status !== 'completed' && (
-                          <a
-                            href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, '')}?text=${encodeURIComponent(
-                              `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${business.name}?`,
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
-                            title="Enviar por WhatsApp"
-                          >
-                            <span className="sm:hidden">WA</span>
-                            <span className="hidden sm:inline">
-                              Enviar WhatsApp
-                            </span>
-                          </a>
-                        )}
-                    </div>
-                  </td>
-                  <td
-                    className="py-3.5 whitespace-nowrap pl-2"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      {detail && (
-        <CustomerDetail customer={detail} onClose={() => setDetail(null)} />
-      )}
+        {detail && (
+          <CustomerDetail customer={detail} onClose={() => setDetail(null)} />
+        )}
 
-      {/* Modal: Añadir cliente manual */}
-      {showAdd && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={() => setShowAdd(false)}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Modal: Añadir cliente manual */}
+        {showAdd && (
+          <>
             <div
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-lg font-semibold mb-4">Añadir cliente</h2>
-              <form onSubmit={handleAddManual} className="flex flex-col gap-4">
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setShowAdd(false)}
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-semibold mb-4">Añadir cliente</h2>
+                <form
+                  onSubmit={handleAddManual}
+                  className="flex flex-col gap-4"
+                >
+                  <input
+                    value={addForm.name}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, name: e.target.value })
+                    }
+                    placeholder="Nombre"
+                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                  />
+                  <input
+                    value={addForm.email}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, email: e.target.value })
+                    }
+                    placeholder="Email"
+                    required
+                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                  />
+                  <input
+                    value={addForm.phone}
+                    onChange={(e) =>
+                      setAddForm({ ...addForm, phone: e.target.value })
+                    }
+                    placeholder="Teléfono"
+                    required
+                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      onClick={() => setShowAdd(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button variant="primary" type="submit">
+                      Guardar
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Modal: Importar CSV */}
+        {showCsv && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => {
+                setShowCsv(false);
+                setCsvResult('');
+              }}
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-semibold mb-1">Importar CSV</h2>
+                <p className="text-xs text-neutral-400 mb-4">
+                  Columnas: nombre, email, teléfono (separado por comas)
+                </p>
                 <input
-                  value={addForm.name}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, name: e.target.value })
-                  }
-                  placeholder="Nombre"
-                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCsv}
+                  className="text-sm text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:bg-white dark:file:bg-neutral-800 file:text-neutral-950 dark:file:text-neutral-100 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 file:cursor-pointer"
                 />
-                <input
-                  value={addForm.email}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, email: e.target.value })
-                  }
-                  placeholder="Email"
-                  required
-                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-                />
-                <input
-                  value={addForm.phone}
-                  onChange={(e) =>
-                    setAddForm({ ...addForm, phone: e.target.value })
-                  }
-                  placeholder="Teléfono"
-                  required
-                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-                />
-                <div className="flex gap-2 justify-end">
+                {csvResult && (
+                  <p className="text-sm text-neutral-500 mt-3">{csvResult}</p>
+                )}
+                <div className="flex justify-end mt-4">
                   <Button
                     variant="secondary"
                     type="button"
-                    onClick={() => setShowAdd(false)}
+                    onClick={() => {
+                      setShowCsv(false);
+                      setCsvResult('');
+                    }}
                   >
-                    Cancelar
-                  </Button>
-                  <Button variant="primary" type="submit">
-                    Guardar
+                    Cerrar
                   </Button>
                 </div>
-              </form>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Modal: Importar CSV */}
-      {showCsv && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={() => {
-              setShowCsv(false);
-              setCsvResult('');
-            }}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-lg font-semibold mb-1">Importar CSV</h2>
-              <p className="text-xs text-neutral-400 mb-4">
-                Columnas: nombre, email, teléfono (separado por comas)
-              </p>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleCsv}
-                className="text-sm text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:bg-white dark:file:bg-neutral-800 file:text-neutral-950 dark:file:text-neutral-100 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 file:cursor-pointer"
-              />
-              {csvResult && (
-                <p className="text-sm text-neutral-500 mt-3">{csvResult}</p>
-              )}
-              <div className="flex justify-end mt-4">
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => {
-                    setShowCsv(false);
-                    setCsvResult('');
-                  }}
-                >
-                  Cerrar
-                </Button>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
       </div>
 
       {/* Reseñas de Google */}

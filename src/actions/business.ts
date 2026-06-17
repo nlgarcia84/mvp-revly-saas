@@ -189,6 +189,24 @@ export const updateBusiness = async (
   });
 };
 
+// ──────────────────────────────────────────────
+// uploadBusinessImage (Server Action)
+// ──────────────────────────────────────────────
+// Sube un archivo de imagen como logo del negocio
+// al bucket "business-logos" en Supabase Storage.
+//
+// Flujo:
+//   1. Verifica autenticación y propiedad del negocio.
+//   2. Valida tipo (PNG/JPEG/WebP) y tamaño (≤5MB).
+//   3. Sube el archivo a Supabase Storage con la ruta
+//      "{businessId}/{timestamp}.{ext}".
+//   4. Obtiene la URL pública del archivo subido.
+//   5. Actualiza el campo Business.image en BD con esa URL.
+//   6. Devuelve la URL pública.
+//
+// Requiere SUPABASE_SERVICE_ROLE_KEY en .env.local
+// (configurada en Vercel Production).
+// ──────────────────────────────────────────────
 export const uploadBusinessImage = async (businessId: string, formData: FormData) => {
   const userId = await getUserId();
   if (!userId) throw new Error('No autenticado');
