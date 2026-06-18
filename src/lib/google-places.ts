@@ -30,6 +30,9 @@ export function extractPlaceId(url: string): string | null {
     const ftid = u.searchParams.get('ftid');
     if (ftid) return ftid;
 
+    const rldimm = u.searchParams.get('rldimm');
+    if (rldimm) return rldimm;
+
     const data = u.searchParams.get('data') || u.href.match(/data=([^&?]+)/)?.[1];
     if (data) {
       const raw = decodeURIComponent(data);
