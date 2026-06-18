@@ -33,6 +33,8 @@ export function extractPlaceId(url: string): string | null {
     const data = u.searchParams.get('data') || u.href.match(/data=([^&?]+)/)?.[1];
     if (data) {
       const raw = decodeURIComponent(data);
+      const p1s = raw.match(/!1s(ChI[^!]+)/)?.[1];
+      if (p1s) return p1s;
       const p16 = raw.match(/!16s([^!]+)/)?.[1];
       if (p16) {
         const clean = p16.replace(/^\//, '');
