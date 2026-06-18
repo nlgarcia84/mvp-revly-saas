@@ -139,6 +139,9 @@ export async function fetchPlaceDetails(
   if (data.status !== 'OK' || !data.result) return null;
 
   const result = data.result;
+
+  if (queryName && !nameMatches(result.name, queryName)) return null;
+
   return {
     name: result.name ?? '',
     rating: result.rating ?? 0,
