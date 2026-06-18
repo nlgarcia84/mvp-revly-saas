@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createBusiness, getBusinesses } from '@/actions/business';
+import { createBusiness, getBusinesses, uploadBusinessImage } from '@/actions/business';
 import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
@@ -59,8 +59,10 @@ const BusinessQR = ({ slug }: { slug: string }) => {
 const BusinessPage = () => {
   // ── Modal de creación ──
   const [open, setOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [form, setForm] = useState({ name: '', googleLink: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const load = useCallback(async () => {
     setBusinesses(await getBusinesses());
@@ -75,10 +77,22 @@ const BusinessPage = () => {
   // la lista para mostrar el nuevo slug y QR.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createBusiness(form);
-    setForm({ name: '', googleLink: '' });
-    setOpen(false);
-    await load();
+    setCreating(true);
+    try {
+      const business = await createBusiness(form);
+      if (logoFile) {
+        const fd = new FormData();
+        fd.append('file', logoFile);
+        await uploadBusinessImage(business.id, fd);
+      }
+      setForm({ name: '', googleLink: '' });
+      setLogoFile(null);
+      setOpen(false);
+      await load();
+    } catch (err: any) {
+      alert(err.message);
+    }
+    setCreating(false);
   };
 
   return (
@@ -137,7 +151,7 @@ const BusinessPage = () => {
                   Logo del negocio
                 </label>
                 <label className="flex items-center gap-2 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-400 bg-white dark:bg-neutral-800 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors">
-                  <input type="file" accept="image/*" className="hidden" />
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)} />
                   <svg
                     className="w-4 h-4 shrink-0"
                     fill="none"
@@ -151,7 +165,7 @@ const BusinessPage = () => {
                       d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                     />
                   </svg>
-                  <span>Seleccionar archivo</span>
+                  <span>{logoFile ? logoFile.name : 'Seleccionar archivo'}</span>
                 </label>
               </div>
 
@@ -163,8 +177,8 @@ const BusinessPage = () => {
                 >
                   Cancelar
                 </Button>
-                <Button variant="primary" type="submit">
-                  Guardar
+                <Button variant="primary" type="submit" disabled={creating}>
+                  {creating ? 'Guardando...' : 'Guardar'}
                 </Button>
               </div>
             </form>
