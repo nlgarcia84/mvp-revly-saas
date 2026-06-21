@@ -132,6 +132,38 @@ export const signIn = async (
 //  No usa Prisma — solo limpia la cookie de sesión.
 // ════════════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════════════
+//  updateProfileName
+// ════════════════════════════════════════════════════════════════════
+//  Actualiza el nombre del usuario autenticado tanto en nuestra
+//  tabla User (Prisma) como en los metadatos de Supabase Auth.
+// ════════════════════════════════════════════════════════════════════
+export const getProfile = async () => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return null;
+  return { name: user.name ?? '', email: user.email };
+};
+
+export const updateProfileName = async (name: string) => {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+  if (!userId) throw new Error('No autenticado');
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { name },
+  });
+
+  await supabase.auth.updateUser({
+    data: { full_name: name, name },
+  });
+};
+
 export const signOut = async () => {
   // ──────────────────────────────────────────────
   // SUPABASE: destruye la sesión actual

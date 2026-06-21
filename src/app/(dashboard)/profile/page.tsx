@@ -1,27 +1,39 @@
-import { createClient } from '@/lib/supabase/server';
-import prisma from '@/lib/db';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { updateProfileName, getProfile } from '@/actions/auth';
 import { Card } from '@/components/ui/card';
+import Button from '@/components/ui/button';
 import BackButton from '@/components/back-button';
 
-// ──────────────────────────────────────────────
-// ProfilePage (Server Component)
-// ──────────────────────────────────────────────
-// 1. Obtiene la sesión desde Supabase (cookie HTTP).
-// 2. Usa el userId de la sesión para consultar los
-//    datos del usuario en nuestra tabla User (Prisma).
-// Separamos Supabase Auth (sesión) de nuestra BD
-// (nombre, email) porque la tabla User puede tener
-// datos adicionales que no están en Auth.
-// ──────────────────────────────────────────────
-const ProfilePage = async () => {
-  const supabase = await createClient();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  const name = user?.name ?? '';
-  const email = user?.email ?? '';
+const ProfilePage = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const profile = await getProfile();
+      if (profile) {
+        setName(profile.name);
+        setEmail(profile.email);
+      }
+    })();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMsg('');
+    try {
+      await updateProfileName(name);
+      setMsg('Guardado');
+    } catch (err: any) {
+      setMsg(err.message);
+    }
+    setSaving(false);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,26 +50,43 @@ const ProfilePage = async () => {
       <Card neumorphic>
         <div className="flex items-center gap-3 px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
           <div className="w-10 h-10 rounded-full bg-neutral-950 text-white flex items-center justify-center text-sm font-semibold">
-            {name.charAt(0).toUpperCase()}
+            {(name || email).charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="text-sm font-medium text-neutral-500">{name}</p>
+            <p className="text-sm font-medium text-neutral-500">{name || 'Sin nombre'}</p>
             <p className="text-xs text-neutral-500">{email}</p>
           </div>
         </div>
 
-        <div className="p-6 flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
           <div>
-            <p className="text-xs font-medium text-neutral-400 mb-1">Nombre</p>
-            <p className="text-sm font-medium text-neutral-500">{name}</p>
+            <label className="text-xs font-medium text-neutral-400 mb-1 block">
+              Nombre
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+              placeholder="Tu nombre"
+            />
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-400 mb-1">
+            <label className="text-xs font-medium text-neutral-400 mb-1 block">
               Correo electrónico
-            </p>
-            <p className="text-sm font-medium text-neutral-500">{email}</p>
+            </label>
+            <p className="text-sm text-neutral-500">{email}</p>
           </div>
-        </div>
+          {msg && (
+            <p className={`text-sm ${msg === 'Guardado' ? 'text-emerald-500' : 'text-red-500'}`}>
+              {msg}
+            </p>
+          )}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </div>
+        </form>
       </Card>
     </div>
   );

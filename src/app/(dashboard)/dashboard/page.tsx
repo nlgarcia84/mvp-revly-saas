@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     where: { id: userId },
     include: { subscription: true },
   });
-  const name = user?.name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || '';
+  const name = user?.name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
   const planData = await getPlan(userId);
   const plan = planData.plan;
   const trialDaysLeft = planData.trialDaysLeft;
@@ -89,7 +89,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-8 sm:gap-6">
       <div className={`${nCard} p-5 sm:p-6 bg-gradient-to-br from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-950`}>
         <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3 flex-wrap">
-          Hola, {name}
+          {name ? `Hola, ${name}` : 'Hola'}
           {trialDaysLeft > 0 ? (
             <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 uppercase tracking-wider whitespace-nowrap">
               Prueba · {trialDaysLeft} día{trialDaysLeft !== 1 ? 's' : ''}
