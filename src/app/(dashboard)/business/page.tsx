@@ -27,7 +27,9 @@ const BusinessQR = ({ slug }: { slug: string }) => {
     QRCode.toDataURL(`https://revly.es/${slug}`, {
       width: 320,
       margin: 2,
-    }).then(setUrl);
+    })
+      .then(setUrl)
+      .catch((err) => console.error('Error al generar QR:', err));
   }, [slug]);
 
   const handleDownload = () => {
@@ -223,54 +225,50 @@ const BusinessPage = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {businesses.map((b) => (
-            <Link
-              href={`/business/${b.id}`}
-              className="font-medium hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+            <div
+              key={b.id}
+              className={`${nCard} flex items-center justify-between px-5 py-4`}
             >
-              <div>
-                <div
-                  key={b.id}
-                  className={`${nCard} flex items-center justify-between px-5 py-4`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {b.image && (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
-                        <Image
-                          src={b.image}
-                          alt={b.name}
-                          width={40}
-                          height={40}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <span className="font-medium truncate block">
-                        {b.name}
-                      </span>
-                      {b.slug && (
-                        <a
-                          href={`/${b.slug}`}
-                          target="_blank"
-                          className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline truncate block"
-                        >
-                          revly.es/{b.slug}
-                        </a>
-                      )}
-                    </div>
+              <div className="flex items-center gap-3 min-w-0">
+                {b.image && (
+                  <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+                    <Image
+                      src={b.image}
+                      alt={b.name}
+                      width={40}
+                      height={40}
+                      className="object-cover w-full h-full"
+                    />
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Link
-                      href={`/business/${b.id}/settings`}
-                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
+                )}
+                <div className="min-w-0">
+                  <Link
+                    href={`/business/${b.id}`}
+                    className="font-medium truncate block hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                  >
+                    {b.name}
+                  </Link>
+                  {b.slug && (
+                    <a
+                      href={`/${b.slug}`}
+                      target="_blank"
+                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline truncate block"
                     >
-                      Configurar
-                    </Link>
-                    <BusinessQR slug={b.slug ?? ''} />
-                  </div>
+                      revly.es/{b.slug}
+                    </a>
+                  )}
                 </div>
               </div>
-            </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href={`/business/${b.id}/settings`}
+                  className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
+                >
+                  Configurar
+                </Link>
+                <BusinessQR slug={b.slug ?? ''} />
+              </div>
+            </div>
           ))}
         </div>
       )}
