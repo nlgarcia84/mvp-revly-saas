@@ -3,6 +3,7 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { resolveShortUrl } from '@/lib/google-places';
 
 // ──────────────────────────────────────────────
 // slugify
@@ -71,12 +72,13 @@ export const createBusiness = async (data: {
   }
 
   const slug = await generateSlug(data.name);
+  const googleLink = data.googleLink ? await resolveShortUrl(data.googleLink) : null;
 
   const business = await prisma.business.create({
     data: {
       name: data.name,
       slug,
-      googleLink: data.googleLink ?? null,
+      googleLink,
       userId,
     },
   });
@@ -178,11 +180,13 @@ export const updateBusiness = async (
     if (slugExists) throw new Error('El slug ya está en uso');
   }
 
+  const googleLink = data.googleLink ? await resolveShortUrl(data.googleLink) : null;
+
   return prisma.business.update({
     where: { id },
     data: {
       name: data.name,
-      googleLink: data.googleLink || null,
+      googleLink,
       slug: data.slug || null,
       emailTemplate: data.emailTemplate || null,
     },
