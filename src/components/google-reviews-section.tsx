@@ -70,7 +70,7 @@ const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => vo
               <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
                 Reseña crítica
               </p>
-              <button onClick={() => { setVisible(false); setTimeout(onClose, 300); }} className="text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors shrink-0">
+              <button onClick={() => { setVisible(false); setTimeout(onClose, 300); }} className="text-neutral-300 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors shrink-0 cursor-pointer">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -110,7 +110,7 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Respuesta para {authorName}</h3>
-            <button onClick={onClose} className="text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 text-lg leading-none">&times;</button>
+            <button onClick={onClose} className="text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 text-lg leading-none cursor-pointer">&times;</button>
           </div>
           <div className={`${nCard} p-4 mb-4 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto`}>
             {text}
@@ -273,7 +273,7 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
             <button
               key={f}
               onClick={() => setRatingFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
                 ratingFilter === f
                   ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
@@ -287,7 +287,7 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
             <button
               key={f}
               onClick={() => setDateFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+              className={`text-xs px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
                 dateFilter === f
                   ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'

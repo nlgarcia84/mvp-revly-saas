@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { extractPlaceId, fetchPlaceDetails, type GoogleReview } from '@/lib/google-places';
+import { extractPlaceId, fetchPlaceDetails, resolveShortUrl, type GoogleReview } from '@/lib/google-places';
 
 export const getBusinessGoogleReviews = async (businessId: string) => {
   const supabase = await createClient();
@@ -18,11 +18,19 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
   if (!business) throw new Error('Negocio no encontrado');
   if (!business.googleLink) return null;
 
-  const placeId = extractPlaceId(business.googleLink);
-  if (!placeId) return null;
+  const resolvedUrl = await resolveShortUrl(business.googleLink);
 
-  const details = await fetchPlaceDetails(placeId, business.name, business.googleLink);
-  if (!details) return null;
+  const placeId = extractPlaceId(resolvedUrl);
+  if (!placeId) {
+    console.error(`[GoogleReviews] No se pudo extraer Place ID del enlace: ${business.googleLink} (resuelto: ${resolvedUrl})`);
+    return null;
+  }
+
+  const details = await fetchPlaceDetails(placeId, business.name, resolvedUrl);
+  if (!details) {
+    console.error(`[GoogleReviews] fetchPlaceDetails devolvió null | placeId: ${placeId} | negocio: ${business.name} | enlace: ${resolvedUrl}`);
+    return null;
+  }
   return { ...details, placeId };
 };
 
@@ -48,9 +56,10 @@ export const getAllGoogleReviews = async () => {
   const results = await Promise.allSettled(
     businesses.map(async (b) => {
       if (!b.googleLink) return null;
-      const placeId = extractPlaceId(b.googleLink);
+      const resolvedUrl = await resolveShortUrl(b.googleLink);
+      const placeId = extractPlaceId(resolvedUrl);
       if (!placeId) return null;
-      const details = await fetchPlaceDetails(placeId, b.name, b.googleLink);
+      const details = await fetchPlaceDetails(placeId, b.name, resolvedUrl);
       if (!details) return null;
       return { businessId: b.id, businessName: b.name, ...details };
     }),

@@ -14,6 +14,17 @@ export type PlaceDetails = {
   reviews: GoogleReview[];
 };
 
+export async function resolveShortUrl(url: string): Promise<string> {
+  try {
+    const u = new URL(url);
+    if (u.hostname.endsWith('goo.gl')) {
+      const res = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+      return res.url;
+    }
+  } catch {}
+  return url;
+}
+
 export function extractPlaceId(url: string): string | null {
   try {
     const u = new URL(url);
@@ -25,13 +36,20 @@ export function extractPlaceId(url: string): string | null {
     if (q?.startsWith('place_id:')) return q.slice(9);
 
     const cid = u.searchParams.get('cid');
-    if (cid) return cid;
+    if (cid) {
+      if (/^\d+$/.test(cid)) return cid;
+      console.warn(`[extractPlaceId] cid no numérico ignorado: ${cid}`);
+    }
 
     const ftid = u.searchParams.get('ftid');
-    if (ftid) return ftid;
+    if (ftid) {
+      console.warn(`[extractPlaceId] ftid ignorado (no es Place ID válido): ${ftid}`);
+    }
 
     const rldimm = u.searchParams.get('rldimm');
-    if (rldimm) return rldimm;
+    if (rldimm) {
+      console.warn(`[extractPlaceId] rldimm ignorado (no es Place ID válido): ${rldimm}`);
+    }
 
     const data = u.searchParams.get('data') || u.href.match(/data=([^&?]+)/)?.[1];
     if (data) {
@@ -120,11 +138,22 @@ export async function fetchPlaceDetails(
   if (!apiKey) throw new Error('Falta GOOGLE_MAPS_API_KEY en .env.local');
 
   const resolved = await resolvePlaceId(placeId, queryName, url);
-  if (!resolved || !/^ChIJ/.test(resolved)) return null;
+  if (!resolved) {
+    console.warn(`[fetchPlaceDetails] No se pudo resolver placeId: ${placeId}`);
+    return null;
+  }
+  if (!/^ChIJ/.test(resolved)) {
+    console.warn(`[fetchPlaceDetails] placeId resuelto no es ChIJ: ${resolved}`);
+    return null;
+  }
+
   const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
 
   const res = await fetch(apiUrl);
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`[fetchPlaceDetails] HTTP ${res.status} al llamar Places API`);
+    return null;
+  }
 
   const data = await res.json();
   if (data.status === 'REQUEST_DENIED') {
@@ -136,11 +165,17 @@ export async function fetchPlaceDetails(
   if (data.status === 'INVALID_REQUEST') {
     throw new Error(`Google Places API: solicitud inválida - ${data.error_message ?? ''}`);
   }
-  if (data.status !== 'OK' || !data.result) return null;
+  if (data.status !== 'OK' || !data.result) {
+    console.warn(`[fetchPlaceDetails] API status: ${data.status} | placeId: ${resolved}`);
+    return null;
+  }
 
   const result = data.result;
 
-  if (queryName && !nameMatches(result.name, queryName)) return null;
+  if (queryName && !nameMatches(result.name, queryName)) {
+    console.warn(`[fetchPlaceDetails] El nombre no coincide | Google: "${result.name}" | Negocio: "${queryName}"`);
+    return null;
+  }
 
   return {
     name: result.name ?? '',

@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     where: { id: userId },
     include: { subscription: true },
   });
-  const name = user?.name ?? '';
+  const name = user?.name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || '';
   const planData = await getPlan(userId);
   const plan = planData.plan;
   const trialDaysLeft = planData.trialDaysLeft;

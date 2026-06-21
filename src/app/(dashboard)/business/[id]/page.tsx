@@ -442,7 +442,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`text-xs sm:text-sm px-3 py-1.5 rounded-md border transition-colors ${
+                className={`text-xs sm:text-sm px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
                   filter === f
                     ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
                     : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
