@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
-import Link from 'next/link';
 import { ChartLine } from '@/components/ui/chart';
 import { getAllGoogleReviews } from '@/actions/google-reviews';
 import { getPlan } from '@/lib/subscription';
 import { nCard } from '@/components/ui/card';
+import BusinessList from '@/components/business-list';
 
 const iconColor: Record<string, string> = {
   blue: 'text-blue-500',
@@ -204,34 +204,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Business list */}
-      {totalBusinesses === 0 ? (
-        <div className={`${nCard} p-6 sm:p-8`}>
-          <p className="text-sm text-neutral-400 text-center py-12">Crea tu primer negocio para empezar a recibir reseñas</p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
-              Tus negocios
-            </h2>
-            <p className="text-xs text-neutral-400 mt-1.5">
-              {totalBusinesses} negocio{totalBusinesses !== 1 ? 's' : ''} registrado{totalBusinesses !== 1 ? 's' : ''}
-            </p>
-          </div>
-          {businesses.map((b) => (
-            <Link key={b.id} href={`/business/${b.id}`} className={`${nCard} flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 transition-all duration-200 hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#b0b0b0] dark:hover:shadow-[-5px_-5px_10px_#3a3a3a,5px_5px_10px_#0a0a0a] hover:scale-[1.01]`}>
-              <div className="flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-neutral-950 dark:bg-neutral-100 shrink-0" />
-                <span className="font-medium bg-gradient-to-r from-neutral-950 to-neutral-500 dark:from-neutral-100 dark:to-neutral-400 bg-clip-text text-transparent">{b.name}</span>
-                <span className="text-xs text-neutral-400">· {b._count.customers} cliente{b._count.customers !== 1 ? 's' : ''}</span>
-              </div>
-              <svg className="w-4 h-4 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </Link>
-          ))}
-        </div>
-      )}
+      <BusinessList businesses={businesses} />
     </div>
   );
 }
