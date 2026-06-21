@@ -22,14 +22,19 @@ export type GooglePlaceResult = {
 export async function searchBusinessOnGoogle(
   query: string,
   location?: string,
+  postalCode?: string,
 ): Promise<GooglePlaceResult[]> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) throw new Error('Falta GOOGLE_MAPS_API_KEY');
 
   // Construimos la consulta para la API de Text Search.
-  // Si el usuario indicó una ubicación (ciudad), la
-  // añadimos para que los resultados sean más precisos.
-  const searchQuery = location ? `${query} ${location}` : query;
+  // Si el usuario indicó ubicación (ciudad) o código
+  // postal, los añadimos para que los resultados sean
+  // mucho más precisos y aparezca el negocio correcto.
+  const parts = [query];
+  if (location) parts.push(location);
+  if (postalCode) parts.push(postalCode);
+  const searchQuery = parts.join(' ');
 
   const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(searchQuery)}&language=es&key=${apiKey}`;
 

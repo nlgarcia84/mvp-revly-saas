@@ -22,6 +22,7 @@ const BusinessPage = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
+  const [searchPostalCode, setSearchPostalCode] = useState('');
   const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [urlFound, setUrlFound] = useState('');
@@ -45,7 +46,7 @@ const BusinessPage = () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const results = await searchBusinessOnGoogle(searchQuery, searchLocation);
+      const results = await searchBusinessOnGoogle(searchQuery, searchLocation, searchPostalCode);
       setSearchResults(results);
     } catch {
       setSearchResults([]);
@@ -158,6 +159,12 @@ const BusinessPage = () => {
                           value={searchLocation}
                           onChange={(e) => setSearchLocation(e.target.value)}
                           placeholder="Ciudad o dirección (opcional)"
+                          className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                        />
+                        <input
+                          value={searchPostalCode}
+                          onChange={(e) => setSearchPostalCode(e.target.value)}
+                          placeholder="Código postal (opcional)"
                           className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
                         />
                         <div className="flex gap-2">
