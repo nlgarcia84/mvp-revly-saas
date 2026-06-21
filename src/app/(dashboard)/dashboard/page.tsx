@@ -6,11 +6,11 @@ import { getAllGoogleReviews } from '@/actions/google-reviews';
 import { getPlan } from '@/lib/subscription';
 import { nCard } from '@/components/ui/card';
 
-const indicator: Record<string, string> = {
-  blue: 'bg-blue-500',
-  violet: 'bg-violet-500',
-  amber: 'bg-amber-500',
-  emerald: 'bg-emerald-500',
+const iconColor: Record<string, string> = {
+  blue: 'text-blue-500',
+  violet: 'text-violet-500',
+  amber: 'text-amber-500',
+  emerald: 'text-emerald-500',
 };
 
 export default async function DashboardPage() {
@@ -117,7 +117,7 @@ export default async function DashboardPage() {
         ].map((s) => (
           <div key={s.label} className={`${nCard} flex flex-col gap-2 p-5 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:shadow-[-5px_-5px_10px_#2a2a2a,5px_5px_10px_#0a0a0a]`}>
             <div className="flex items-center gap-2">
-              <svg className={`w-4 h-4 ${indicator[s.color].replace('bg-', 'text-')}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg className={`w-4 h-4 ${iconColor[s.color]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d={s.icon} />
               </svg>
               <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">{s.label}</span>
