@@ -357,17 +357,15 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                       {'★'.repeat(review.rating)}
                     </span>
                     {review.rating < 4 && (
-                      <>
-                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
-                        <button
-                          onClick={() => handleGenerate(review, data.placeId)}
-                          disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
-                          className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
-                        >
-                          {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
-                        </button>
-                      </>
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
                     )}
+                    <button
+                      onClick={() => handleGenerate(review, data.placeId)}
+                      disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
+                      className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
+                    >
+                      {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
+                    </button>
                     <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
                       {fmtDate(review.time)}
                     </span>
@@ -382,6 +380,14 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                   )}
                 </div>
               ))}
+              <a
+                href={googleLink || `https://www.google.com/maps/place/?q=place_id:${data.placeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors text-center pt-2"
+              >
+                Ver todas las reseñas en Google →
+              </a>
             </div>
           ) : (
             <p className="text-sm text-neutral-400 text-center py-6">No hay reseñas con estos filtros</p>
