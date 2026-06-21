@@ -32,6 +32,14 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [searchLocation, setSearchLocation] = useState('');
   const [searchResults, setSearchResults] = useState<GooglePlaceResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [urlFound, setUrlFound] = useState('');
+
+  useEffect(() => {
+    if (urlFound) {
+      const t = setTimeout(() => setUrlFound(''), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [urlFound]);
 
   useEffect(() => {
     getBusinesses().then((list) => {
@@ -85,6 +93,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setForm({ ...form, googleLink: result.googleLink });
     setShowSearch(false);
     setSearchResults([]);
+    setUrlFound(result.name);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,6 +174,14 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             {urlValidation?.valid && (
               <p className="text-xs text-emerald-600 mt-1.5">Enlace válido</p>
             )}
+            {urlFound && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 mt-1.5">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                URL encontrada: {urlFound}
+              </div>
+            )}
             {/* Buscador automático de Google Places */}
             <div className="mt-3">
               {showSearch ? (
@@ -190,8 +207,14 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         type="button"
                         onClick={handleSearch}
                         disabled={searching || !searchQuery.trim()}
-                        className="text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
+                        className="text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
                       >
+                        {searching && (
+                          <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        )}
                         {searching ? 'Buscando...' : 'Buscar'}
                       </button>
                       <button
