@@ -204,6 +204,25 @@ export const updateBusiness = async (
 };
 
 // ──────────────────────────────────────────────
+// deleteBusiness (Server Action)
+// ──────────────────────────────────────────────
+// Elimina un negocio y todos sus clientes
+// asociados (CASCADE en BD). Solo el propietario
+// puede eliminar su negocio.
+// ──────────────────────────────────────────────
+export const deleteBusiness = async (id: string) => {
+  const userId = await getUserId();
+  if (!userId) throw new Error('No autenticado');
+
+  const business = await prisma.business.findFirst({
+    where: { id, userId },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  await prisma.business.delete({ where: { id } });
+};
+
+// ──────────────────────────────────────────────
 // uploadBusinessImage (Server Action)
 // ──────────────────────────────────────────────
 // Sube un archivo de imagen como logo del negocio

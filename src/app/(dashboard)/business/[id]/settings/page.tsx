@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { getBusinesses, updateBusiness, uploadBusinessImage } from '@/actions/business';
+import { getBusinesses, updateBusiness, uploadBusinessImage, deleteBusiness } from '@/actions/business';
 import { validateGoogleUrl, type UrlValidationResult } from '@/actions/validate-url';
 import { searchBusinessOnGoogle, type GooglePlaceResult } from '@/actions/search-business';
 import Button from '@/components/ui/button';
@@ -17,6 +17,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const [business, setBusiness] = useState<Business | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [msg, setMsg] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [form, setForm] = useState({
@@ -95,6 +96,18 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setShowSearch(false);
     setSearchResults([]);
     setUrlFound(result.name);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('¿Eliminar este negocio? Todos sus clientes se borrarán permanentemente.')) return;
+    setDeleting(true);
+    try {
+      await deleteBusiness(id);
+      router.push('/business');
+    } catch (err: any) {
+      setMsg(err.message);
+      setDeleting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -341,10 +354,22 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </p>
         )}
 
-        <div className="flex gap-2 justify-center">
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Guardando...' : 'Guardar cambios'}
-          </Button>
+        <div className="flex flex-col gap-3">
+          <div className="flex gap-2 justify-center">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </div>
+          <div className="flex gap-2 justify-center pt-2 border-t border-neutral-200 dark:border-neutral-700">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-xs text-red-400 hover:text-red-500 disabled:opacity-50 cursor-pointer"
+            >
+              {deleting ? 'Eliminando...' : 'Eliminar negocio'}
+            </button>
+          </div>
         </div>
       </form>
     </div>
