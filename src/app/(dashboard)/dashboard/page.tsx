@@ -5,6 +5,7 @@ import { getAllGoogleReviews } from '@/actions/google-reviews';
 import { getPlan } from '@/lib/subscription';
 import { nCard } from '@/components/ui/card';
 import BusinessList from '@/components/business-list';
+import AnimatedCounter from '@/components/ui/animated-counter';
 
 const iconColor: Record<string, string> = {
   blue: 'text-blue-500',
@@ -44,10 +45,16 @@ export default async function DashboardPage() {
   const completed = allCustomers.filter((c) => c.status === 'completed').length;
   const conversionRate = invited > 0 ? Math.round((completed / invited) * 100) : null;
 
+  // ── Datos de Google Reviews ───────────────────
+  // getAllGoogleReviews devuelve las reseñas de
+  // Google Places API para todos los negocios del
+  // usuario. La usamos para la valoración media del
+  // dashboard y para extraer las reseñas negativas.
   let googleAvg: string | null = null;
   let googleTotal = 0;
+  let googleData: Awaited<ReturnType<typeof getAllGoogleReviews>> = [];
   try {
-    const googleData = await getAllGoogleReviews();
+    googleData = await getAllGoogleReviews();
     if (googleData && googleData.length > 0) {
       const ratings = googleData.map((g) => g.rating).filter((r) => r > 0);
       if (ratings.length > 0) {
@@ -83,31 +90,25 @@ export default async function DashboardPage() {
     });
   }
 
-  // ── Reseñas negativas agrupadas por negocio ────
-  // Traemos todos los clientes completados que tengan
-  // valoración < 4. Usamos not + gte (en vez de lt)
-  // para evitar posibles problemas con el tipado del
-  // campo nullable Int? en la consulta de Prisma.
-  const negativeReviews = await prisma.customer.findMany({
-    where: { business: { userId }, status: 'completed', rating: { not: null } },
-    select: { rating: true, feedback: true, business: { select: { id: true, name: true } } },
-  });
-  // Filtramos en JS para asegurar que solo entran
-  // valoraciones realmente bajas (1-3 estrellas).
-  const filteredNegatives = negativeReviews.filter((c) => c.rating! < 4);
-
-  // Agrupamos por negocio: contamos cuántas reseñas
-  // negativas tiene cada uno y recogemos los feedbacks
-  // para mostrar una muestra abreviada.
-  const negativeByBusiness = new Map<string, { name: string; count: number; feedbacks: string[] }>();
-  for (const nr of filteredNegatives) {
-    const key = nr.business.id;
-    if (!negativeByBusiness.has(key)) {
-      negativeByBusiness.set(key, { name: nr.business.name, count: 0, feedbacks: [] });
+  // ── Reseñas negativas de Google agrupadas ────
+  // Recorremos las reseñas que devuelve Google
+  // Places API y extraemos las que tienen valoración
+  // baja (< 4), agrupándolas por negocio para
+  // mostrarlas en la card de alertas.
+  const negativeByBusiness = new Map<string, { name: string; count: number; samples: string[] }>();
+  for (const biz of googleData) {
+    if (!biz.reviews) continue;
+    for (const rev of biz.reviews) {
+      if (rev.rating < 4) {
+        const key = biz.businessId;
+        if (!negativeByBusiness.has(key)) {
+          negativeByBusiness.set(key, { name: biz.businessName, count: 0, samples: [] });
+        }
+        const entry = negativeByBusiness.get(key)!;
+        entry.count++;
+        if (rev.text && entry.samples.length < 3) entry.samples.push(rev.text);
+      }
     }
-    const entry = negativeByBusiness.get(key)!;
-    entry.count++;
-    if (nr.feedback) entry.feedbacks.push(nr.feedback);
   }
 
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
@@ -149,7 +150,7 @@ export default async function DashboardPage() {
               </svg>
               <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">{s.label}</span>
             </div>
-            <span className="text-2xl sm:text-3xl font-bold">{s.value}</span>
+            <span className="text-2xl sm:text-3xl font-bold"><AnimatedCounter value={s.value} /></span>
           </div>
         ))}
       </div>
@@ -251,9 +252,9 @@ export default async function DashboardPage() {
                   <span className="text-xs text-neutral-400 ml-2">
                     · {biz.count} negativa{biz.count !== 1 ? 's' : ''}
                   </span>
-                  {biz.feedbacks[0] && (
+                  {biz.samples[0] && (
                     <p className="text-xs text-neutral-400 mt-1 truncate max-w-[300px]">
-                      {biz.feedbacks[0]}
+                      {biz.samples[0]}
                     </p>
                   )}
                 </div>
