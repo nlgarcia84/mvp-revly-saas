@@ -4,86 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createBusiness, getBusinesses, uploadBusinessImage } from '@/actions/business';
-import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 import BackButton from '@/components/back-button';
+import BusinessQR from '@/components/business-qr';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
-
-// ──────────────────────────────────────────────
-// BusinessQR
-// ──────────────────────────────────────────────
-// Componente que genera un código QR para la URL
-// pública del negocio (revly.es/{slug}). Al hacer
-// clic en "QR" se muestra/oculta con un overlay
-// semitransparente de fondo.
-// ──────────────────────────────────────────────
-const BusinessQR = ({ slug }: { slug: string }) => {
-  const [url, setUrl] = useState('');
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    QRCode.toDataURL(`https://revly.es/${slug}`, {
-      width: 320,
-      margin: 2,
-    })
-      .then(setUrl)
-      .catch((err) => console.error('Error al generar QR:', err));
-  }, [slug]);
-
-  const handleDownload = () => {
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `qr-${slug}.png`;
-    a.click();
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShow(true);
-  };
-
-  return (
-    <>
-      <button
-        onClick={handleClick}
-        className="text-xs text-neutral-400 hover:text-neutral-950 underline transition-colors"
-      >
-        QR
-      </button>
-      {show && url && (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" onClick={() => setShow(false)}>
-            <div
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6 flex flex-col items-center gap-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img src={url} alt={`QR para ${slug}`} className="w-64 h-64 object-contain" />
-              <p className="text-xs text-neutral-400">revly.es/{slug}</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleDownload}
-                  className="text-xs font-medium px-4 py-2 rounded-lg bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity"
-                >
-                  Descargar PNG
-                </button>
-                <button
-                  onClick={() => setShow(false)}
-                  className="text-xs font-medium px-4 py-2 rounded-lg border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </>
-  );
-};
 
 const BusinessPage = () => {
   // ── Modal de creación ──

@@ -14,9 +14,20 @@ export type PlaceDetails = {
   reviews: GoogleReview[];
 };
 
+// ─── resuelve enlaces cortos de Google ─────────────
+// Cuando un usuario pega un enlace tipo
+// "https://maps.app.goo.gl/XXXX" (enlace corto de Google),
+// este código sigue la redirección hasta obtener la URL
+// completa de Google Maps, que es la que contiene los
+// datos del lugar (Place ID, coordenadas, etc.).
+//
+// Si la URL no es de goo.gl, la devuelve tal cual.
+// ─────────────────────────────────────────────────────
 export async function resolveShortUrl(url: string): Promise<string> {
   try {
     const u = new URL(url);
+    // Solo seguimos redirecciones si el dominio termina
+    // en "goo.gl" (incluye maps.app.goo.gl)
     if (u.hostname.endsWith('goo.gl')) {
       const res = await fetch(url, { method: 'HEAD', redirect: 'follow' });
       return res.url;

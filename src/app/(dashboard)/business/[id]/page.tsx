@@ -14,6 +14,7 @@ import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
 import BackButton from '@/components/back-button';
 import GoogleReviewsSection from '@/components/google-reviews-section';
+import BusinessQR from '@/components/business-qr';
 import { Card } from '@/components/ui/card';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
@@ -346,10 +347,25 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <h1 className="text-xl sm:text-2xl font-semibold">
                 {business?.name ?? 'Cargando...'}
               </h1>
-              <p className="text-xs sm:text-sm text-neutral-500">
-                {total} cliente{total !== 1 ? 's' : ''} registrado
-                {total !== 1 ? 's' : ''}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-xs sm:text-sm text-neutral-500">
+                  {total} cliente{total !== 1 ? 's' : ''} registrado
+                  {total !== 1 ? 's' : ''}
+                </p>
+                {business?.slug && (
+                  <>
+                    <span className="text-neutral-300">·</span>
+                    <a
+                      href={`/${business.slug}`}
+                      target="_blank"
+                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline"
+                    >
+                      revly.es/{business.slug}
+                    </a>
+                    <BusinessQR slug={business.slug} />
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

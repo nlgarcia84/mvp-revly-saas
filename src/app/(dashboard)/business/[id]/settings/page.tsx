@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { getBusinesses, updateBusiness, uploadBusinessImage } from '@/actions/business';
+import { validateGoogleUrl, type UrlValidationResult } from '@/actions/validate-url';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 import BackButton from '@/components/back-button';
@@ -23,6 +24,8 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     slug: '',
     emailTemplate: '',
   });
+  const [urlValidation, setUrlValidation] = useState<UrlValidationResult | null>(null);
+  const [validating, setValidating] = useState(false);
 
   useEffect(() => {
     getBusinesses().then((list) => {
@@ -38,6 +41,27 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       }
     });
   }, [id]);
+
+  // ── Validación automática del enlace de Google ────
+  // Cada vez que el usuario escribe en el campo "Enlace
+  // de Google Reviews", esperamos 600ms (para no saturar
+  // el servidor) y luego comprobamos si la URL es válida.
+  // El resultado se muestra con un borde verde (✓) o
+  // rojo (✗) y un mensaje explicativo.
+  // ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!form.googleLink.trim()) {
+      setUrlValidation(null);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setValidating(true);
+      const result = await validateGoogleUrl(form.googleLink);
+      setUrlValidation(result);
+      setValidating(false);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [form.googleLink]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,12 +112,35 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <label className="block text-xs font-medium mb-[6px] text-neutral-500">
               Enlace de Google Reviews
             </label>
-            <input
-              value={form.googleLink}
-              onChange={(e) => setForm({ ...form, googleLink: e.target.value })}
-              className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-              placeholder="https://search.google.com/local/writereview?placeid=..."
-            />
+            <div className="relative">
+              <input
+                value={form.googleLink}
+                onChange={(e) => setForm({ ...form, googleLink: e.target.value })}
+                className={`w-full px-3 py-2.5 border rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-colors pr-9 ${
+                  urlValidation?.valid
+                    ? 'border-emerald-400 focus:border-emerald-500'
+                    : urlValidation && urlValidation.valid === false
+                    ? 'border-red-400 focus:border-red-500'
+                    : 'border-neutral-200 dark:border-neutral-700 focus:border-neutral-950 dark:focus:border-neutral-400'
+                }`}
+                placeholder="https://search.google.com/local/writereview?placeid=..."
+              />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-sm leading-none">
+                {validating ? (
+                  <span className="text-neutral-300 animate-pulse">···</span>
+                ) : urlValidation?.valid ? (
+                  <span className="text-emerald-500">✓</span>
+                ) : urlValidation && urlValidation.valid === false ? (
+                  <span className="text-red-400" title={urlValidation.error}>✗</span>
+                ) : null}
+              </span>
+            </div>
+            {urlValidation && urlValidation.valid === false && (
+              <p className="text-xs text-red-500 mt-1.5">{urlValidation.error}</p>
+            )}
+            {urlValidation?.valid && (
+              <p className="text-xs text-emerald-600 mt-1.5">Enlace válido</p>
+            )}
           </div>
 
           <div>

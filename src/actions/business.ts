@@ -3,6 +3,9 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+// resolveShortUrl convierte enlaces cortos (goo.gl) en la
+// URL real de Google Maps antes de guardarla en la base de
+// datos. Así la URL guardada es siempre la completa.
 import { resolveShortUrl } from '@/lib/google-places';
 
 // ──────────────────────────────────────────────
@@ -71,6 +74,11 @@ export const createBusiness = async (data: {
     throw new Error(`Has alcanzado el límite de ${limit} negocio(s) de tu plan. Mejora a Pro en /pricing`);
   }
 
+  // Antes de guardar, resolvemos los enlaces cortos de
+  // Google (goo.gl) a su URL completa. Así la base de
+  // datos siempre tiene la URL definitiva y no perdemos
+  // información si el servicio de acortamiento deja de
+  // funcionar.
   const slug = await generateSlug(data.name);
   const googleLink = data.googleLink ? await resolveShortUrl(data.googleLink) : null;
 
@@ -180,6 +188,8 @@ export const updateBusiness = async (
     if (slugExists) throw new Error('El slug ya está en uso');
   }
 
+  // Al guardar los cambios, también resolvemos posibles
+  // enlaces cortos a su URL completa (igual que al crear).
   const googleLink = data.googleLink ? await resolveShortUrl(data.googleLink) : null;
 
   return prisma.business.update({
