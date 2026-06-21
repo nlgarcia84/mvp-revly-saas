@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
+import BackButton from '@/components/back-button';
 import type { PlanKey } from '@/lib/subscription';
 
 const plans = [
@@ -67,7 +68,8 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold mb-1">Planes</h1>
+        <BackButton href="/dashboard" />
+        <h1 className="text-2xl font-semibold mt-1 mb-1">Planes</h1>
         <p className="text-sm text-neutral-500">
           {isOnTrial
             ? `Estás en periodo de prueba. Te quedan ${planData.trialDaysLeft} día${planData.trialDaysLeft !== 1 ? 's' : ''} con todas las funciones Pro.`

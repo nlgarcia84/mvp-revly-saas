@@ -1,8 +1,11 @@
+import BackButton from '@/components/back-button';
+
 const PrivacyPage = () => {
   return (
     <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 py-12 px-4">
       <div className="max-w-2xl mx-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-8">
-        <h1 className="text-2xl font-semibold mb-6">Política de Privacidad</h1>
+        <BackButton href="/" />
+        <h1 className="text-2xl font-semibold mt-2 mb-6">Política de Privacidad</h1>
 
         <div className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed space-y-4">
           <p>

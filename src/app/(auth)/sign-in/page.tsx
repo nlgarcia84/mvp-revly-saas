@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/button';
 import AuthBackground from '@/components/auth-background';
+import BackButton from '@/components/back-button';
 
 const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
@@ -12,6 +13,9 @@ const SignInPage = () => {
   return (
     <AuthBackground>
       <div className="w-full max-w-[360px] flex flex-col items-center gap-8">
+        <div className="self-start">
+          <BackButton label="Volver al inicio" href="/" />
+        </div>
         <span className="text-lg font-semibold text-white">Revly</span>
 
         <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7">

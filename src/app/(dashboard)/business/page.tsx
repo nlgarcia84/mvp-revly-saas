@@ -7,6 +7,7 @@ import { createBusiness, getBusinesses, uploadBusinessImage } from '@/actions/bu
 import QRCode from 'qrcode';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
+import BackButton from '@/components/back-button';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 
@@ -125,7 +126,8 @@ const BusinessPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold mb-1">Negocios</h1>
+          <BackButton href="/dashboard" />
+          <h1 className="text-xl sm:text-2xl font-semibold mt-1 mb-1">Negocios</h1>
           <p className="text-xs sm:text-sm text-neutral-500">
             Gestiona tus negocios y sus enlaces de reseña
           </p>

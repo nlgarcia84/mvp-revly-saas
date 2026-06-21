@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import { Card } from '@/components/ui/card';
+import BackButton from '@/components/back-button';
 
 // ──────────────────────────────────────────────
 // ProfilePage (Server Component)
@@ -25,7 +26,8 @@ const ProfilePage = async () => {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl sm:text-2xl font-semibold mb-1">
+        <BackButton href="/dashboard" />
+        <h1 className="text-xl sm:text-2xl font-semibold mt-1 mb-1">
           Datos personales
         </h1>
         <p className="text-xs sm:text-sm text-neutral-500">

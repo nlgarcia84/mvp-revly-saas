@@ -12,6 +12,7 @@ import {
 } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
 import Button from '@/components/ui/button';
+import BackButton from '@/components/back-button';
 import GoogleReviewsSection from '@/components/google-reviews-section';
 import { Card } from '@/components/ui/card';
 
@@ -328,12 +329,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <button
-            onClick={() => window.history.back()}
-            className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors mb-1"
-          >
-            &larr; Volver a negocios
-          </button>
+          <BackButton label="Volver a negocios" />
           <div className="flex items-center gap-3 mt-1">
             {business?.image && (
               <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">

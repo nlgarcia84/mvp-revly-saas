@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { getBusinesses, updateBusiness, uploadBusinessImage } from '@/actions/business';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
+import BackButton from '@/components/back-button';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 
@@ -60,12 +61,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <button
-          onClick={() => router.push(`/business/${id}`)}
-          className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors mb-1"
-        >
-          &larr; Volver a clientes
-        </button>
+        <BackButton label="Volver a clientes" href={`/business/${id}`} />
         <h1 className="text-xl sm:text-2xl font-semibold mb-1">
           Configuración
         </h1>
