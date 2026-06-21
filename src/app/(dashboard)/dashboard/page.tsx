@@ -83,6 +83,29 @@ export default async function DashboardPage() {
     });
   }
 
+  // ── Reseñas negativas agrupadas por negocio ────
+  // Buscamos clientes con valoración baja (< 4) que
+  // además hayan dejado feedback escrito, para mostrar
+  // qué negocios necesitan atención.
+  const negativeReviews = await prisma.customer.findMany({
+    where: { business: { userId }, rating: { lt: 4 }, status: 'completed' },
+    select: { rating: true, feedback: true, business: { select: { id: true, name: true } } },
+  });
+
+  // Agrupamos por negocio: contamos cuántas reseñas
+  // negativas tiene cada uno y recogemos los feedbacks
+  // para mostrar una muestra abreviada.
+  const negativeByBusiness = new Map<string, { name: string; count: number; feedbacks: string[] }>();
+  for (const nr of negativeReviews) {
+    const key = nr.business.id;
+    if (!negativeByBusiness.has(key)) {
+      negativeByBusiness.set(key, { name: nr.business.name, count: 0, feedbacks: [] });
+    }
+    const entry = negativeByBusiness.get(key)!;
+    entry.count++;
+    if (nr.feedback) entry.feedbacks.push(nr.feedback);
+  }
+
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
@@ -201,6 +224,40 @@ export default async function DashboardPage() {
             color="#6366f1"
           />
         </div>
+      </div>
+
+      {/* Reseñas negativas */}
+      <div className={`${nCard} p-5 sm:p-6`}>
+        <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+          Alertas · reseñas negativas
+        </h2>
+        {negativeByBusiness.size === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-emerald-600">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Sin reseñas negativas — todo bien
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {Array.from(negativeByBusiness.entries()).map(([bizId, biz]) => (
+              <div key={bizId} className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium">{biz.name}</span>
+                  <span className="text-xs text-neutral-400 ml-2">
+                    · {biz.count} negativa{biz.count !== 1 ? 's' : ''}
+                  </span>
+                  {biz.feedbacks[0] && (
+                    <p className="text-xs text-neutral-400 mt-1 truncate max-w-[300px]">
+                      {biz.feedbacks[0]}
+                    </p>
+                  )}
+                </div>
+                <span className="text-lg shrink-0 text-red-400">{'★'.repeat(Math.min(3, biz.count > 3 ? 3 : 1))}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Business list */}
