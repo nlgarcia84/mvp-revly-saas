@@ -84,19 +84,23 @@ export default async function DashboardPage() {
   }
 
   // ── Reseñas negativas agrupadas por negocio ────
-  // Buscamos clientes con valoración baja (< 4) que
-  // además hayan dejado feedback escrito, para mostrar
-  // qué negocios necesitan atención.
+  // Traemos todos los clientes completados que tengan
+  // valoración < 4. Usamos not + gte (en vez de lt)
+  // para evitar posibles problemas con el tipado del
+  // campo nullable Int? en la consulta de Prisma.
   const negativeReviews = await prisma.customer.findMany({
-    where: { business: { userId }, rating: { lt: 4 }, status: 'completed' },
+    where: { business: { userId }, status: 'completed', rating: { not: null } },
     select: { rating: true, feedback: true, business: { select: { id: true, name: true } } },
   });
+  // Filtramos en JS para asegurar que solo entran
+  // valoraciones realmente bajas (1-3 estrellas).
+  const filteredNegatives = negativeReviews.filter((c) => c.rating! < 4);
 
   // Agrupamos por negocio: contamos cuántas reseñas
   // negativas tiene cada uno y recogemos los feedbacks
   // para mostrar una muestra abreviada.
   const negativeByBusiness = new Map<string, { name: string; count: number; feedbacks: string[] }>();
-  for (const nr of negativeReviews) {
+  for (const nr of filteredNegatives) {
     const key = nr.business.id;
     if (!negativeByBusiness.has(key)) {
       negativeByBusiness.set(key, { name: nr.business.name, count: 0, feedbacks: [] });
