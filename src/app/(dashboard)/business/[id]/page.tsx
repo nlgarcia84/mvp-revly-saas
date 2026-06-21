@@ -326,29 +326,31 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const completed = customers.filter((c) => c.status === 'completed').length;
 
   return (
-    <div className="flex flex-col gap-8 sm:gap-10">
+    <div className="flex flex-col gap-10 sm:gap-12">
       {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-0">
         <div>
-          <BackButton label="Volver a negocios" />
-          <div className="flex items-center gap-3 mt-1">
+          <div className="mb-4">
+            <BackButton label="Volver a negocios" />
+          </div>
+          <div className="flex items-center gap-3">
             {business?.image && (
-              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0">
+              <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
                 <Image
                   src={business.image}
                   alt={business.name}
-                  width={40}
-                  height={40}
+                  width={48}
+                  height={48}
                   className="object-cover w-full h-full"
                 />
               </div>
             )}
             <div>
-              <h1 className="text-xl sm:text-2xl font-semibold">
+              <h1 className="text-2xl sm:text-3xl font-semibold">
                 {business?.name ?? 'Cargando...'}
               </h1>
-              <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs sm:text-sm text-neutral-500">
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-sm text-neutral-500">
                   {total} cliente{total !== 1 ? 's' : ''} registrado
                   {total !== 1 ? 's' : ''}
                 </p>
@@ -358,7 +360,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <a
                       href={`/${business.slug}`}
                       target="_blank"
-                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline"
+                      className="text-sm text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline"
                     >
                       revly.es/{business.slug}
                     </a>
@@ -369,7 +371,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="flex gap-2.5 sm:gap-3">
+        <div className="flex gap-3">
           <Button
             variant="secondary"
             className="!px-3 !py-1.5 text-[11px]"
@@ -409,45 +411,45 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Stats */}
-      <div className="flex flex-col gap-4 sm:gap-5">
+      <div className="flex flex-col gap-5">
         <div>
           <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
             Estadísticas
           </h2>
-          <p className="text-xs text-neutral-400 mt-1.5">
+          <p className="text-xs text-neutral-400 mt-2">
             Resumen de clientes registrados, invitaciones enviadas y reseñas
             completadas.
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-4 sm:gap-5">
-          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+        <div className="grid grid-cols-3 gap-5">
+          <Card neumorphic className="flex flex-col gap-2 p-6">
+            <span className="text-xs text-neutral-500 font-medium">
               Registrados
             </span>
-            <span className="text-2xl sm:text-3xl font-bold">{total}</span>
+            <span className="text-3xl font-bold">{total}</span>
           </Card>
-          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+          <Card neumorphic className="flex flex-col gap-2 p-6">
+            <span className="text-xs text-neutral-500 font-medium">
               Invitados
             </span>
-            <span className="text-2xl sm:text-3xl font-bold">{invited}</span>
+            <span className="text-3xl font-bold">{invited}</span>
           </Card>
-          <Card neumorphic className="flex flex-col gap-1.5 p-5 sm:p-6">
-            <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">
+          <Card neumorphic className="flex flex-col gap-2 p-6">
+            <span className="text-xs text-neutral-500 font-medium">
               Completados
             </span>
-            <span className="text-2xl sm:text-3xl font-bold">{completed}</span>
+            <span className="text-3xl font-bold">{completed}</span>
           </Card>
         </div>
       </div>
 
-      {/* Filtros + batch */}
-      <div className="flex flex-col gap-4 sm:gap-5">
+      {/* Client section */}
+      <div className="flex flex-col gap-5">
         <div>
           <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
             CLIENTES BD PROPIA
           </h2>
-          <p className="text-xs text-neutral-400 mt-1.5">
+          <p className="text-xs text-neutral-400 mt-2">
             Gestiona los clientes de tu negocio. Selecciona varios para enviar
             invitaciones en lote o eliminar.
           </p>
