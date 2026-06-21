@@ -42,66 +42,80 @@ const SignUpPage = () => {
         </div>
         <span className="text-lg font-semibold text-white">Revly</span>
 
-        <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7">
-          <h1 className="text-lg font-semibold text-white mb-1">Crear cuenta</h1>
-          <p className="text-sm text-neutral-400 mb-6">Empieza a gestionar tus reseñas</p>
+        <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7 relative overflow-hidden">
+          <div className={`transition-all duration-300 ${pending ? 'opacity-0 scale-95 pointer-events-none' : ''}`}>
+            <h1 className="text-lg font-semibold text-white mb-1">Crear cuenta</h1>
+            <p className="text-sm text-neutral-400 mb-6">Empieza a gestionar tus reseñas</p>
 
-          <form action={action} className="flex flex-col gap-4">
-            <div>
-              <label className="block text-xs font-medium mb-1.5 text-neutral-400">
-                Nombre
-              </label>
-              <input
-                name="name"
-                type="text"
-                required
-                className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
-                placeholder="Tu nombre"
-              />
+            <form action={action} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs font-medium mb-1.5 text-neutral-400">
+                  Nombre
+                </label>
+                <input
+                  name="name"
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
+                  placeholder="Tu nombre"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium mb-1.5 text-neutral-400">
+                  Correo electrónico
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
+                  placeholder="tu@email.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium mb-1.5 text-neutral-400">
+                  Contraseña
+                </label>
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={6}
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+
+              {state && 'error' in state && state.error && (
+                <p className="text-sm text-red-400">{state.error}</p>
+              )}
+
+              <Button type="submit" variant="secondary" disabled={pending}>
+                {pending ? 'Creando cuenta...' : 'Crear cuenta'}
+              </Button>
+            </form>
+
+            <p className="text-xs text-neutral-500 text-center mt-6">
+              ¿Ya tienes cuenta?{' '}
+              <Link href="/sign-in" className="text-white font-medium hover:underline">
+                Inicia sesión
+              </Link>
+            </p>
+          </div>
+
+          {pending && (
+            <div className="absolute inset-0 flex items-center justify-center animate-fade-slide-in">
+              <div className="flex flex-col items-center gap-3">
+                <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-sm text-neutral-400">Creando cuenta...</span>
+              </div>
             </div>
-
-            <div>
-              <label className="block text-xs font-medium mb-1.5 text-neutral-400">
-                Correo electrónico
-              </label>
-              <input
-                name="email"
-                type="email"
-                required
-                className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
-                placeholder="tu@email.com"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium mb-1.5 text-neutral-400">
-                Contraseña
-              </label>
-              <input
-                name="password"
-                type="password"
-                required
-                minLength={6}
-                className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
-                placeholder="Mínimo 6 caracteres"
-              />
-            </div>
-
-            {state && 'error' in state && state.error && (
-              <p className="text-sm text-red-400">{state.error}</p>
-            )}
-
-            <Button type="submit" variant="secondary" disabled={pending}>
-              {pending ? 'Creando cuenta...' : 'Crear cuenta'}
-            </Button>
-          </form>
-
-          <p className="text-xs text-neutral-500 text-center mt-6">
-            ¿Ya tienes cuenta?{' '}
-            <Link href="/sign-in" className="text-white font-medium hover:underline">
-              Inicia sesión
-            </Link>
-          </p>
+          )}
         </div>
       </div>
     </AuthBackground>

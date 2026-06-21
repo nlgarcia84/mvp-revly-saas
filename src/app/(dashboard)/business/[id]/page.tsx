@@ -503,11 +503,19 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         {/* Tabla */}
         {filtered.length === 0 ? (
           <Card neumorphic className="p-6">
-            <p className="text-sm text-neutral-400 text-center py-8">
-              {customers.length === 0
-                ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.'
-                : 'No hay clientes con este estado.'}
-            </p>
+            <div className="flex flex-col items-center gap-3 py-8">
+              <svg className="w-10 h-10 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 15c0 0 1.5-2 4-2s4 2 4 2" />
+                <line x1="9" y1="9" x2="9.01" y2="9" />
+                <line x1="15" y1="9" x2="15.01" y2="9" />
+              </svg>
+              <p className="text-sm text-neutral-400 text-center">
+                {customers.length === 0
+                  ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.'
+                  : 'No hay clientes con este estado.'}
+              </p>
+            </div>
           </Card>
         ) : (
           <div className="overflow-x-auto">

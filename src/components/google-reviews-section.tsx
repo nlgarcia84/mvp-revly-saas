@@ -96,6 +96,18 @@ const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => vo
 
 const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { text: string; authorName: string; placeId: string; googleLink?: string; onClose: () => void }) => {
   const [copied, setCopied] = useState(false);
+  const [displayed, setDisplayed] = useState('');
+
+  useEffect(() => {
+    setDisplayed('');
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) clearInterval(interval);
+    }, 15);
+    return () => clearInterval(interval);
+  }, [text]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);
@@ -113,7 +125,10 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
             <button onClick={onClose} className="text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 text-lg leading-none cursor-pointer">&times;</button>
           </div>
           <div className={`${nCard} p-4 mb-4 text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto`}>
-            {text}
+            {displayed}
+            {displayed.length < text.length && (
+              <span className="inline-block w-0.5 h-4 bg-neutral-950 dark:bg-neutral-100 ml-0.5 animate-pulse align-text-bottom" />
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button

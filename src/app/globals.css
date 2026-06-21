@@ -19,3 +19,44 @@
 .animate-pulse-bg {
   animation: pulse-bg 2s ease-in-out infinite;
 }
+
+@keyframes pulse-red {
+  0%, 100% {
+    background-color: #fef2f2;
+  }
+  50% {
+    background-color: #fecaca;
+  }
+}
+
+.dark .animate-pulse-red {
+  animation: pulse-red-dark 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red-dark {
+  0%, 100% {
+    background-color: #1c1010;
+  }
+  50% {
+    background-color: #2d1414;
+  }
+}
+
+.animate-pulse-red {
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide-in {
+  animation: fadeSlideIn 0.4s ease-out;
+}

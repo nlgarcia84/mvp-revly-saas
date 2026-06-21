@@ -232,9 +232,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* Reseñas negativas */}
-      <div className={`${nCard} p-5 sm:p-6`}>
+      <div className={`${nCard} p-5 sm:p-6 ${negativeByBusiness.size > 0 ? 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/40 dark:to-red-900/30 animate-pulse-red' : ''}`}>
         <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-          Alertas · reseñas negativas
+          Feed de reseñas negativas por negocio
         </h2>
         {negativeByBusiness.size === 0 ? (
           <div className="flex items-center gap-2 text-sm text-emerald-600">
