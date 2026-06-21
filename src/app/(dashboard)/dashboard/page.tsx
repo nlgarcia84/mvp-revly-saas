@@ -87,7 +87,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 sm:gap-6">
-      <div>
+      <div className={`${nCard} p-5 sm:p-6 bg-gradient-to-br from-white to-neutral-50 dark:from-neutral-900 dark:to-neutral-950`}>
         <h1 className="text-2xl font-semibold mb-2 flex items-center gap-3 flex-wrap">
           Hola, {name}
           {trialDaysLeft > 0 ? (
@@ -110,14 +110,16 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: 'Negocios', value: totalBusinesses, color: 'blue' },
-          { label: 'Clientes', value: totalCustomers, color: 'violet' },
-          { label: 'Invitados', value: invited, color: 'amber' },
-          { label: 'Completados', value: completed, color: 'emerald' },
+          { label: 'Negocios', value: totalBusinesses, color: 'blue', icon: 'M3 21h18M3 7v14h18V7M3 7l9-5 9 5' },
+          { label: 'Clientes', value: totalCustomers, color: 'violet', icon: 'M12 4a4 4 0 100 8 4 4 0 000-8zM4 20c0-4 3.58-8 8-8s8 4 8 8' },
+          { label: 'Invitados', value: invited, color: 'amber', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+          { label: 'Completados', value: completed, color: 'emerald', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
         ].map((s) => (
-          <div key={s.label} className={`${nCard} flex flex-col gap-1.5 p-5`}>
+          <div key={s.label} className={`${nCard} flex flex-col gap-2 p-5 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:shadow-[-5px_-5px_10px_#2a2a2a,5px_5px_10px_#0a0a0a]`}>
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${indicator[s.color]}`} />
+              <svg className={`w-4 h-4 ${indicator[s.color].replace('bg-', 'text-')}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={s.icon} />
+              </svg>
               <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">{s.label}</span>
             </div>
             <span className="text-2xl sm:text-3xl font-bold">{s.value}</span>
@@ -149,10 +151,10 @@ export default async function DashboardPage() {
               )}
             </div>
             {conversionRate !== null && (
-              <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
+              <div className="w-full h-3 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden shadow-[inset_1px_1px_2px_#d4d4d4,inset_-1px_-1px_2px_#ffffff] dark:shadow-[inset_1px_1px_2px_#0c0c0c,inset_-1px_-1px_2px_#222222]">
                 <div
-                  className="h-full bg-neutral-950 dark:bg-neutral-100 rounded-full transition-all"
-                  style={{ width: `${conversionRate}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${conversionRate}%`, background: 'linear-gradient(90deg, #0a0a0a, #525252)' }}
                 />
               </div>
             )}
@@ -210,12 +212,15 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium text-neutral-500">Tus negocios</h2>
           {businesses.map((b) => (
-            <Link key={b.id} href={`/business/${b.id}`} className={`${nCard} flex items-center justify-between px-5 py-4 sm:py-5 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:shadow-[-5px_-5px_10px_#2a2a2a,5px_5px_10px_#0a0a0a]`}>
-              <div>
+            <Link key={b.id} href={`/business/${b.id}`} className={`${nCard} flex items-center justify-between px-5 py-4 sm:py-5 transition-all duration-200 hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#b0b0b0] dark:hover:shadow-[-5px_-5px_10px_#3a3a3a,5px_5px_10px_#0a0a0a] hover:scale-[1.01]`}>
+              <div className="flex items-center gap-3">
+                <span className="w-2 h-2 rounded-full bg-neutral-950 dark:bg-neutral-100 shrink-0" />
                 <span className="font-medium">{b.name}</span>
-                <span className="text-xs text-neutral-400 ml-3">{b._count.customers} clientes</span>
+                <span className="text-xs text-neutral-400">· {b._count.customers} cliente{b._count.customers !== 1 ? 's' : ''}</span>
               </div>
-              <span className="text-xs text-neutral-300">&rarr;</span>
+              <svg className="w-4 h-4 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </Link>
           ))}
         </div>
