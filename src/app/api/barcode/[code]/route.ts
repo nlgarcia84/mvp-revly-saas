@@ -34,8 +34,8 @@ export async function GET(
       paddingheight: 5,        // padding superior/inferior
     });
 
-    // Devolvemos la imagen PNG
-    return new NextResponse(png, {
+    // Devolvemos la imagen PNG (convertir Buffer a Uint8Array para compatibilidad TS)
+    return new NextResponse(new Uint8Array(png), {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=86400', // cache 24h
