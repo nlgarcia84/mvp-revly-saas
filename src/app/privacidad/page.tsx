@@ -25,7 +25,7 @@ const PrivacyPage = () => {
             Los datos recogidos se utilizarán exclusivamente para:
           </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Gestionar la solicitud de descuento del 10% en el negocio seleccionado.</li>
+            <li>Gestionar el programa de puntos y descuentos del negocio seleccionado.</li>
             <li>Enviar comunicaciones comerciales personalizadas del negocio.</li>
             <li>Mejorar la experiencia del cliente y realizar análisis estadísticos internos.</li>
           </ul>

@@ -248,6 +248,7 @@ const BusinessPage = () => {
                   </svg>
                   <span>{logoFile ? logoFile.name : 'Seleccionar archivo'}</span>
                 </label>
+                <p className="text-xs text-neutral-400 mt-1">Máximo 1 MB · Resolución recomendada: 512x512 px</p>
               </div>
 
               <div className="flex gap-2 justify-end mt-2">

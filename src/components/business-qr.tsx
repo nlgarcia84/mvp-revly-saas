@@ -24,8 +24,10 @@ const BusinessQR = ({ slug }: { slug: string }) => {
   // Al montar el componente (o si cambia el slug), genera
   // el QR llamando a la librería qrcode. El resultado es
   // una imagen en formato data URL que se guarda en "url".
+  // Usamos window.location.origin para que funcione tanto
+  // en local (localhost:3000) como en producción (revly.es).
   useEffect(() => {
-    QRCode.toDataURL(`https://revly.es/${slug}`, {
+    QRCode.toDataURL(`${window.location.origin}/${slug}`, {
       width: 320,
       margin: 2,
     })

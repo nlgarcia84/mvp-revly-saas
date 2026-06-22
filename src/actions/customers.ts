@@ -177,6 +177,36 @@ export const clearCompletedCustomers = async (businessId: string) => {
   return { count };
 };
 
+// ─── Página pública del cliente ──────────────────────
+// Devuelve los datos que necesita la página de perfil
+// del cliente (puntos, código de descuento, negocio).
+// No requiere autenticación porque es una página pública.
+// Busca el cliente por ID y verifica que el slug del
+// negocio coincida (para evitar mostrar datos de otro).
+// ─────────────────────────────────────────────────────
+export const getPublicCustomer = async (
+  customerId: string,
+  slug: string,
+) => {
+  const customer = await prisma.customer.findUnique({
+    where: { id: customerId },
+    include: {
+      business: { select: { name: true, slug: true } },
+    },
+  });
+
+  if (!customer) return null;
+  if (customer.business.slug !== slug) return null;
+
+  return {
+    id: customer.id,
+    name: customer.name,
+    points: customer.points,
+    discountCode: customer.discountCode,
+    businessName: customer.business.name,
+  };
+};
+
 export const deleteSelectedCustomers = async (ids: string[]) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();

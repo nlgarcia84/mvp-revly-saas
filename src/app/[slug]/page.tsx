@@ -6,26 +6,28 @@ import Button from '@/components/ui/button';
 // PublicBusinessPage (Server Component)
 // ──────────────────────────────────────────────
 // Página pública visitada por los clientes del negocio
-// (revly.es/{slug}). Muestra un formulario para canjear
-// un 10% de descuento a cambio de datos de contacto.
+// (revly.es/{slug}). Muestra un formulario para unirse
+// al programa de puntos y obtener descuentos.
 //
 // Flujo:
 //   1. Sin ?success → muestra formulario con nombre,
 //      email, teléfono y checkbox de privacidad.
-//   2. Al enviar → Server Action addPublicCustomer con
-//      consent validado. Si ok, redirect a ?success=1.
-//   3. Con ?success → pantalla de agradecimiento.
-//      El cliente presenta este mensaje para el descuento.
+//   2. Al enviar → Server Action addPublicCustomer.
+//      Si el email ya existe, suma 1 punto más.
+//      Si es nuevo, crea con 1 punto + código descuento.
+//   3. Con ?success → pantalla de bienvenida con puntos
+//      y enlace a la página del cliente.
+//   4. Con ?error → muestra el mensaje de error.
 // ──────────────────────────────────────────────
 const PublicBusinessPage = async ({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ success?: string }>;
+  searchParams: Promise<{ success?: string; error?: string; customerId?: string; points?: string }>;
 }) => {
   const { slug } = await params;
-  const { success } = await searchParams;
+  const { success, error, customerId, points } = await searchParams;
   const business = await getBusinessBySlug(slug);
 
   if (!business) {
@@ -36,42 +38,77 @@ const PublicBusinessPage = async ({
     );
   }
 
+  // ── Pantalla de éxito ─────────────────────────
+  // El cliente se ha registrado correctamente.
+  // Le mostramos sus puntos y un enlace a su perfil.
   if (success) {
+    const puntos = points ? parseInt(points) : 1;
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8 text-center">
-          <h1 className="text-xl font-semibold mb-1">¡Gracias, {business.name}!</h1>
+          <h1 className="text-xl font-semibold mb-1">¡Bienvenido, {business.name}!</h1>
           <p className="text-sm text-neutral-500 mb-6">
             Tus datos han sido registrados correctamente.
-            Presenta este mensaje en tu próxima compra para obtener tu <strong>10% de descuento</strong>.
+            Tienes <strong>{puntos} punto{puntos !== 1 ? 's' : ''}</strong> acumulado
+            {puntos !== 1 ? 's' : ''}.
+            Cada 5 puntos consigues un <strong>10% de descuento</strong>.
           </p>
+          {customerId && (
+            <Button as="a" variant="primary" href={`/${slug}/customer/${customerId}`}>
+              Ver mi perfil y código de descuento
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pantalla de error ─────────────────────────
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8">
+          <h1 className="text-xl font-semibold mb-4">Algo salió mal</h1>
+          <p className="text-sm text-red-500 mb-6">{error}</p>
           <Button as="a" variant="primary" href={`/${slug}`}>
-            Volver
+            Volver a intentar
           </Button>
         </div>
       </div>
     );
   }
 
+  // ── Formulario ────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8">
         <h1 className="text-xl font-semibold mb-1">{business.name}</h1>
         <p className="text-xs text-neutral-400 mb-4">
-          Déjanos tus datos y obtén un <strong>10% de descuento</strong> en tu próxima compra
+          Déjanos tus datos y empieza a <strong>acumular puntos</strong>.
+          Cada 5 puntos consigues un <strong>10% de descuento</strong> en tus compras.
         </p>
 
         <form
           action={async (formData: FormData) => {
             'use server';
-            await addPublicCustomer({
-              slug,
-              name: formData.get('name') as string,
-              email: formData.get('email') as string,
-              phone: (formData.get('phone') as string) || '',
-              consent: formData.get('consent') === 'on',
-            });
-            redirect(`/${slug}?success=1`);
+            try {
+              const customer = await addPublicCustomer({
+                slug,
+                name: formData.get('name') as string,
+                email: formData.get('email') as string,
+                phone: (formData.get('phone') as string) || '',
+                consent: formData.get('consent') === 'on',
+              });
+              redirect(
+                `/${slug}?success=1&customerId=${customer.id}&points=${customer.points}`,
+              );
+            } catch (e) {
+              if (e instanceof Error && 'digest' in e && typeof e.digest === 'string' && e.digest.startsWith('NEXT_REDIRECT')) {
+                throw e;
+              }
+              const msg = e instanceof Error ? e.message : 'Error al procesar el formulario';
+              redirect(`/${slug}?error=${encodeURIComponent(msg)}`);
+            }
           }}
           className="flex flex-col gap-4"
         >
@@ -128,7 +165,7 @@ const PublicBusinessPage = async ({
           </label>
 
           <Button type="submit">
-            Obtener 10% de descuento
+            ¡Quiero empezar!
           </Button>
         </form>
       </div>

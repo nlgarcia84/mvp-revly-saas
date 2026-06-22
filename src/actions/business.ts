@@ -122,11 +122,23 @@ export const getBusinessBySlug = async (slug: string) => {
   });
 };
 
+// Genera un código de descuento único de 8 caracteres
+// (ej: REVLY-A3X9). Se usa para identificar a cada
+// cliente y canjear su descuento en el negocio.
+function generateDiscountCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'REVLY-';
+  for (let i = 0; i < 4; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 /**
- * Crea un cliente desde la página pública (sin autenticación).
- * Valida que el usuario haya marcado consent (aceptar
- * política de privacidad) antes de guardar en BD.
- * Requiere el slug del negocio, no el ID.
+ * Crea o actualiza un cliente desde la página pública.
+ * - Si el email ya existe para este negocio → suma 1 punto
+ * - Si es nuevo → crea con 1 punto + código de descuento
+ * Valida consent antes de guardar.
  */
 export const addPublicCustomer = async (data: {
   slug: string;
@@ -142,13 +154,26 @@ export const addPublicCustomer = async (data: {
   });
   if (!business) throw new Error('Negocio no encontrado');
 
-  const customer = await prisma.customer.create({
-    data: {
+  // Usamos upsert para que si el cliente ya existe
+  // (mismo email + mismo negocio), solo sume puntos
+  // en vez de crear un duplicado.
+  const customer = await prisma.customer.upsert({
+    where: {
+      email_businessId: { email: data.email, businessId: business.id },
+    },
+    create: {
       name: data.name || null,
       email: data.email,
       phone: data.phone,
       source: 'qr',
       businessId: business.id,
+      points: 1,
+      discountCode: generateDiscountCode(),
+    },
+    update: {
+      name: data.name || null,
+      phone: data.phone || '',
+      points: { increment: 1 },
     },
   });
 

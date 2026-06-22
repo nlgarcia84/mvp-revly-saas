@@ -66,6 +66,19 @@ model Business {
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers     Customer[]
 
+  // ── Google Business Profile ────────────────────────
+  // Si el usuario conecta su cuenta de Google Business
+  // Profile (OAuth), guardamos aquí los tokens y los IDs
+  // de su cuenta y ubicación en Google. Así podemos usar
+  // la API de Business Profile para traer TODAS las
+  // reseñas en lugar de solo las 5 que da Places API.
+  googleBusinessAccessToken  String?   // token OAuth para llamar a la API
+  googleBusinessRefreshToken String?   // token para renovar el access token cuando caduca
+  googleBusinessTokenExpiry  DateTime? // cuándo caduca el access token
+  googleBusinessAccountId    String?   // ID de la cuenta en Google Business Profile
+  googleBusinessLocationId   String?   // ID de la ubicación/local en Google Business Profile
+  // ─────────────────────────────────────────────────
+
   @@unique([name, userId])
 }
 
@@ -90,6 +103,16 @@ model Customer {
   lastInvitedAt DateTime?
   rating        Int?
   feedback      String?
+  // ── Sistema de puntos y descuentos ──────────────────
+  // "points" se incrementa cada vez que el cliente
+  // rellena el formulario (1 punto por envío). Cuando
+  // acumula 5 puntos, puede canjear un 10% de descuento.
+  // "discountCode" es un código único (ej: REVLY-A3X9)
+  // que se genera al crear el cliente y se muestra en
+  // su perfil público con un barcode.
+  points        Int       @default(1)
+  discountCode  String?
+  // ─────────────────────────────────────────────────
   createdAt     DateTime  @default(now())
   business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
 

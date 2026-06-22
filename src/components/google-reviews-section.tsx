@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getBusinessGoogleReviews } from '@/actions/google-reviews';
+import { getBusinessGoogleReviews, getBusinessProfileStatus } from '@/actions/google-reviews';
 import { generateReviewResponse } from '@/actions/generate-response';
 import { nCard } from '@/components/ui/card';
 
@@ -156,6 +156,7 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
   const [data, setData] = useState<GoogleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bpConnected, setBpConnected] = useState(false);
   const [alerts, setAlerts] = useState<BadReview[]>([]);
   const [ratingFilter, setRatingFilter] = useState<'all' | 'positive' | 'negative'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
@@ -212,6 +213,13 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Comprueba si el negocio tiene Business Profile conectado
+  useEffect(() => {
+    getBusinessProfileStatus(businessId)
+      .then((status) => setBpConnected(status.connected))
+      .catch(() => setBpConnected(false));
+  }, [businessId]);
 
   const now = Date.now() / 1000;
   const filtered = data?.reviews.filter((r) => {
@@ -271,8 +279,13 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
               <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
               <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
             </svg>
-            <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wider">
+            <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wider flex items-center gap-2">
               Reseñas de Google
+              {bpConnected && (
+                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 normal-case tracking-normal">
+                  Todas
+                </span>
+              )}
             </h2>
           </div>
           <button
@@ -332,7 +345,9 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                 </span>
               </div>
             </div>
-            <span className="text-xs text-neutral-400">{filtered.length} mostradas</span>
+            <span className="text-xs text-neutral-400">
+              {filtered.length} {bpConnected ? 'mostradas' : 'mostradas (máx. 5 sin conectar)'}
+            </span>
           </div>
 
           {filtered.length > 0 ? (
