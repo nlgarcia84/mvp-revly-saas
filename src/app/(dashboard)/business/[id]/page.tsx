@@ -3,7 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBusinesses } from '@/actions/business';
+import { getBusinesses, getUserFeatures } from '@/actions/business';
 import {
   getCustomers,
   addCustomerBatch,
@@ -148,6 +148,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [showCsv, setShowCsv] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '' });
   const [csvResult, setCsvResult] = useState('');
+  const [features, setFeatures] = useState<string[]>([]);
   const [showInvoices, setShowInvoices] = useState(false);
   const [invoiceText, setInvoiceText] = useState('');
   const [invoiceList, setInvoiceList] = useState<Awaited<ReturnType<typeof getInvoices>>>([]);
@@ -159,6 +160,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const found = businesses.find((b) => b.id === id);
     setBusiness(found ?? null);
     if (found) setCustomers(await getCustomers(id));
+    const userFeatures = await getUserFeatures();
+    setFeatures(userFeatures);
   };
 
   useEffect(() => {
@@ -991,7 +994,30 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <GoogleReviewsSection
         businessId={id}
         googleLink={business?.googleLink ?? ''}
+        features={features}
       />
+
+      {/* Reporte PDF (plan Pro) */}
+      {features.includes('pdf-reports') && (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
+          <h2 className="text-sm font-semibold mb-1">Reporte de plan de acción</h2>
+          <p className="text-xs text-neutral-400 mb-3">
+            Genera un informe basado en las reseñas negativas con recomendaciones y plan de acción.
+          </p>
+          <a
+            href={`/api/report/${id}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Descargar reporte
+          </a>
+        </div>
+      )}
     </div>
   );
 };

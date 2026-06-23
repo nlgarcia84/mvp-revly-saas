@@ -152,7 +152,7 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
   );
 };
 
-const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; googleLink?: string }) => {
+const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId: string; googleLink?: string; features?: string[] }) => {
   const [data, setData] = useState<GoogleData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -374,13 +374,22 @@ const GoogleReviewsSection = ({ businessId, googleLink }: { businessId: string; 
                     {review.rating < 4 && (
                       <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
                     )}
-                    <button
-                      onClick={() => handleGenerate(review, data.placeId)}
-                      disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
-                      className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
-                    >
-                      {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
-                    </button>
+                    {features?.includes('ai-responses') ? (
+                      <button
+                        onClick={() => handleGenerate(review, data.placeId)}
+                        disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
+                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
+                      >
+                        {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
+                      </button>
+                    ) : (
+                      <a
+                        href="/pricing"
+                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 transition-colors"
+                      >
+                        IA disponible en Avanzado
+                      </a>
+                    )}
                     <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
                       {fmtDate(review.time)}
                     </span>

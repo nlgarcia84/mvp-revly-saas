@@ -7,6 +7,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 // URL real de Google Maps antes de guardarla en la base de
 // datos. Así la URL guardada es siempre la completa.
 import { resolveShortUrl } from '@/lib/google-places';
+import { getPlan } from '@/lib/subscription';
 
 // ──────────────────────────────────────────────
 // slugify
@@ -314,4 +315,11 @@ export const uploadBusinessImage = async (businessId: string, formData: FormData
   });
 
   return imageUrl;
+};
+
+export const getUserFeatures = async (): Promise<string[]> => {
+  const userId = await getUserId();
+  if (!userId) return [];
+  const plan = await getPlan(userId);
+  return [...plan.features];
 };

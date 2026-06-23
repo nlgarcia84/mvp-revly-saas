@@ -25,6 +25,16 @@ export async function POST(request: Request) {
 
         const subscriptionId = session.subscription as string;
         const customerId = session.customer as string;
+        // El plan se pasa en metadata al crear la sesión de checkout.
+        // Si no hay metadata.plan, se deduce del line_items.
+        let plan = session.metadata?.plan as string;
+        if (!plan && subscriptionId) {
+          const sub: any = await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = sub.items?.data?.[0]?.price?.id;
+          if (priceId === 'price_1R41NhGGc0u0LW2eH0y6Q3mh') plan = 'avanzado';
+          else if (priceId === 'price_PRO_PLACEHOLDER') plan = 'pro';
+          else plan = 'avanzado';
+        }
 
         if (subscriptionId) {
           const sub: any = await stripe.subscriptions.retrieve(subscriptionId);
@@ -32,14 +42,14 @@ export async function POST(request: Request) {
             where: { userId },
             create: {
               userId,
-              plan: 'pro',
+              plan: plan || 'avanzado',
               status: sub.status === 'active' ? 'active' : 'inactive',
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
               currentPeriodEnd: new Date(sub.current_period_end * 1000),
             },
             update: {
-              plan: 'pro',
+              plan: plan || 'avanzado',
               status: sub.status === 'active' ? 'active' : 'inactive',
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
@@ -61,11 +71,12 @@ export async function POST(request: Request) {
         if (!sub) break;
 
         const isActive = subEvent.status === 'active' || subEvent.status === 'trialing';
+        // Si sigue activo, mantiene el plan actual. Si se cancela, vuelve a basico.
         await prisma.subscription.update({
           where: { id: sub.id },
           data: {
             status: isActive ? 'active' : 'inactive',
-            plan: isActive ? 'pro' : 'free',
+            plan: isActive ? sub.plan : 'basico',
             currentPeriodEnd: subEvent.current_period_end
               ? new Date(subEvent.current_period_end * 1000)
               : null,

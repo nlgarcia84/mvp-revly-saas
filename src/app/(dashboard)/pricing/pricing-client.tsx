@@ -5,50 +5,76 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 import BackButton from '@/components/back-button';
-import type { PlanKey } from '@/lib/subscription';
 
 const plans = [
   {
-    id: 'free',
-    name: 'Gratis',
+    id: 'basico',
+    name: 'Básico',
     price: '0 €',
     period: '',
     features: [
       '1 negocio',
       'Clientes ilimitados',
-      'QR y email',
-      'Analytics básico',
+      'Sistema de puntos y descuentos',
+      'Canje en caja con QR + PIN',
+      'Facturas para sumar puntos',
+      'Reseñas de Google (5 últimas)',
+      'Invitaciones por email',
     ],
   },
   {
-    id: 'pro',
-    name: 'Pro',
+    id: 'avanzado',
+    name: 'Avanzado',
     price: '9 €',
     period: '/mes',
     features: [
-      'Negocios ilimitados',
+      'Hasta 5 negocios',
       'Clientes ilimitados',
-      'QR y email personalizado',
-      'Importar CSV',
-      'Analytics completo',
-      'Valoraciones con estrellas',
+      'Todo lo del plan Básico',
+      'IA en respuestas a reseñas',
+      'Google Business Profile (todas las reseñas)',
+      'Filtros avanzados de reseñas',
+      'Importar clientes por CSV',
     ],
     priceId: 'price_1R41NhGGc0u0LW2eH0y6Q3mh',
     popular: true,
   },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '19 €',
+    period: '/mes',
+    features: [
+      'Negocios ilimitados',
+      'Clientes ilimitados',
+      'Todo lo del plan Avanzado',
+      'Reportes PDF de plan de acción',
+      'Analytics completo',
+      'QR y email personalizado',
+      'Valoraciones con estrellas',
+    ],
+    priceId: 'price_PRO_PLACEHOLDER',
+  },
 ];
 
+const planDetails: Record<string, { badge: string; btnFree: string; btnPaid: string }> = {
+  basico: { badge: '', btnFree: 'Tu plan actual', btnPaid: 'Downgrade' },
+  avanzado: { badge: 'Más popular', btnFree: 'Mejorar a Avanzado', btnPaid: 'Tu plan actual' },
+  pro: { badge: '', btnFree: 'Mejorar a Pro', btnPaid: 'Tu plan actual' },
+};
+
 export default function PricingClient({ planData }: { planData: { plan: string; trialDaysLeft: number; status: string } }) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleCheckout = async (priceId: string) => {
-    setLoading(true);
+  const handleCheckout = async (planId: string, priceId?: string) => {
+    if (!priceId) return;
+    setLoading(planId);
     try {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, plan: planId }),
       });
       const data = await res.json();
       if (data.url) {
@@ -59,11 +85,11 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
     } catch {
       alert('Error de conexión');
     }
-    setLoading(false);
+    setLoading(null);
   };
 
   const isOnTrial = planData.trialDaysLeft > 0;
-  const isPro = planData.plan === 'pro';
+  const currentPlan = planData.plan;
 
   return (
     <div className="flex flex-col gap-8">
@@ -77,10 +103,10 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
         {plans.map((plan) => {
-          const isCurrentPlan = plan.id === 'free' && !isPro && !isOnTrial;
-          const isCurrentPro = plan.id === 'pro' && (isPro || isOnTrial);
+          const isCurrent = plan.id === currentPlan || (isOnTrial && plan.id === 'pro');
+          const details = planDetails[plan.id];
 
           return (
             <div
@@ -91,9 +117,9 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
                   : ''
               }`}
             >
-              {plan.popular && (
+              {details.badge && (
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-950 dark:text-neutral-100">
-                  Más popular
+                  {details.badge}
                 </span>
               )}
               <div>
@@ -103,7 +129,7 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
                   <span className="text-sm text-neutral-400">{plan.period}</span>
                 </div>
               </div>
-              <ul className="flex flex-col gap-2">
+              <ul className="flex flex-col gap-2 flex-1">
                 {plan.features.map((f) => (
                   <li
                     key={f}
@@ -127,20 +153,18 @@ export default function PricingClient({ planData }: { planData: { plan: string; 
               <Button
                 variant={plan.popular ? 'primary' : 'secondary'}
                 className="w-full"
-                disabled={isCurrentPlan || isCurrentPro || loading}
-                onClick={() => plan.priceId && handleCheckout(plan.priceId)}
+                disabled={isCurrent || loading === plan.id}
+                onClick={() => handleCheckout(plan.id, plan.priceId)}
               >
-                {loading
+                {loading === plan.id
                   ? 'Procesando…'
-                  : isCurrentPlan
-                    ? 'Tu plan actual'
-                    : isCurrentPro
-                      ? isOnTrial
-                        ? `Prueba (${planData.trialDaysLeft} día${planData.trialDaysLeft !== 1 ? 's' : ''})`
-                        : 'Plan actual'
-                      : plan.id === 'free'
-                        ? 'Downgrade'
-                        : 'Mejorar a Pro'}
+                  : isCurrent
+                    ? isOnTrial && plan.id === 'pro'
+                      ? `Prueba (${planData.trialDaysLeft} día${planData.trialDaysLeft !== 1 ? 's' : ''})`
+                      : 'Tu plan actual'
+                    : plan.price
+                      ? `Mejorar a ${plan.name}`
+                      : 'Downgrade'}
               </Button>
             </div>
           );
