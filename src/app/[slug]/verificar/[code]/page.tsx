@@ -2,6 +2,29 @@ import { checkDiscountCode, redeemDiscountCode } from '@/actions/redeem';
 import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
 
+// ────────────────────────────────────────────────────────────
+// VerifyPage (Server Component)
+// ────────────────────────────────────────────────────────────
+// Página pública de verificación: revly.es/{slug}/verificar/{code}
+//
+// La usa el empleado del negocio desde su móvil de empresa.
+// Flujo completo:
+//   1. El cliente muestra el QR de su perfil al empleado
+//   2. El empleado escanea el QR con la cámara del móvil
+//   3. Se abre esta página con el código de descuento ya cargado
+//   4. El empleado introduce el PIN de 4 dígitos del negocio
+//   5. El sistema verifica el código + PIN en una sola acción
+//   6. Si todo ok → descuenta 5 puntos, genera código nuevo
+//   7. Muestra pantalla de éxito con el nuevo código
+//
+// La protección es el PIN (no requiere login). El PIN lo
+// configura el negocio en Settings y solo lo saben los empleados.
+//
+// Query params:
+//   ?error=msg       → muestra error (PIN incorrecto, código inválido)
+//   ?redeemed=1      → muestra pantalla de canje exitoso
+//   ?newCode=XXXX    → el nuevo código generado tras canjear
+// ────────────────────────────────────────────────────────────
 const VerifyPage = async ({
   params,
   searchParams,
@@ -20,6 +43,7 @@ const VerifyPage = async ({
         </p>
         <h1 className="text-xl font-semibold text-center mb-2">{slug}</h1>
 
+        {/* ── Pantalla de éxito (canje completado) ────── */}
         {redeemed ? (
           <>
             <p className="text-emerald-600 dark:text-emerald-400 font-medium text-center mb-2">
@@ -34,6 +58,7 @@ const VerifyPage = async ({
           </>
         ) : (
           <>
+            {/* ── Formulario de verificación ──────────── */}
             <p className="text-sm text-neutral-500 text-center mb-4">
               Código: <strong className="font-mono text-neutral-950 dark:text-neutral-100">{code}</strong>
             </p>
@@ -52,8 +77,8 @@ const VerifyPage = async ({
                 }
 
                 try {
+                  // Primero verifica código + PIN, luego ejecuta el canje
                   const result = await checkDiscountCode(code, pin, slug);
-                  // Valid — now redeem
                   const redeemResult = await redeemDiscountCode(code, pin, slug);
                   redirect(
                     `/${slug}/verificar/${code}?redeemed=1&newCode=${redeemResult.newCode}`,

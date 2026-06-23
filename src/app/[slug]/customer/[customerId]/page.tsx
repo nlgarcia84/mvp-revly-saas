@@ -9,11 +9,23 @@ import QRCode from 'qrcode';
 // CustomerProfilePage (Server Component)
 // ─────────────────────────────────────────────────────
 // Página pública del cliente: revly.es/{slug}/customer/{customerId}
+//
 // Aquí el cliente puede ver:
 //   - Sus puntos acumulados
 //   - Su progreso hacia el próximo descuento (cada 5 puntos)
-//   - Su código de descuento con barcode
-//   - Cuántos descuentos ha conseguido ya
+//   - Su código de descuento con QR y código alfanumérico
+//   - Cuántos descuentos ha conseguido hasta ahora
+//   - Canjear puntos con número de factura
+//
+// El QR que se muestra codifica la URL de verificación:
+//   revly.es/{slug}/verificar/{discountCode}
+//
+// El empleado escanea ese QR con la cámara de su móvil
+// para verificar y canjear el descuento en caja.
+//
+// También incluye el flujo de canje de facturas:
+//   El cliente introduce el número de factura (dado de alta
+//   por el negocio) y suma 1 punto por cada factura válida.
 //
 // No requiere autenticación. Es una página pública para
 // que el cliente pueda consultar sus puntos desde casa.
@@ -33,10 +45,13 @@ const CustomerProfilePage = async ({
     notFound();
   }
 
+  // Calculamos la URL base para generar el QR absoluto
+  // (necesario para que la cámara del empleado pueda abrirlo)
   const host = (await headers()).get('host') || 'revly.es';
   const protocol = host.includes('localhost') ? 'http' : 'https';
   const baseUrl = `${protocol}://${host}`;
 
+  // Generamos el QR en SVG (server-side) que codifica la URL de verificación
   let qrSvg = '';
   if (customer.discountCode) {
     const verifyUrl = `${baseUrl}/${slug}/verificar/${customer.discountCode}`;
@@ -72,6 +87,8 @@ const CustomerProfilePage = async ({
         </div>
 
         {/* ── Tarjeta: progreso al próximo descuento ── */}
+        {/* Si puntos >= 5 muestra "¡Descuento conseguido!"
+            Si no, muestra barra de progreso + cuántos faltan */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
           <h2 className="text-sm font-semibold mb-3">Progreso</h2>
 
@@ -111,6 +128,10 @@ const CustomerProfilePage = async ({
         </div>
 
         {/* ── Tarjeta: código de descuento + QR ──────── */}
+        {/* Muestra un QR que el empleado escanea con la cámara.
+            El QR codifica la URL de verificación con el código.
+            También muestra el código alfanumérico como respaldo
+            por si el empleado prefiere escribirlo manualmente. */}
         {customer.discountCode && (
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6 text-center">
             <h2 className="text-sm font-semibold mb-1">Tu código de descuento</h2>
@@ -118,7 +139,6 @@ const CustomerProfilePage = async ({
               Muestra este QR en caja para que el empleado lo escanee
             </p>
 
-            {/* QR Code — el empleado lo escanea con la cámara */}
             {qrSvg && (
               <div
                 className="mx-auto mb-4 w-[180px] h-[180px] flex items-center justify-center bg-white rounded-lg p-2"
@@ -126,7 +146,6 @@ const CustomerProfilePage = async ({
               />
             )}
 
-            {/* Código alfanumérico como respaldo */}
             <p className="text-xs text-neutral-400 mb-1">O introduce manualmente:</p>
             <p className="text-lg font-bold tracking-widest text-neutral-950 dark:text-neutral-100 font-mono">
               {customer.discountCode}
@@ -135,6 +154,10 @@ const CustomerProfilePage = async ({
         )}
 
         {/* ── Tarjeta: Sumar puntos con factura ───────── */}
+        {/* El cliente escribe el número de factura (dado de alta
+            por el negocio en su dashboard) y gana 1 punto extra.
+            El placeholder se adapta al formato que el negocio
+            configuró en Settings (ej: "FACT-001"). */}
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
           <h2 className="text-sm font-semibold mb-1">Sumar puntos con una factura</h2>
           <p className="text-xs text-neutral-400 mb-3">

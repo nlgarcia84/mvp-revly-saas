@@ -130,6 +130,12 @@ export const addCustomerBatch = async (
   return { created, errors };
 };
 
+// ──────────────────────────────────────────────
+// deleteCustomer
+// ──────────────────────────────────────────────
+// Elimina un cliente individual. Solo el dueño
+// del negocio puede eliminar sus clientes.
+// ──────────────────────────────────────────────
 export const deleteCustomer = async (customerId: string) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -145,6 +151,13 @@ export const deleteCustomer = async (customerId: string) => {
   return { success: true };
 };
 
+// ──────────────────────────────────────────────
+// clearCustomers
+// ──────────────────────────────────────────────
+// Elimina TODOS los clientes de un negocio.
+// Útil para pruebas o reinicio de datos.
+// Solo el dueño del negocio puede hacerlo.
+// ──────────────────────────────────────────────
 export const clearCustomers = async (businessId: string) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -160,6 +173,14 @@ export const clearCustomers = async (businessId: string) => {
   return { success: true };
 };
 
+// ──────────────────────────────────────────────
+// clearCompletedCustomers
+// ──────────────────────────────────────────────
+// Elimina solo los clientes con estado
+// "completed". Se usa para limpiar clientes
+// que ya dejaron reseña. Devuelve cuántos
+// se eliminaron.
+// ──────────────────────────────────────────────
 export const clearCompletedCustomers = async (businessId: string) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -177,13 +198,6 @@ export const clearCompletedCustomers = async (businessId: string) => {
   return { count };
 };
 
-// ─── Página pública del cliente ──────────────────────
-// Devuelve los datos que necesita la página de perfil
-// del cliente (puntos, código de descuento, negocio).
-// No requiere autenticación porque es una página pública.
-// Busca el cliente por ID y verifica que el slug del
-// negocio coincida (para evitar mostrar datos de otro).
-// ─────────────────────────────────────────────────────
 // ──────────────────────────────────────────────
 // findPublicCustomerByEmail
 // ──────────────────────────────────────────────
@@ -192,6 +206,11 @@ export const clearCompletedCustomers = async (businessId: string) => {
 // Es una Server Action pública — no requiere auth.
 // Sirve para el flujo: "¿Ya tienes cuenta?
 // Introduce tu email" en la página pública.
+// Cuando el QR del negocio escanea y el cliente
+// introduce su email, esta función lo busca y
+// redirige directamente a su perfil de puntos
+// si ya existe (evita que tenga que registrarse
+// cada vez que visita el negocio).
 // ──────────────────────────────────────────────
 export const findPublicCustomerByEmail = async (
   slug: string,
@@ -223,6 +242,19 @@ export const findPublicCustomerByEmail = async (
   };
 };
 
+// ──────────────────────────────────────────────
+// getPublicCustomer
+// ──────────────────────────────────────────────
+// Devuelve los datos que necesita la página de perfil
+// del cliente (puntos, código de descuento, negocio).
+// No requiere autenticación porque es una página pública.
+// Busca el cliente por ID y verifica que el slug del
+// negocio coincida (para evitar mostrar datos de otro).
+//
+// También devuelve invoiceFormat — el formato de factura
+// que el negocio configuró, para mostrarlo como placeholder
+// en el campo de canje de factura del cliente.
+// ──────────────────────────────────────────────
 export const getPublicCustomer = async (
   customerId: string,
   slug: string,
@@ -247,6 +279,15 @@ export const getPublicCustomer = async (
   };
 };
 
+// ──────────────────────────────────────────────
+// deleteSelectedCustomers
+// ──────────────────────────────────────────────
+// Elimina múltiples clientes seleccionados de la tabla.
+// Primero verifica que TODOS pertenezcan al usuario
+// (en una sola query findMany filtrada por userId del
+// negocio). Solo borra los IDs válidos para evitar
+// que alguien intente borrar clientes de otros negocios.
+// ──────────────────────────────────────────────
 export const deleteSelectedCustomers = async (ids: string[]) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();

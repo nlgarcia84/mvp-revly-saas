@@ -3,6 +3,14 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 
+/**
+ * generateDiscountCode
+ *
+ * Genera un código de descuento único de 8 caracteres con formato REVLY-XXXX.
+ * Se usa para identificar a cada cliente y canjear su descuento en el negocio.
+ * Los códigos usan caracteres seguros (sin vocales para evitar palabras
+ * ofensivas, sin 0/O/1/I/L para evitar confusiones al leerlos en voz alta).
+ */
 function generateDiscountCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'REVLY-';
@@ -12,6 +20,19 @@ function generateDiscountCode(): string {
   return code;
 }
 
+/**
+ * checkDiscountCode
+ *
+ * Verifica que un código de descuento sea válido para un negocio.
+ * Comprueba:
+ *   1. Que el negocio exista y tenga PIN configurado
+ *   2. Que el PIN coincida
+ *   3. Que el código de descuento exista y pertenezca a ese negocio
+ *   4. Que el cliente tenga al menos 5 puntos para canjear
+ *
+ * Es una Server Action pública (sin auth) porque la protege el PIN
+ * del negocio. El empleado introduce el PIN desde su móvil.
+ */
 export const checkDiscountCode = async (
   code: string,
   pin: string,
@@ -30,7 +51,6 @@ export const checkDiscountCode = async (
   });
   if (!customer) throw new Error('Código de descuento no válido');
 
-  // Check they have at least 5 points to redeem
   if (customer.points < 5) {
     throw new Error('El cliente no tiene suficientes puntos para canjear');
   }
@@ -43,6 +63,19 @@ export const checkDiscountCode = async (
   };
 };
 
+/**
+ * redeemDiscountCode
+ *
+ * Ejecuta el canje del descuento:
+ *   1. Verifica el PIN del negocio
+ *   2. Verifica que el código exista y tenga puntos suficientes
+ *   3. Descarga 5 puntos al cliente
+ *   4. Genera un código de descuento NUEVO (el anterior queda inválido)
+ *
+ * Una vez canjeado, el código anterior ya no sirve. Esto evita que
+ * el cliente reutilice una captura de pantalla del código viejo.
+ * El nuevo código se muestra al empleado para que lo aplique en caja.
+ */
 export const redeemDiscountCode = async (
   code: string,
   pin: string,
@@ -75,6 +108,14 @@ export const redeemDiscountCode = async (
   return { success: true, newCode };
 };
 
+/**
+ * updateVerificationPin
+ *
+ * Guarda o actualiza el PIN de verificación del negocio.
+ * Requiere autenticación (solo el dueño del negocio).
+ * El PIN debe tener exactamente 4 dígitos numéricos.
+ * Si se envía vacío, se elimina el PIN (desactiva verificación).
+ */
 export const updateVerificationPin = async (
   businessId: string,
   pin: string,
@@ -101,6 +142,14 @@ export const updateVerificationPin = async (
   return { success: true };
 };
 
+/**
+ * getBusinessVerificationInfo
+ *
+ * Devuelve información sobre la verificación de un negocio.
+ * Es pública (sin auth) porque se usa en la página de verificación
+ * para saber si el negocio tiene PIN configurado.
+ * Devuelve el nombre del negocio y si tiene PIN activo.
+ */
 export const getBusinessVerificationInfo = async (slug: string) => {
   const business = await prisma.business.findUnique({
     where: { slug },

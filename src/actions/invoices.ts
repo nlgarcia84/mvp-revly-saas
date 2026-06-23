@@ -3,6 +3,19 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 
+/**
+ * addInvoices
+ *
+ * Añade uno o varios números de factura a un negocio.
+ * El negocio da de alta números de factura únicos para que los
+ * clientes los canjeen por puntos (1 factura = 1 punto).
+ *
+ * Cada número solo puede usarse una vez (unique constraint
+ * @@unique([number, businessId]) en el schema).
+ * skipDuplicates evita errores si se intenta añadir un número ya existente.
+ *
+ * Requiere autenticación (solo el dueño del negocio).
+ */
 export const addInvoices = async (businessId: string, numbers: string[]) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -27,6 +40,16 @@ export const addInvoices = async (businessId: string, numbers: string[]) => {
   return { added: created.count, total: cleanNumbers.length };
 };
 
+/**
+ * getInvoices
+ *
+ * Devuelve todas las facturas de un negocio ordenadas por fecha
+ * de creación (más recientes primero). Incluye los datos del
+ * cliente que la canjeó (si aplica) para que el negocio pueda
+ * ver qué cliente usó cada factura.
+ *
+ * Requiere autenticación.
+ */
 export const getInvoices = async (businessId: string) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -57,6 +80,22 @@ export const getInvoices = async (businessId: string) => {
   }));
 };
 
+/**
+ * claimInvoice
+ *
+ * El cliente canjea un número de factura para sumar 1 punto.
+ * Flujo:
+ *   1. Verifica que el cliente exista y pertenezca al negocio (slug)
+ *   2. Busca la factura por número + negocio
+ *   3. Si no existe → error "Número de factura no válido"
+ *   4. Si ya fue canjeada (customerId != null) → error "Ya canjeada"
+ *   5. Si todo ok → transacción atómica: marca factura como usada Y
+ *      suma 1 punto al cliente (todo o nada)
+ *
+ * Es una Server Action pública (sin auth) porque la usa el cliente
+ * desde su perfil público. El sistema antifraude es que cada factura
+ * solo puede canjearse una vez (unique + customerId check).
+ */
 export const claimInvoice = async (
   customerId: string,
   slug: string,
@@ -79,6 +118,8 @@ export const claimInvoice = async (
   if (!invoice) throw new Error('Número de factura no válido');
   if (invoice.customerId) throw new Error('Esta factura ya ha sido canjeada');
 
+  // Transacción atómica: marca la factura como usada Y suma el punto
+  // Si algo falla, la BD revierte ambas operaciones (rollback implícito)
   await prisma.$transaction([
     prisma.invoice.update({
       where: { id: invoice.id },
@@ -93,6 +134,15 @@ export const claimInvoice = async (
   return { success: true };
 };
 
+/**
+ * deleteInvoice
+ *
+ * Elimina una factura del sistema. Solo permite borrar facturas
+ * que no hayan sido canjeadas aún (no hay validación explícita,
+ * pero si está canjeada tiene customerId puesto).
+ *
+ * Requiere autenticación (solo el dueño del negocio).
+ */
 export const deleteInvoice = async (id: string) => {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
