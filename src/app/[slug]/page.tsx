@@ -1,4 +1,5 @@
 import { getBusinessBySlug, addPublicCustomer } from '@/actions/business';
+import { findPublicCustomerByEmail } from '@/actions/customers';
 import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
 
@@ -10,24 +11,26 @@ import Button from '@/components/ui/button';
 // al programa de puntos y obtener descuentos.
 //
 // Flujo:
-//   1. Sin ?success → muestra formulario con nombre,
-//      email, teléfono y checkbox de privacidad.
-//   2. Al enviar → Server Action addPublicCustomer.
+//   1. Sin ?success ni ?find → muestra formulario.
+//   2. Con ?find=email → busca al cliente por email:
+//      a. Si existe → redirect a /{slug}/customer/{id}
+//      b. Si no → muestra formulario con email relleno
+//   3. Al enviar → Server Action addPublicCustomer.
 //      Si el email ya existe, suma 1 punto más.
 //      Si es nuevo, crea con 1 punto + código descuento.
-//   3. Con ?success → pantalla de bienvenida con puntos
+//   4. Con ?success → pantalla de bienvenida con puntos
 //      y enlace a la página del cliente.
-//   4. Con ?error → muestra el mensaje de error.
+//   5. Con ?error → muestra el mensaje de error.
 // ──────────────────────────────────────────────
 const PublicBusinessPage = async ({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ success?: string; error?: string; customerId?: string; points?: string }>;
+  searchParams: Promise<{ success?: string; error?: string; customerId?: string; points?: string; find?: string }>;
 }) => {
   const { slug } = await params;
-  const { success, error, customerId, points } = await searchParams;
+  const { success, error, customerId, points, find } = await searchParams;
   const business = await getBusinessBySlug(slug);
 
   if (!business) {
@@ -78,14 +81,62 @@ const PublicBusinessPage = async ({
     );
   }
 
+  // ── Búsqueda por email ───────────────────────
+  // Si el QR o el usuario llega con ?find=email,
+  // buscamos si ya está registrado. Si existe,
+  // redirigimos directamente a su perfil de puntos.
+  let prefillEmail = '';
+  let notFoundMsg = '';
+  if (find) {
+    const existing = await findPublicCustomerByEmail(slug, find);
+    if (existing) {
+      redirect(`/${slug}/customer/${existing.id}`);
+    }
+    prefillEmail = find;
+    notFoundMsg = 'No encontramos ese email. Regístrate aquí:';
+  }
+
   // ── Formulario ────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-neutral-100 dark:bg-neutral-950 p-4">
+      {/* ── Card: ¿Ya tienes cuenta? ──────────────── */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8 mb-4">
+        <h2 className="text-sm font-semibold mb-2">¿Ya tienes una cuenta?</h2>
+        <p className="text-xs text-neutral-400 mb-3">
+          Introduce tu email para ver tus puntos y tu código de descuento
+        </p>
+        <form
+          action={async (formData: FormData) => {
+            'use server';
+            const email = formData.get('email') as string;
+            if (!email) redirect(`/${slug}`);
+            redirect(`/${slug}?find=${encodeURIComponent(email)}`);
+          }}
+          className="flex gap-2"
+        >
+          <input
+            name="email"
+            type="email"
+            required
+            placeholder="tu@email.com"
+            className="flex-1 min-w-0 px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+          />
+          <Button type="submit" variant="secondary">
+            Ver mis puntos
+          </Button>
+        </form>
+      </div>
+
+      {/* ── Card: Registro ─────────────────────────── */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-md p-8">
         <h1 className="text-xl font-semibold mb-1">{business.name}</h1>
         <p className="text-xs text-neutral-400 mb-4">
-          Déjanos tus datos y empieza a <strong>acumular puntos</strong>.
-          Cada 5 puntos consigues un <strong>10% de descuento</strong> en tus compras.
+          {notFoundMsg || (
+            <>
+              Déjanos tus datos y empieza a <strong>acumular puntos</strong>.
+              Cada 5 puntos consigues un <strong>10% de descuento</strong> en tus compras.
+            </>
+          )}
         </p>
 
         <form
@@ -132,6 +183,7 @@ const PublicBusinessPage = async ({
               name="email"
               type="email"
               required
+              defaultValue={prefillEmail}
               className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
               placeholder="tu@email.com"
             />

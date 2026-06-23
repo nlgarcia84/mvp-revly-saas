@@ -10,6 +10,7 @@ import Button from '@/components/ui/button';
 import { nCard } from '@/components/ui/card';
 import BackButton from '@/components/back-button';
 import { getBusinessProfileStatus } from '@/actions/google-reviews';
+import { updateVerificationPin } from '@/actions/redeem';
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 
@@ -37,6 +38,9 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [searching, setSearching] = useState(false);
   const [urlFound, setUrlFound] = useState('');
   const [bpStatus, setBpStatus] = useState<{ connected: boolean } | null>(null);
+  const [pin, setPin] = useState('');
+  const [savingPin, setSavingPin] = useState(false);
+  const [pinMsg, setPinMsg] = useState('');
 
   // ── Mensajes desde el callback de Google Business Profile ──
   // Cuando el usuario conecta o desconecta su cuenta de Google
@@ -85,6 +89,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           slug: b.slug ?? '',
           emailTemplate: (b as any).emailTemplate ?? '',
         });
+        setPin((b as any).verificationPin ?? '');
       }
     });
   }, [id]);
@@ -376,6 +381,71 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 resize-y font-mono"
             placeholder={`<h1>Hola, {{nombre}}</h1>\n<p>Gracias por visitar {{negocio}}...</p>`}
           />
+        </div>
+
+        {/* ── Canje en caja ────────────────────────────── */}
+        <div className={`${nCard} p-6 flex flex-col gap-5`}>
+          <div>
+            <h2 className="text-sm font-semibold mb-1">Canje en caja</h2>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Los empleados escanean el QR del cliente desde su móvil y escriben este PIN
+              para verificar y canjear el descuento en caja.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-[6px] text-neutral-500">
+              PIN de verificación (4 dígitos)
+            </label>
+            <div className="flex gap-2 items-start">
+              <input
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{4}"
+                maxLength={4}
+                placeholder="1234"
+                className="w-24 px-3 py-2.5 text-center text-lg tracking-[0.3em] border border-neutral-200 dark:border-neutral-700 rounded-md text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 placeholder:text-neutral-300 dark:placeholder:text-neutral-600"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  setSavingPin(true);
+                  setPinMsg('');
+                  try {
+                    const result = await updateVerificationPin(id, pin);
+                    setPinMsg('PIN guardado correctamente');
+                  } catch (e: any) {
+                    setPinMsg(e.message);
+                  }
+                  setSavingPin(false);
+                }}
+                disabled={savingPin || pin.length !== 4}
+                className="text-xs font-medium px-4 py-2.5 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity disabled:opacity-50 cursor-pointer"
+              >
+                {savingPin ? 'Guardando...' : 'Guardar PIN'}
+              </button>
+            </div>
+            {pinMsg && (
+              <p className={`text-xs mt-1.5 ${pinMsg === 'PIN guardado correctamente' ? 'text-emerald-500' : 'text-red-500'}`}>
+                {pinMsg}
+              </p>
+            )}
+          </div>
+
+          {pin && (
+            <div className="bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg p-3">
+              <p className="text-xs text-neutral-500 mb-1">URL para los empleados:</p>
+              <p className="text-xs font-mono text-neutral-950 dark:text-neutral-100 break-all">
+                {typeof window !== 'undefined' ? `${window.location.origin}/${form.slug || '...'}/verificar/` : `/${form.slug || '...'}/verificar/`}
+                <span className="text-neutral-400">[código del cliente]</span>
+              </p>
+              <p className="text-xs text-neutral-400 mt-1">
+                El empleado escanea el QR del cliente con la cámara y escribe este PIN de 4 dígitos.
+              </p>
+            </div>
+          )}
         </div>
 
         {msg && (

@@ -61,10 +61,12 @@ model Business {
   image         String?
   slug          String?   @unique
   emailTemplate String?
+  verificationPin String?  // PIN de 4 dígitos para canje en caja
   userId        String
   createdAt     DateTime   @default(now())
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers     Customer[]
+  invoices      Invoice[]
 
   // ── Google Business Profile ────────────────────────
   // Si el usuario conecta su cuenta de Google Business
@@ -83,14 +85,27 @@ model Business {
 }
 
 // ──────────────────────────────────────────────
-// Customer: Cliente que ha rellenado el formulario
-// público de un negocio. Solo se crea si el usuario
-// aceptó la política de privacidad (consent).
-// Cada cliente pertenece a un único negocio.
-// invitedCount: número de veces que se le ha enviado
-// la invitación. Se incrementa en cada envío.
-// lastInvitedAt: fecha del último envío.
+// Invoice: Factura registrada por el negocio para
+// que el cliente la canjee y sume puntos.
+// Cada número de factura solo puede usarse una vez.
+// El negocio da de alta los números; el cliente
+// los introduce en su perfil público para canjear.
+// Una vez canjeado (customerId + usedAt), queda
+// bloqueado para siempre.
 // ──────────────────────────────────────────────
+model Invoice {
+  id         String    @id @default(uuid())
+  number     String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId String?
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([number, businessId])
+}
+
 model Customer {
   id            String    @id @default(uuid())
   name          String?
@@ -115,6 +130,7 @@ model Customer {
   // ─────────────────────────────────────────────────
   createdAt     DateTime  @default(now())
   business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  invoices      Invoice[]
 
   @@unique([email, businessId])
 }

@@ -184,6 +184,45 @@ export const clearCompletedCustomers = async (businessId: string) => {
 // Busca el cliente por ID y verifica que el slug del
 // negocio coincida (para evitar mostrar datos de otro).
 // ─────────────────────────────────────────────────────
+// ──────────────────────────────────────────────
+// findPublicCustomerByEmail
+// ──────────────────────────────────────────────
+// Busca un cliente por email en un negocio (slug).
+// Devuelve el cliente si existe o null si no.
+// Es una Server Action pública — no requiere auth.
+// Sirve para el flujo: "¿Ya tienes cuenta?
+// Introduce tu email" en la página pública.
+// ──────────────────────────────────────────────
+export const findPublicCustomerByEmail = async (
+  slug: string,
+  email: string,
+) => {
+  const business = await prisma.business.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!business) return null;
+
+  const customer = await prisma.customer.findUnique({
+    where: {
+      email_businessId: { email, businessId: business.id },
+    },
+    include: {
+      business: { select: { name: true, slug: true } },
+    },
+  });
+
+  if (!customer) return null;
+
+  return {
+    id: customer.id,
+    name: customer.name,
+    points: customer.points,
+    discountCode: customer.discountCode,
+    businessName: customer.business.name,
+  };
+};
+
 export const getPublicCustomer = async (
   customerId: string,
   slug: string,

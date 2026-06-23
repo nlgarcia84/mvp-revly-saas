@@ -11,6 +11,7 @@ import {
   deleteSelectedCustomers,
 } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
+import { addInvoices, getInvoices, deleteInvoice } from '@/actions/invoices';
 import Button from '@/components/ui/button';
 import BackButton from '@/components/back-button';
 import GoogleReviewsSection from '@/components/google-reviews-section';
@@ -147,6 +148,11 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [showCsv, setShowCsv] = useState(false);
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '' });
   const [csvResult, setCsvResult] = useState('');
+  const [showInvoices, setShowInvoices] = useState(false);
+  const [invoiceText, setInvoiceText] = useState('');
+  const [invoiceList, setInvoiceList] = useState<Awaited<ReturnType<typeof getInvoices>>>([]);
+  const [invoiceAddResult, setInvoiceAddResult] = useState('');
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   const load = async () => {
     const businesses = await getBusinesses();
@@ -318,6 +324,54 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     await load();
   };
 
+  const handleOpenInvoices = async () => {
+    setShowInvoices(true);
+    setLoadingInvoices(true);
+    try {
+      const list = await getInvoices(id);
+      setInvoiceList(list);
+    } catch {
+      // silencio
+    }
+    setLoadingInvoices(false);
+  };
+
+  const handleAddInvoices = async () => {
+    const numbers = invoiceText
+      .split('\n')
+      .map((n) => n.trim())
+      .filter(Boolean);
+    if (numbers.length === 0) {
+      setInvoiceAddResult('Introduce al menos un número de factura');
+      return;
+    }
+    try {
+      const result = await addInvoices(id, numbers);
+      setInvoiceAddResult(
+        `Añadidas ${result.added} de ${result.total} factura(s)`,
+      );
+      setInvoiceText('');
+      const list = await getInvoices(id);
+      setInvoiceList(list);
+    } catch (e) {
+      setInvoiceAddResult(
+        'Error: ' + (e instanceof Error ? e.message : 'desconocido'),
+      );
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!confirm('¿Eliminar esta factura?')) return;
+    try {
+      await deleteInvoice(invoiceId);
+      setInvoiceList((prev) => prev.filter((i) => i.id !== invoiceId));
+    } catch (e) {
+      alert(
+        'Error: ' + (e instanceof Error ? e.message : 'desconocido'),
+      );
+    }
+  };
+
   const filtered =
     filter === 'all' ? customers : customers.filter((c) => c.status === filter);
 
@@ -400,6 +454,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             onClick={() => setShowCsv(true)}
           >
             Importar CSV
+          </Button>
+          <Button
+            variant="secondary"
+            className="!px-3 !py-1.5 text-[11px]"
+            onClick={handleOpenInvoices}
+          >
+            Facturas
           </Button>
           <Link
             href={`/business/${id}/settings`}
@@ -816,6 +877,115 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </>
         )}
       </div>
+
+      {/* Modal: Facturas */}
+      {showInvoices && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setShowInvoices(false)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-semibold mb-1">Facturas</h2>
+              <p className="text-xs text-neutral-400 mb-4">
+                Añade números de factura para que tus clientes los canjeen por puntos (1 factura = 1 punto)
+              </p>
+
+              {/* Añadir facturas */}
+              <textarea
+                value={invoiceText}
+                onChange={(e) => setInvoiceText(e.target.value)}
+                placeholder="Números de factura (uno por línea)"
+                rows={4}
+                className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 mb-2 placeholder:text-neutral-400"
+              />
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant="primary"
+                  type="button"
+                  onClick={handleAddInvoices}
+                >
+                  Añadir facturas
+                </Button>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => setShowInvoices(false)}
+                >
+                  Cerrar
+                </Button>
+              </div>
+              {invoiceAddResult && (
+                <p className="text-sm text-neutral-600 mb-3">{invoiceAddResult}</p>
+              )}
+
+              {/* Lista de facturas */}
+              <h3 className="text-sm font-semibold mb-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                Facturas registradas
+              </h3>
+              {loadingInvoices ? (
+                <p className="text-sm text-neutral-400">Cargando...</p>
+              ) : invoiceList.length === 0 ? (
+                <p className="text-sm text-neutral-400">
+                  No hay facturas registradas
+                </p>
+              ) : (
+                <div className="max-h-60 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
+                        <th className="pb-2 font-medium">Nº Factura</th>
+                        <th className="pb-2 font-medium">Estado</th>
+                        <th className="pb-2 font-medium">Cliente</th>
+                        <th className="pb-2 font-medium">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceList.map((inv) => (
+                        <tr
+                          key={inv.id}
+                          className="border-b border-neutral-100 dark:border-neutral-800"
+                        >
+                          <td className="py-2 font-mono text-xs">{inv.number}</td>
+                          <td className="py-2">
+                            {inv.used ? (
+                              <span className="text-xs text-neutral-400">Canjeada</span>
+                            ) : (
+                              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                Disponible
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2 text-xs text-neutral-500">
+                            {inv.used
+                              ? `${inv.customerName || inv.customerEmail || '—'}`
+                              : '—'}
+                          </td>
+                          <td className="py-2">
+                            {!inv.used && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteInvoice(inv.id)}
+                                className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
+                              >
+                                Eliminar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Reseñas de Google */}
       <GoogleReviewsSection
