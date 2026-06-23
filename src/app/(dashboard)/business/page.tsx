@@ -311,12 +311,13 @@ const BusinessPage = () => {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2">
                 <Link
                   href={`/business/${b.id}/settings`}
-                  className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
+                  className="text-[11px] sm:text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
                 >
-                  Configurar
+                  <span className="sm:hidden">Config</span>
+                  <span className="hidden sm:inline">Configurar</span>
                 </Link>
                 <BusinessQR slug={b.slug ?? ''} />
               </div>

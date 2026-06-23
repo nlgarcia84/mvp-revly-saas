@@ -357,43 +357,45 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
                   key={i}
                   className="border-t border-neutral-200 dark:border-neutral-800 pt-3"
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
                     {review.profilePhotoUrl && (
                       <img
                         src={review.profilePhotoUrl}
                         alt=""
-                        className="w-6 h-6 rounded-full"
+                        className="w-6 h-6 rounded-full shrink-0"
                       />
                     )}
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium truncate max-w-[120px] sm:max-w-none">
                       {review.authorName}
                     </span>
-                    <span className="text-xs" style={{ color: review.rating < 4 ? '#ef4444' : '#f59e0b' }}>
+                    <span className="text-xs shrink-0" style={{ color: review.rating < 4 ? '#ef4444' : '#f59e0b' }}>
                       {'★'.repeat(review.rating)}
                     </span>
                     {review.rating < 4 && (
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">Crítica</span>
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">Crítica</span>
                     )}
                     {features?.includes('ai-responses') ? (
                       <button
                         onClick={() => handleGenerate(review, data.placeId)}
                         disabled={generating === `${review.authorName}|${review.text.slice(0, 20)}`}
-                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50"
+                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/40 transition-colors disabled:opacity-50 shrink-0"
                       >
-                        {generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}
+                        <span className="sm:hidden">IA</span>
+                        <span className="hidden sm:inline">{generating === `${review.authorName}|${review.text.slice(0, 20)}` ? 'Generando...' : 'Generar respuesta con IA'}</span>
                       </button>
                     ) : (
                       <a
                         href="/pricing"
-                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 transition-colors"
+                        className="text-[10px] font-medium px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
                       >
-                        IA disponible en Avanzado
+                        <span className="sm:hidden">IA</span>
+                        <span className="hidden sm:inline">IA disponible en Avanzado</span>
                       </a>
                     )}
-                    <span className="text-xs text-neutral-400 ml-auto hidden sm:inline">
+                    <span className="text-xs text-neutral-400 ml-auto hidden sm:inline shrink-0">
                       {fmtDate(review.time)}
                     </span>
-                    <span className="text-xs text-neutral-400 ml-1">
+                    <span className="text-xs text-neutral-400 shrink-0">
                       {review.relativeTimeDescription}
                     </span>
                   </div>

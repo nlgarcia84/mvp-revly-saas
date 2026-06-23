@@ -11,7 +11,6 @@ import {
   deleteSelectedCustomers,
 } from '@/actions/customers';
 import { sendInvitation, sendBatchInvitations } from '@/actions/send';
-import { addInvoices, getInvoices, deleteInvoice } from '@/actions/invoices';
 import Button from '@/components/ui/button';
 import BackButton from '@/components/back-button';
 import GoogleReviewsSection from '@/components/google-reviews-section';
@@ -149,11 +148,6 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '' });
   const [csvResult, setCsvResult] = useState('');
   const [features, setFeatures] = useState<string[]>([]);
-  const [showInvoices, setShowInvoices] = useState(false);
-  const [invoiceText, setInvoiceText] = useState('');
-  const [invoiceList, setInvoiceList] = useState<Awaited<ReturnType<typeof getInvoices>>>([]);
-  const [invoiceAddResult, setInvoiceAddResult] = useState('');
-  const [loadingInvoices, setLoadingInvoices] = useState(false);
 
   const load = async () => {
     const businesses = await getBusinesses();
@@ -327,54 +321,6 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     await load();
   };
 
-  const handleOpenInvoices = async () => {
-    setShowInvoices(true);
-    setLoadingInvoices(true);
-    try {
-      const list = await getInvoices(id);
-      setInvoiceList(list);
-    } catch {
-      // silencio
-    }
-    setLoadingInvoices(false);
-  };
-
-  const handleAddInvoices = async () => {
-    const numbers = invoiceText
-      .split('\n')
-      .map((n) => n.trim())
-      .filter(Boolean);
-    if (numbers.length === 0) {
-      setInvoiceAddResult('Introduce al menos un número de factura');
-      return;
-    }
-    try {
-      const result = await addInvoices(id, numbers);
-      setInvoiceAddResult(
-        `Añadidas ${result.added} de ${result.total} factura(s)`,
-      );
-      setInvoiceText('');
-      const list = await getInvoices(id);
-      setInvoiceList(list);
-    } catch (e) {
-      setInvoiceAddResult(
-        'Error: ' + (e instanceof Error ? e.message : 'desconocido'),
-      );
-    }
-  };
-
-  const handleDeleteInvoice = async (invoiceId: string) => {
-    if (!confirm('¿Eliminar esta factura?')) return;
-    try {
-      await deleteInvoice(invoiceId);
-      setInvoiceList((prev) => prev.filter((i) => i.id !== invoiceId));
-    } catch (e) {
-      alert(
-        'Error: ' + (e instanceof Error ? e.message : 'desconocido'),
-      );
-    }
-  };
-
   const filtered =
     filter === 'all' ? customers : customers.filter((c) => c.status === filter);
 
@@ -417,7 +363,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <a
                       href={`/${business.slug}`}
                       target="_blank"
-                      className="text-sm text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline"
+                      className="text-sm text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline truncate max-w-[160px] sm:max-w-none"
                     >
                       revly.es/{business.slug}
                     </a>
@@ -428,10 +374,10 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <Button
             variant="secondary"
-            className="!px-3 !py-1.5 text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
             onClick={() => {
               if (selected.size > 0) {
                 handleDeleteSelected();
@@ -446,28 +392,21 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </Button>
           <Button
             variant="secondary"
-            className="!px-3 !py-1.5 text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
             onClick={() => setShowAdd(true)}
           >
-            + Añadir cliente
+            + Añadir
           </Button>
           <Button
             variant="secondary"
-            className="!px-3 !py-1.5 text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
             onClick={() => setShowCsv(true)}
           >
-            Importar CSV
-          </Button>
-          <Button
-            variant="secondary"
-            className="!px-3 !py-1.5 text-[11px]"
-            onClick={handleOpenInvoices}
-          >
-            Facturas
+            CSV
           </Button>
           <Link
             href={`/business/${id}/settings`}
-            className="text-xs sm:text-sm px-3 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
+            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
           >
             Configuración
           </Link>
@@ -485,7 +424,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             completadas.
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <Card neumorphic className="flex flex-col gap-2 p-6">
             <span className="text-xs text-neutral-500 font-medium">
               Registrados
@@ -520,49 +459,50 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex gap-3">
-            {['all', 'pending', 'invited', 'completed'].map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`text-xs sm:text-sm px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
-                  filter === f
-                    ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-                }`}
-              >
-                {f === 'all'
-                  ? 'Todos'
-                  : ({
-                      pending: 'P Pendiente',
-                      invited: 'I Invitado',
-                      completed: 'C Completado',
-                    }[f] ?? f)}
-              </button>
-            ))}
+              {['all', 'pending', 'invited', 'completed'].map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`text-[11px] sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border transition-colors cursor-pointer ${
+                    filter === f
+                      ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                      : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+                  }`}
+                >
+                  {f === 'all'
+                    ? 'Todos'
+                    : ({
+                        pending: 'Pendiente',
+                        invited: 'Invitado',
+                        completed: 'Completado',
+                      }[f] ?? f)}
+                </button>
+              ))}
           </div>
           <div className="flex gap-2">
-            {customers.filter((c) => c.status === 'completed').length > 0 &&
-              filter !== 'pending' && (
+              {customers.filter((c) => c.status === 'completed').length > 0 &&
+                filter !== 'pending' && (
+                  <Button
+                    variant="secondary"
+                    className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                    onClick={handleClearCompleted}
+                  >
+                    <span className="hidden sm:inline">Ocultar completados</span>
+                    <span className="sm:hidden">Ocultar</span>
+                  </Button>
+                )}
+              {selected.size > 0 && (
                 <Button
-                  variant="secondary"
-                  className="!px-3 !py-1.5 text-[11px]"
-                  onClick={handleClearCompleted}
+                  variant="primary"
+                  className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                  onClick={handleBatchSend}
+                  disabled={batchSending}
                 >
-                  Ocultar completados
+                  {batchSending
+                    ? '...'
+                    : `${selected.size}`}
                 </Button>
               )}
-            {selected.size > 0 && (
-              <Button
-                variant="primary"
-                className="!px-3 !py-1.5 text-[11px]"
-                onClick={handleBatchSend}
-                disabled={batchSending}
-              >
-                {batchSending
-                  ? 'Enviando...'
-                  : `Enviar a ${selected.size} cliente${selected.size !== 1 ? 's' : ''}`}
-              </Button>
-            )}
           </div>
         </div>
 
@@ -613,7 +553,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
                     Valoración
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
                     Feedback
                   </th>
                   <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap">
@@ -678,7 +618,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         <span className="text-neutral-300">—</span>
                       )}
                     </td>
-                    <td className="py-3.5 pr-4 whitespace-nowrap">
+                    <td className="py-3.5 pr-4 whitespace-nowrap hidden sm:table-cell">
                       <span className="text-xs">
                         {(c as any).feedback &&
                         c.rating != null &&
@@ -880,115 +820,6 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </>
         )}
       </div>
-
-      {/* Modal: Facturas */}
-      {showInvoices && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={() => setShowInvoices(false)}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-lg p-6 max-h-[80vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 className="text-lg font-semibold mb-1">Facturas</h2>
-              <p className="text-xs text-neutral-400 mb-4">
-                Añade números de factura para que tus clientes los canjeen por puntos (1 factura = 1 punto)
-              </p>
-
-              {/* Añadir facturas */}
-              <textarea
-                value={invoiceText}
-                onChange={(e) => setInvoiceText(e.target.value)}
-                placeholder="Números de factura (uno por línea)"
-                rows={4}
-                className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 mb-2 placeholder:text-neutral-400"
-              />
-              <div className="flex gap-2 mb-4">
-                <Button
-                  variant="primary"
-                  type="button"
-                  onClick={handleAddInvoices}
-                >
-                  Añadir facturas
-                </Button>
-                <Button
-                  variant="secondary"
-                  type="button"
-                  onClick={() => setShowInvoices(false)}
-                >
-                  Cerrar
-                </Button>
-              </div>
-              {invoiceAddResult && (
-                <p className="text-sm text-neutral-600 mb-3">{invoiceAddResult}</p>
-              )}
-
-              {/* Lista de facturas */}
-              <h3 className="text-sm font-semibold mb-2 border-t border-neutral-200 dark:border-neutral-700 pt-4">
-                Facturas registradas
-              </h3>
-              {loadingInvoices ? (
-                <p className="text-sm text-neutral-400">Cargando...</p>
-              ) : invoiceList.length === 0 ? (
-                <p className="text-sm text-neutral-400">
-                  No hay facturas registradas
-                </p>
-              ) : (
-                <div className="max-h-60 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-left text-xs text-neutral-400 border-b border-neutral-200 dark:border-neutral-700">
-                        <th className="pb-2 font-medium">Nº Factura</th>
-                        <th className="pb-2 font-medium">Estado</th>
-                        <th className="pb-2 font-medium">Cliente</th>
-                        <th className="pb-2 font-medium">Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoiceList.map((inv) => (
-                        <tr
-                          key={inv.id}
-                          className="border-b border-neutral-100 dark:border-neutral-800"
-                        >
-                          <td className="py-2 font-mono text-xs">{inv.number}</td>
-                          <td className="py-2">
-                            {inv.used ? (
-                              <span className="text-xs text-neutral-400">Canjeada</span>
-                            ) : (
-                              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                                Disponible
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 text-xs text-neutral-500">
-                            {inv.used
-                              ? `${inv.customerName || inv.customerEmail || '—'}`
-                              : '—'}
-                          </td>
-                          <td className="py-2">
-                            {!inv.used && (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteInvoice(inv.id)}
-                                className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
-                              >
-                                Eliminar
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
 
       {/* Reseñas de Google */}
       <GoogleReviewsSection
