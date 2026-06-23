@@ -194,6 +194,7 @@ export const updateBusiness = async (
     googleLink: string;
     slug: string;
     emailTemplate: string;
+    invoiceFormat?: string;
   },
 ) => {
   const userId = await getUserId();
@@ -224,6 +225,7 @@ export const updateBusiness = async (
       googleLink,
       slug: data.slug || null,
       emailTemplate: data.emailTemplate || null,
+      invoiceFormat: data.invoiceFormat || null,
     },
   });
 };

@@ -62,6 +62,7 @@ model Business {
   slug          String?   @unique
   emailTemplate String?
   verificationPin String?  // PIN de 4 dígitos para canje en caja
+  invoiceFormat String?    // Ejemplo: "FACT-001" — se muestra al cliente al canjear facturas
   userId        String
   createdAt     DateTime   @default(now())
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)

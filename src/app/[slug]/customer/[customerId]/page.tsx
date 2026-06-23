@@ -43,6 +43,7 @@ const CustomerProfilePage = async ({
     qrSvg = await QRCode.toString(verifyUrl, { type: 'svg', margin: 1, width: 200 });
   }
 
+  const invoicePlaceholder = (customer as any).invoiceFormat || 'Nº de factura';
   const puntos = customer.points;
   const descuentosConseguidos = Math.floor(puntos / 5);
   const puntosSiguiente = 5 - (puntos % 5);
@@ -168,7 +169,7 @@ const CustomerProfilePage = async ({
               name="invoice"
               type="text"
               required
-              placeholder="Nº de factura"
+              placeholder={invoicePlaceholder}
               className="flex-1 min-w-0 px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
             />
             <Button type="submit" variant="secondary">
