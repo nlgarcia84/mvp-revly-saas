@@ -5,6 +5,7 @@ export type GoogleReview = {
   time: number;
   profilePhotoUrl: string;
   relativeTimeDescription: string;
+  hasReply?: boolean;
 };
 
 export type PlaceDetails = {

@@ -161,10 +161,6 @@ export const getAllGoogleReviews = async () => {
   const userId = session?.user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
-  if (!process.env.GOOGLE_MAPS_API_KEY) {
-    throw new Error('Falta GOOGLE_MAPS_API_KEY en .env.local');
-  }
-
   const businesses = await prisma.business.findMany({
     where: { userId, googleLink: { not: null } },
     select: { id: true, name: true, googleLink: true },
@@ -174,13 +170,9 @@ export const getAllGoogleReviews = async () => {
 
   const results = await Promise.allSettled(
     businesses.map(async (b) => {
-      if (!b.googleLink) return null;
-      const resolvedUrl = await resolveShortUrl(b.googleLink);
-      const placeId = extractPlaceId(resolvedUrl);
-      if (!placeId) return null;
-      const details = await fetchPlaceDetails(placeId, b.name, resolvedUrl);
-      if (!details) return null;
-      return { businessId: b.id, businessName: b.name, ...details };
+      const data = await getBusinessGoogleReviews(b.id);
+      if (!data) return null;
+      return { businessId: b.id, businessName: b.name, ...data };
     }),
   );
 

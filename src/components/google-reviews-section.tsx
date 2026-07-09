@@ -283,7 +283,7 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
               <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
               <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
             </svg>
-            <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wider flex items-center gap-2">
+            <h2 className="text-sm font-medium text-blue-600 uppercase tracking-wider flex items-center gap-2">
               Reseñas de Google
               {bpConnected && (
                 <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 normal-case tracking-normal">
@@ -300,54 +300,61 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-neutral-400 font-medium">Valoración:</span>
-          <button
-            onClick={() => setStarFilter(null)}
-            className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
-              starFilter === null
-                ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-            }`}
-          >
-            Todas
-          </button>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              onClick={() => setStarFilter(starFilter === star ? null : star)}
-              className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
-                starFilter === star
-                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
-                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-              }`}
-            >
-              {'★'.repeat(star)}{'☆'.repeat(5 - star)}
-            </button>
-          ))}
-          <span className="w-px bg-neutral-200 dark:bg-neutral-700 mx-1 hidden sm:block" />
-          <span className="text-[11px] text-neutral-400 font-medium">Fecha:</span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="text-xs px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-          />
-          <span className="text-xs text-neutral-300">—</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="text-xs px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-          />
-          {(dateFrom || dateTo || starFilter !== null) && (
-            <button
-              onClick={() => { setStarFilter(null); setDateFrom(''); setDateTo(''); }}
-              className="text-xs text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
-            >
-              Limpiar
-            </button>
-          )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 flex flex-col gap-2">
+            <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Valoración</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setStarFilter(null)}
+                className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+                  starFilter === null
+                    ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+                }`}
+              >
+                Todas
+              </button>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setStarFilter(starFilter === star ? null : star)}
+                  className={`text-sm px-1.5 py-1 rounded-md transition-colors cursor-pointer ${
+                    starFilter === star
+                      ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 font-medium'
+                      : 'text-neutral-400 hover:text-amber-500'
+                  }`}
+                >
+                  {'★'.repeat(star)}{'☆'.repeat(5 - star)}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 flex flex-col gap-2">
+            <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Fecha</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="text-xs px-2 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+              />
+              <span className="text-xs text-neutral-300">—</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="text-xs px-2 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+              />
+              {(dateFrom || dateTo) && (
+                <button
+                  onClick={() => { setDateFrom(''); setDateTo(''); }}
+                  className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors cursor-pointer"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {generateError && (

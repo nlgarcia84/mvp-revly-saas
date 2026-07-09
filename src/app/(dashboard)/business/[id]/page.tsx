@@ -378,9 +378,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <a
                       href={`/${business.slug}`}
                       target="_blank"
-                      className="text-sm text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline truncate max-w-[160px] sm:max-w-none"
+                      className="text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
                     >
-                      revly.es/{business.slug}
+                      Enlace fidelización cliente
                     </a>
                     <BusinessQR slug={business.slug} />
                   </>
@@ -389,49 +389,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
-            onClick={() => {
-              if (selected.size > 0) {
-                handleDeleteSelected();
-              } else {
-                alert(
-                  'Selecciona uno o más clientes de la tabla para eliminar',
-                );
-              }
-            }}
-          >
-            Eliminar clientes
-          </Button>
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
-            onClick={() => setShowAdd(true)}
-          >
-            + Añadir cliente
-          </Button>
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
-            onClick={() => setShowCsv(true)}
-          >
-            CSV clientes
-          </Button>
-          <Link
-            href={`/business/${id}/settings`}
-            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors w-full sm:w-auto text-center"
-          >
-            Configuración
-          </Link>
-        </div>
       </div>
 
       {/* Stats */}
       <div className="flex flex-col gap-5">
         <div>
-          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
             Estadísticas
           </h2>
           <p className="text-xs text-neutral-400 mt-2">
@@ -464,13 +427,54 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Client section */}
       <div className="flex flex-col gap-5">
         <div>
-          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">
+          <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
+            </svg>
             CLIENTES BD PROPIA
           </h2>
           <p className="text-xs text-neutral-400 mt-2">
             Gestiona los clientes de tu negocio. Selecciona varios para enviar
             invitaciones en lote o eliminar.
           </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            onClick={() => {
+              if (selected.size > 0) {
+                handleDeleteSelected();
+              } else {
+                alert('Selecciona uno o más clientes de la tabla para eliminar');
+              }
+            }}
+          >
+            Eliminar clientes
+          </Button>
+          <Button
+            variant="secondary"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            onClick={() => setShowAdd(true)}
+          >
+            + Añadir cliente
+          </Button>
+          <Button
+            variant="secondary"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            onClick={() => setShowCsv(true)}
+          >
+            CSV clientes
+          </Button>
+          <Link
+            href={`/business/${id}/settings`}
+            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
+          >
+            Configuración
+          </Link>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex gap-3 flex-wrap">

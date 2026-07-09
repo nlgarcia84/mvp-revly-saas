@@ -17,6 +17,8 @@ export type BusinessProfileReview = {
   time: number;
   profilePhotoUrl: string;
   relativeTimeDescription: string;
+  hasReply: boolean;
+  reviewId?: string;
 };
 
 export type BusinessProfileData = {
@@ -147,6 +149,8 @@ export async function getBusinessReviews(
           time: Math.floor(new Date(r.createTime).getTime() / 1000),
           profilePhotoUrl: r.reviewer?.profilePhotoUrl ?? '',
           relativeTimeDescription: calcularTiempoRelativo(r.createTime),
+          hasReply: !!r.reviewReply,
+          reviewId: r.reviewId ?? undefined,
         });
       }
     }

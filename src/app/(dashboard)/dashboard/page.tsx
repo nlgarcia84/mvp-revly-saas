@@ -111,6 +111,26 @@ export default async function DashboardPage() {
     }
   }
 
+  // ── Reseñas sin responder ─────────────────────
+  // Recorremos las reseñas y extraemos aquellas
+  // que tienen hasReply === false (solo disponible
+  // si el negocio tiene Business Profile conectado).
+  const unrepliedByBusiness = new Map<string, { name: string; count: number; samples: string[] }>();
+  for (const biz of googleData) {
+    if (!biz.reviews) continue;
+    for (const rev of biz.reviews) {
+      if (rev.hasReply === false) {
+        const key = biz.businessId;
+        if (!unrepliedByBusiness.has(key)) {
+          unrepliedByBusiness.set(key, { name: biz.businessName, count: 0, samples: [] });
+        }
+        const entry = unrepliedByBusiness.get(key)!;
+        entry.count++;
+        if (rev.text && entry.samples.length < 3) entry.samples.push(rev.text);
+      }
+    }
+  }
+
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
@@ -259,6 +279,48 @@ export default async function DashboardPage() {
                   )}
                 </div>
                 <span className="text-lg shrink-0 text-red-400">{'★'.repeat(Math.min(3, biz.count > 3 ? 3 : 1))}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Reseñas sin responder */}
+      <div className={`${nCard} p-5 sm:p-6 ${unrepliedByBusiness.size > 0 ? 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30' : ''}`}>
+        <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />
+          </svg>
+          Reseñas sin responder
+        </h2>
+        {unrepliedByBusiness.size === 0 ? (
+          <div className="flex items-center gap-2 text-sm text-emerald-600">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Todas las reseñas tienen respuesta
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {Array.from(unrepliedByBusiness.entries()).map(([bizId, biz]) => (
+              <div key={bizId} className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-sm font-medium">{biz.name}</span>
+                  <span className="text-xs text-neutral-400 ml-2">
+                    · {biz.count} sin responder
+                  </span>
+                  {biz.samples[0] && (
+                    <p className="text-xs text-neutral-400 mt-1 truncate max-w-[300px]">
+                      {biz.samples[0]}
+                    </p>
+                  )}
+                </div>
+                <a
+                  href={`/business/${bizId}`}
+                  className="text-xs font-medium px-3 py-1.5 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors shrink-0"
+                >
+                  Revisar
+                </a>
               </div>
             ))}
           </div>
