@@ -178,7 +178,7 @@ export const getAllGoogleReviews = async () => {
 
   const fulfilled = results
     .filter(
-      (r): r is PromiseFulfilledResult<{ businessId: string; businessName: string; name: string; rating: number; userRatingsTotal: number; reviews: GoogleReview[] }> =>
+      (r): r is PromiseFulfilledResult<{ businessId: string; businessName: string; name: string; rating: number; userRatingsTotal: number; placeId: string; reviews: GoogleReview[] }> =>
         r.status === 'fulfilled' && r.value !== null,
     )
     .map((r) => r.value);
