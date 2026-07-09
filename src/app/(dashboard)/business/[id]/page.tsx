@@ -3,7 +3,8 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getBusinesses, getUserFeatures } from '@/actions/business';
+import { useRouter } from 'next/navigation';
+import { getBusinesses, getUserFeatures, deleteBusiness } from '@/actions/business';
 import {
   getCustomers,
   addCustomerBatch,
@@ -148,6 +149,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [addForm, setAddForm] = useState({ name: '', email: '', phone: '' });
   const [csvResult, setCsvResult] = useState('');
   const [features, setFeatures] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   const load = async () => {
     const businesses = await getBusinesses();
@@ -244,6 +247,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         'Error al eliminar: ' +
           (e instanceof Error ? e.message : 'desconocido'),
       );
+    }
+  };
+
+  const handleDeleteBusiness = async () => {
+    if (!window.confirm('¿Eliminar este negocio? Todos sus clientes se borrarán permanentemente.')) return;
+    setDeleting(true);
+    try {
+      await deleteBusiness(id);
+      router.push('/business');
+    } catch (err: any) {
+      alert(err.message);
+      setDeleting(false);
     }
   };
 
@@ -374,10 +389,10 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
           <Button
             variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
             onClick={() => {
               if (selected.size > 0) {
                 handleDeleteSelected();
@@ -388,25 +403,25 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               }
             }}
           >
-            Eliminar
+            Eliminar clientes
           </Button>
           <Button
             variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
             onClick={() => setShowAdd(true)}
           >
-            + Añadir
+            + Añadir cliente
           </Button>
           <Button
             variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px] w-full sm:w-auto"
             onClick={() => setShowCsv(true)}
           >
-            CSV
+            CSV clientes
           </Button>
           <Link
             href={`/business/${id}/settings`}
-            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
+            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors w-full sm:w-auto text-center"
           >
             Configuración
           </Link>
@@ -458,7 +473,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
               {['all', 'pending', 'invited', 'completed'].map((f) => (
                 <button
                   key={f}
@@ -505,6 +520,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               )}
           </div>
         </div>
+
+
 
         {/* Tabla */}
         {filtered.length === 0 ? (
@@ -849,6 +866,21 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </a>
         </div>
       )}
+
+      {/* Eliminar negocio */}
+      <div className="border border-red-200 dark:border-red-900/50 rounded-xl p-6 flex flex-col items-center gap-3">
+        <p className="text-xs text-neutral-400 text-center">
+          Eliminará permanentemente este negocio y todos sus clientes. Esta acción no se puede deshacer.
+        </p>
+        <button
+          type="button"
+          onClick={handleDeleteBusiness}
+          disabled={deleting}
+          className="text-xs font-medium px-4 py-2 rounded-md border border-red-200 dark:border-red-900/50 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-50 transition-colors cursor-pointer"
+        >
+          {deleting ? 'Eliminando...' : 'Eliminar negocio'}
+        </button>
+      </div>
     </div>
   );
 };

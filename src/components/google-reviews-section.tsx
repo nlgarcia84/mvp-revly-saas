@@ -158,8 +158,9 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
   const [error, setError] = useState('');
   const [bpConnected, setBpConnected] = useState(false);
   const [alerts, setAlerts] = useState<BadReview[]>([]);
-  const [ratingFilter, setRatingFilter] = useState<'all' | 'positive' | 'negative'>('all');
-  const [dateFilter, setDateFilter] = useState<'all' | '1m' | '3m' | '6m'>('all');
+  const [starFilter, setStarFilter] = useState<number | null>(null);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [generating, setGenerating] = useState<string | null>(null);
   const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string } | null>(null);
   const [generateError, setGenerateError] = useState('');
@@ -221,13 +222,16 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
       .catch(() => setBpConnected(false));
   }, [businessId]);
 
-  const now = Date.now() / 1000;
   const filtered = data?.reviews.filter((r) => {
-    if (ratingFilter === 'positive' && r.rating < 4) return false;
-    if (ratingFilter === 'negative' && r.rating >= 4) return false;
-    if (dateFilter === '1m' && now - r.time > 2_592_000) return false;
-    if (dateFilter === '3m' && now - r.time > 7_776_000) return false;
-    if (dateFilter === '6m' && now - r.time > 15_552_000) return false;
+    if (starFilter !== null && Number(r.rating) !== Number(starFilter)) return false;
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime() / 1000;
+      if (Number(r.time) < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo).getTime() / 1000 + 86400;
+      if (Number(r.time) > to) return false;
+    }
     return true;
   }) ?? [];
 
@@ -296,34 +300,54 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {(['all', 'positive', 'negative'] as const).map((f) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-neutral-400 font-medium">Valoración:</span>
+          <button
+            onClick={() => setStarFilter(null)}
+            className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+              starFilter === null
+                ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+            }`}
+          >
+            Todas
+          </button>
+          {[1, 2, 3, 4, 5].map((star) => (
             <button
-              key={f}
-              onClick={() => setRatingFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
-                ratingFilter === f
-                  ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+              key={star}
+              onClick={() => setStarFilter(starFilter === star ? null : star)}
+              className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+                starFilter === star
+                  ? 'border-amber-400 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300'
                   : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
               }`}
             >
-              {f === 'all' ? 'Todas' : f === 'positive' ? 'Positivas' : 'Críticas'}
+              {'★'.repeat(star)}{'☆'.repeat(5 - star)}
             </button>
           ))}
-          <span className="w-px bg-neutral-200 dark:bg-neutral-700 mx-1" />
-          {(['all', '1m', '3m', '6m'] as const).map((f) => (
+          <span className="w-px bg-neutral-200 dark:bg-neutral-700 mx-1 hidden sm:block" />
+          <span className="text-[11px] text-neutral-400 font-medium">Fecha:</span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="text-xs px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+          />
+          <span className="text-xs text-neutral-300">—</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="text-xs px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+          />
+          {(dateFrom || dateTo || starFilter !== null) && (
             <button
-              key={f}
-              onClick={() => setDateFilter(f)}
-              className={`text-xs px-3 py-1.5 rounded-md border transition-colors cursor-pointer ${
-                dateFilter === f
-                  ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                  : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-              }`}
+              onClick={() => { setStarFilter(null); setDateFrom(''); setDateTo(''); }}
+              className="text-xs text-neutral-400 hover:text-red-500 transition-colors cursor-pointer"
             >
-              {f === 'all' ? 'Siempre' : f === '1m' ? '1 mes' : f === '3m' ? '3 meses' : '6 meses'}
+              Limpiar
             </button>
-          ))}
+          )}
         </div>
 
         {generateError && (
@@ -362,6 +386,7 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
                       <img
                         src={review.profilePhotoUrl}
                         alt=""
+                        referrerPolicy="no-referrer"
                         className="w-6 h-6 rounded-full shrink-0"
                       />
                     )}
