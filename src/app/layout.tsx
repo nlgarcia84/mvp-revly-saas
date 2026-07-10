@@ -1,15 +1,15 @@
-import localFont from 'next/font/local';
-import './globals.css';
+import localFont from "next/font/local";
+import "./globals.css";
 
 const geist = localFont({
-  src: '../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2',
-  display: 'swap',
-  variable: '--font-geist-sans',
+  src: "../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.woff2",
+  display: "swap",
+  variable: "--font-geist-sans",
 });
 
 export const metadata = {
-  title: 'Revly | Gestión de reservas para negocios',
-  description: 'Plantilla inicial para un SaaS',
+  title: "Revly | Gestión de reviews para negocios",
+  description: "Plantilla inicial para un SaaS",
 };
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
@@ -33,7 +33,10 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
           rel="stylesheet"
         />
       </head>
-      <body className="bg-white dark:bg-neutral-950 text-neutral-950 dark:text-neutral-100 transition-colors" style={{ fontFamily: 'var(--font-geist-sans), system-ui, sans-serif' }}>
+      <body
+        className="bg-white dark:bg-neutral-950 text-neutral-950 dark:text-neutral-100 transition-colors"
+        style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
+      >
         {children}
       </body>
     </html>
