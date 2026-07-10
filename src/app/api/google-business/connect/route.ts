@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const REDIRECT_URI = `${APP_URL}/api/google-business/callback`;
+    console.log('[GoogleBusiness/Connect] APP_URL:', APP_URL, 'REDIRECT_URI:', REDIRECT_URI, 'CLIENT_ID:', GOOGLE_CLIENT_ID?.slice(0, 20) + '...');
 
     // Construimos la URL de autorización de Google
     // El state contiene el businessId para saber a qué negocio
