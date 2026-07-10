@@ -43,8 +43,8 @@ const MobileMenu = () => {
       <div
         className={`fixed left-0 right-0 z-50 flex flex-col bg-white dark:bg-neutral-950 transition-all duration-300 ease-out ${
           open
-            ? 'visible opacity-100 bottom-0 top-[68px]'
-            : 'invisible opacity-0 bottom-0 top-[68px]'
+            ? 'visible opacity-100 bottom-0 top-[72px]'
+            : 'invisible opacity-0 bottom-0 top-[72px]'
         }`}
       >
         <nav className="flex-1 overflow-y-auto px-6 pt-8">
