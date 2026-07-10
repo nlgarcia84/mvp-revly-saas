@@ -39,19 +39,19 @@ export async function refreshAccessToken(
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       client_id: GOOGLE_CLIENT_ID,
       client_secret: GOOGLE_CLIENT_SECRET,
       refresh_token: refreshToken,
-      grant_type: 'refresh_token',
+      grant_type: "refresh_token",
     }),
   });
 
   if (!res.ok) {
-    console.error('[BusinessProfile] Error renovando token:', await res.text());
+    console.error("[BusinessProfile] Error renovando token:", await res.text());
     return null;
   }
 
@@ -66,17 +66,21 @@ export async function refreshAccessToken(
 // ─────────────────────────────────────────────────────
 export async function getBusinessAccounts(accessToken: string) {
   const res = await fetch(
-    'https://mybusinessbusinessinformation.googleapis.com/v1/accounts',
+    "https://mybusinessbusinessinformation.googleapis.com/v1/accounts",
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
   if (!res.ok) {
-    console.error('[BusinessProfile] Error listando cuentas:', await res.text());
-    return [];
+    const body = await res.text();
+    console.error("[BusinessProfile] Error listando cuentas:", body);
+    return {
+      accounts: [],
+      error: `No se pudo acceder a Google Business Profile (${res.status}). ${body}`,
+    };
   }
 
   const data = await res.json();
-  return data.accounts ?? [];
+  return { accounts: data.accounts ?? [] };
 }
 
 // ─── Obtiene las ubicaciones (locales) de una cuenta ──
@@ -93,12 +97,16 @@ export async function getBusinessLocations(
   );
 
   if (!res.ok) {
-    console.error('[BusinessProfile] Error listando ubicaciones:', await res.text());
-    return [];
+    const body = await res.text();
+    console.error("[BusinessProfile] Error listando ubicaciones:", body);
+    return {
+      locations: [],
+      error: `No se pudo listar Google Business Profile (${res.status}). ${body}`,
+    };
   }
 
   const data = await res.json();
-  return data.locations ?? [];
+  return { locations: data.locations ?? [] };
 }
 
 // ─── Convierte la estrella de Google a número ────────
@@ -107,7 +115,11 @@ export async function getBusinessLocations(
 // ─────────────────────────────────────────────────────
 function starRatingToNumber(rating: string): number {
   const map: Record<string, number> = {
-    ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5,
+    ONE: 1,
+    TWO: 2,
+    THREE: 3,
+    FOUR: 4,
+    FIVE: 5,
   };
   return map[rating] ?? 0;
 }
@@ -134,7 +146,10 @@ export async function getBusinessReviews(
     });
 
     if (!res.ok) {
-      console.error('[BusinessProfile] Error obteniendo reseñas:', await res.text());
+      console.error(
+        "[BusinessProfile] Error obteniendo reseñas:",
+        await res.text(),
+      );
       break;
     }
 
@@ -143,11 +158,11 @@ export async function getBusinessReviews(
     if (data.reviews) {
       for (const r of data.reviews) {
         reviews.push({
-          authorName: r.reviewer?.displayName ?? 'Anónimo',
+          authorName: r.reviewer?.displayName ?? "Anónimo",
           rating: starRatingToNumber(r.starRating),
-          text: r.comment ?? '',
+          text: r.comment ?? "",
           time: Math.floor(new Date(r.createTime).getTime() / 1000),
-          profilePhotoUrl: r.reviewer?.profilePhotoUrl ?? '',
+          profilePhotoUrl: r.reviewer?.profilePhotoUrl ?? "",
           relativeTimeDescription: calcularTiempoRelativo(r.createTime),
           hasReply: !!r.reviewReply,
           reviewId: r.reviewId ?? undefined,
@@ -170,7 +185,7 @@ function calcularTiempoRelativo(isoDate: string): string {
   const diffMs = ahora - fecha;
   const diffMin = Math.floor(diffMs / 60000);
 
-  if (diffMin < 1) return 'hace unos segundos';
+  if (diffMin < 1) return "hace unos segundos";
   if (diffMin < 60) return `hace ${diffMin} min`;
 
   const diffHoras = Math.floor(diffMin / 60);
@@ -203,7 +218,10 @@ export async function getBusinessProfileData(
   );
 
   if (!locRes.ok) {
-    console.error('[BusinessProfile] Error obteniendo datos de ubicación:', await locRes.text());
+    console.error(
+      "[BusinessProfile] Error obteniendo datos de ubicación:",
+      await locRes.text(),
+    );
     return null;
   }
 
@@ -216,7 +234,7 @@ export async function getBusinessProfileData(
   const rating = location.rating?.averageRating ?? 0;
 
   return {
-    name: location.title ?? '',
+    name: location.title ?? "",
     rating,
     userRatingsTotal: reviews.length,
     reviews,

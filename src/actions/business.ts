@@ -7,7 +7,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 // URL real de Google Maps antes de guardarla en la base de
 // datos. Así la URL guardada es siempre la completa.
 import { resolveShortUrl } from '@/lib/google-places';
-import { getPlan } from '@/lib/subscription';
+import { getPlan, canCreateBusiness } from '@/lib/subscription';
 
 // ──────────────────────────────────────────────
 // slugify
@@ -69,7 +69,6 @@ export const createBusiness = async (data: {
   if (!userId) throw new Error('No autenticado');
 
   // Verifica límite del plan
-  const { canCreateBusiness } = await import('@/lib/subscription');
   const { allowed, count, limit } = await canCreateBusiness(userId);
   if (!allowed) {
     throw new Error(`Has alcanzado el límite de ${limit} negocio(s) de tu plan. Mejora a Pro en /pricing`);

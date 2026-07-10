@@ -1,5 +1,12 @@
-import Button from '@/components/ui/button';
-import DarkToggle from '@/components/ui/dark-toggle';
+import MobileMenu from "@/components/mobile-menu";
+import Button from "@/components/ui/button";
+import DarkToggle from "@/components/ui/dark-toggle";
+import LandingCard, {
+  LandingCardContent,
+  LandingCardDescription,
+  LandingCardHeader,
+  LandingCardTitle,
+} from "@/components/ui/landing-card";
 
 // ──────────────────────────────────────────────
 // HomePage (Landing)
@@ -14,30 +21,33 @@ import DarkToggle from '@/components/ui/dark-toggle';
 const HomePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="h-20 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-4 sm:px-6 bg-white dark:bg-neutral-950 transition-colors">
-        <span className="font-semibold text-xl sm:text-2xl">Revly</span>
+      <header className="border-b border-neutral-800 flex items-center justify-between px-6 py-5 sm:px-10 sm:py-6 bg-black transition-colors">
+        <span className="font-semibold text-xl sm:text-2xl text-white">Revly</span>
         <div className="flex items-center gap-2 sm:gap-3">
           <DarkToggle />
-          <Button
-            as="link"
-            variant="secondary"
-            href="/sign-in"
-            className="px-3 sm:px-4.5 py-2 text-xs sm:text-sm"
-          >
-            Iniciar sesión
-          </Button>
-          <Button
-            as="link"
-            variant="primary"
-            href="/sign-up"
-            className="px-3 sm:px-4.5 py-2 text-xs sm:text-sm"
-          >
-            Registrarse
-          </Button>
+          <MobileMenu />
+          <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+            <Button
+              as="link"
+              variant="secondary"
+              href="/sign-in"
+              className="px-3 sm:px-4.5 py-2 text-xs sm:text-sm"
+            >
+              Iniciar sesión
+            </Button>
+            <Button
+              as="link"
+              variant="primary"
+              href="/sign-up"
+              className="px-3 sm:px-4.5 py-2 text-xs sm:text-sm"
+            >
+              Registrarse
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      <main className="flex-1 min-h-[calc(115vh-5rem)] sm:min-h-[calc(120vh-5rem)] lg:min-h-[calc(108vh-5rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
         {/* Video de fondo */}
         <div className="absolute inset-0 -z-10">
           <video
@@ -45,21 +55,22 @@ const HomePage = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-20 dark:opacity-10"
+            className="w-full h-full object-cover opacity-25 dark:opacity-12"
           >
             <source src="/videos/mobilevideo.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80 dark:from-neutral-950/50 dark:via-neutral-950/20 dark:to-neutral-950/70" />
+          <div className="absolute inset-0 bg-linear-to-b from-white/45 via-white/20 to-white/55 dark:from-neutral-950/40 dark:via-neutral-950/16 dark:to-neutral-950/45" />
         </div>
 
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.42)_38%,rgba(0,0,0,0.14)_62%,rgba(0,0,0,0)_80%)]" />
+
         <div className="w-full max-w-[90%] sm:max-w-xl lg:max-w-3xl text-center relative z-10">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] mb-4">
-            Consigue más reseñas en Google
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.08] mb-4 [text-shadow:0_1px_2px_rgba(255,255,255,0.65)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
+            La IA para convertir reputación en crecimiento
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-neutral-500 leading-relaxed mb-8">
-            Ayuda a tu negocio a conseguir reseñas en Google de forma
-            automática. Solicitudes personalizadas, seguimiento simple y más
-            visibilidad online.
+          <p className="text-sm sm:text-base lg:text-lg text-neutral-500 leading-relaxed mb-8 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            Automatiza solicitudes, responde con contexto y construye una
+            presencia más sólida en Google sin fricción operativa.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
@@ -82,14 +93,76 @@ const HomePage = () => {
         </div>
       </main>
 
-      <footer className="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 transition-colors">
+      <section className="border-t p-4 border-neutral-800 bg-neutral-950 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.06),transparent_38%),linear-gradient(to_bottom,#171717,#0a0a0a)] backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20">
+          <div className="max-w-2xl mb-8 sm:mb-10">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-100">
+              Una propuesta clara, sin ruido innecesario
+            </h2>
+            <p className="mt-3 text-sm sm:text-base leading-7 text-neutral-400">
+              Todo lo necesario para explicar el valor del producto con una
+              lectura rápida y una estética consistente.
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <LandingCard className="border-neutral-800 bg-neutral-900/80 shadow-[0_1px_2px_rgba(255,255,255,0.03),0_12px_40px_rgba(0,0,0,0.35)] hover:border-neutral-700 dark:bg-neutral-900/80">
+              <LandingCardHeader>
+                <LandingCardTitle>Solicitudes automáticas</LandingCardTitle>
+                <LandingCardDescription>
+                  Envía cada solicitud en el momento oportuno, sin trabajo
+                  manual.
+                </LandingCardDescription>
+              </LandingCardHeader>
+              <LandingCardContent>
+                <p className="text-sm leading-6 text-neutral-300">
+                  Reduce fricción y mantiene una experiencia consistente en cada
+                  punto de contacto.
+                </p>
+              </LandingCardContent>
+            </LandingCard>
+
+            <LandingCard className="border-neutral-800 bg-neutral-900/80 shadow-[0_1px_2px_rgba(255,255,255,0.03),0_12px_40px_rgba(0,0,0,0.35)] hover:border-neutral-700 dark:bg-neutral-900/80">
+              <LandingCardHeader>
+                <LandingCardTitle>Más reseñas útiles</LandingCardTitle>
+                <LandingCardDescription>
+                  Convierte clientes satisfechos en prueba social de calidad.
+                </LandingCardDescription>
+              </LandingCardHeader>
+              <LandingCardContent>
+                <p className="text-sm leading-6 text-neutral-300">
+                  Gana visibilidad con reseñas que fortalecen confianza y
+                  conversión.
+                </p>
+              </LandingCardContent>
+            </LandingCard>
+
+            <LandingCard className="border-neutral-800 bg-neutral-900/80 shadow-[0_1px_2px_rgba(255,255,255,0.03),0_12px_40px_rgba(0,0,0,0.35)] hover:border-neutral-700 dark:bg-neutral-900/80">
+              <LandingCardHeader>
+                <LandingCardTitle>Control y seguimiento</LandingCardTitle>
+                <LandingCardDescription>
+                  Observa el flujo y entiende qué está funcionando.
+                </LandingCardDescription>
+              </LandingCardHeader>
+              <LandingCardContent>
+                <p className="text-sm leading-6 text-neutral-300">
+                  Optimiza campañas y decisiones sin perder tiempo en tareas
+                  repetitivas.
+                </p>
+              </LandingCardContent>
+            </LandingCard>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-neutral-200 p-4 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 transition-colors">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-12">
             <div>
               <span className="font-semibold text-lg">Revly</span>
               <p className="text-sm text-neutral-500 mt-2 leading-relaxed max-w-sm">
-                La forma más inteligente de gestionar y hacer crecer la
-                reputación online de tu negocio.
+                Gestiona tu reputación online con una experiencia más clara y
+                eficiente.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-8">
@@ -116,6 +189,7 @@ const HomePage = () => {
                   </li>
                 </ul>
               </div>
+
               <div>
                 <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">
                   Legal

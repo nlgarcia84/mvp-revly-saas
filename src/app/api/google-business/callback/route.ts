@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/db';
-import { getBusinessAccounts, getBusinessLocations } from '@/lib/google-business-profile';
+import prisma from "@/lib/db";
+import {
+  getBusinessAccounts,
+  getBusinessLocations,
+} from "@/lib/google-business-profile";
+import { NextResponse } from "next/server";
 
 // ─── Google nos llama aquí después de que el usuario ──
 // autorice (o deniegue) el acceso en la pantalla de
@@ -15,20 +18,18 @@ import { getBusinessAccounts, getBusinessLocations } from '@/lib/google-business
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const code = searchParams.get('code');
-    const error = searchParams.get('error');
-    const businessId = searchParams.get('state');  // lo enviamos desde connect
+    const code = searchParams.get("code");
+    const error = searchParams.get("error");
+    const businessId = searchParams.get("state"); // lo enviamos desde connect
 
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const settingsUrl = businessId
       ? `${APP_URL}/business/${businessId}/settings`
       : `${APP_URL}/business`;
 
     // Si el usuario denegó el permiso, volvemos a Settings
     if (error) {
-      return NextResponse.redirect(
-        `${settingsUrl}?bp_error=Acceso denegado`,
-      );
+      return NextResponse.redirect(`${settingsUrl}?bp_error=Acceso denegado`);
     }
 
     if (!code) {
@@ -48,21 +49,28 @@ export async function GET(request: Request) {
     const REDIRECT_URI = `${APP_URL}/api/google-business/callback`;
 
     // Intercambiamos el código por tokens
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         code,
         client_id: GOOGLE_CLIENT_ID,
         client_secret: GOOGLE_CLIENT_SECRET,
         redirect_uri: REDIRECT_URI,
-        grant_type: 'authorization_code',
+        grant_type: "authorization_code",
       }),
     });
 
     if (!tokenRes.ok) {
       const errBody = await tokenRes.text();
-      console.error('[GoogleBusiness/Callback] Error intercambiando código:', errBody, 'REDIRECT_URI:', REDIRECT_URI, 'CLIENT_ID:', GOOGLE_CLIENT_ID?.slice(0,20) + '...');
+      console.error(
+        "[GoogleBusiness/Callback] Error intercambiando código:",
+        errBody,
+        "REDIRECT_URI:",
+        REDIRECT_URI,
+        "CLIENT_ID:",
+        GOOGLE_CLIENT_ID?.slice(0, 20) + "...",
+      );
       return NextResponse.redirect(
         `${settingsUrl}?bp_error=Error al obtener tokens de Google (${tokenRes.status})`,
       );
@@ -75,18 +83,32 @@ export async function GET(request: Request) {
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     // Obtenemos la primera cuenta de Business Profile
-    const accounts = await getBusinessAccounts(accessToken);
-    if (accounts.length === 0) {
+    const accountsResult = await getBusinessAccounts(accessToken);
+    if (accountsResult.error) {
       return NextResponse.redirect(
-        `${settingsUrl}?bp_error=No se encontraron cuentas de Google Business Profile. Asegúrate de tener un perfil verificado.`,
+        `${settingsUrl}?bp_error=Google Business Profile no está disponible para esta cuenta o región. Puedes seguir usando Google Places API con el enlace de reseñas.`,
       );
     }
 
-    const accountId = accounts[0].name;  // viene como "accounts/123456789"
-    const accountName = accounts[0].accountName ?? '';
+    const accounts = accountsResult.accounts;
+    if (accounts.length === 0) {
+      return NextResponse.redirect(
+        `${settingsUrl}?bp_error=No se ha encontrado ningún Perfil de Empresa asociado a esta cuenta de Google. Usa una cuenta que sea propietaria o administradora del perfil, o añade este correo como usuario del perfil en Google Business Profile.`,
+      );
+    }
+
+    const accountId = accounts[0].name; // viene como "accounts/123456789"
+    const accountName = accounts[0].accountName ?? "";
 
     // Obtenemos ubicaciones de esa cuenta
-    const locations = await getBusinessLocations(accessToken, accountId);
+    const locationsResult = await getBusinessLocations(accessToken, accountId);
+    if (locationsResult.error) {
+      return NextResponse.redirect(
+        `${settingsUrl}?bp_error=Google Business Profile no está disponible para esta cuenta o región. Puedes seguir usando Google Places API con el enlace de reseñas.`,
+      );
+    }
+
+    const locations = locationsResult.locations;
     if (locations.length === 0) {
       return NextResponse.redirect(
         `${settingsUrl}?bp_error=No se encontraron ubicaciones en tu cuenta de Business Profile`,
@@ -99,7 +121,7 @@ export async function GET(request: Request) {
       where: { id: businessId },
     });
 
-    let locationId = locations[0].name;  // viene como "accounts/.../locations/..."
+    let locationId = locations[0].name; // viene como "accounts/.../locations/..."
     if (business) {
       const match = locations.find((loc: any) =>
         loc.title?.toLowerCase().includes(business.name.toLowerCase()),
@@ -124,9 +146,7 @@ export async function GET(request: Request) {
       `${settingsUrl}?bp_success=Conectado correctamente a Google Business Profile (${accountName})`,
     );
   } catch (e) {
-    console.error('[GoogleBusiness/Callback] Error:', e);
-    return NextResponse.redirect(
-      new URL('/business', request.url),
-    );
+    console.error("[GoogleBusiness/Callback] Error:", e);
+    return NextResponse.redirect(new URL("/business", request.url));
   }
 }

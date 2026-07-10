@@ -1,36 +1,40 @@
-'use client';
+"use client";
 
-import { useEffect, useState, use } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { getBusinesses, getUserFeatures, deleteBusiness } from '@/actions/business';
 import {
-  getCustomers,
+  deleteBusiness,
+  getBusinesses,
+  getUserFeatures,
+} from "@/actions/business";
+import {
   addCustomerBatch,
   deleteCustomer,
   deleteSelectedCustomers,
-} from '@/actions/customers';
-import { sendInvitation, sendBatchInvitations } from '@/actions/send';
-import Button from '@/components/ui/button';
-import BackButton from '@/components/back-button';
-import GoogleReviewsSection from '@/components/google-reviews-section';
-import BusinessQR from '@/components/business-qr';
-import { Card } from '@/components/ui/card';
+  getCustomers,
+} from "@/actions/customers";
+import { sendBatchInvitations, sendInvitation } from "@/actions/send";
+import BackButton from "@/components/back-button";
+import BusinessQR from "@/components/business-qr";
+import GoogleReviewsSection from "@/components/google-reviews-section";
+import Button from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
 
 const statusLabel: Record<string, string> = {
-  pending: 'P',
-  invited: 'I',
-  completed: 'C',
+  pending: "P",
+  invited: "I",
+  completed: "C",
 };
 
 const statusColor: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-700',
-  invited: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
+  pending: "bg-amber-100 text-amber-700",
+  invited: "bg-blue-100 text-blue-700",
+  completed: "bg-emerald-100 text-emerald-700",
 };
 
 // ──────────────────────────────────────────────
@@ -58,7 +62,7 @@ const CustomerDetail = ({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
-            {customer.name ?? 'Cliente'}
+            {customer.name ?? "Cliente"}
           </h2>
           <button
             onClick={onClose}
@@ -78,7 +82,7 @@ const CustomerDetail = ({
           </div>
           <div className="flex justify-between">
             <dt className="text-neutral-500">Registrado</dt>
-            <dd>{new Date(customer.createdAt).toLocaleDateString('es-ES')}</dd>
+            <dd>{new Date(customer.createdAt).toLocaleDateString("es-ES")}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-neutral-500">Estado</dt>
@@ -99,7 +103,7 @@ const CustomerDetail = ({
               <dt className="text-neutral-500">Último envío</dt>
               <dd>
                 {new Date((customer as any).lastInvitedAt).toLocaleDateString(
-                  'es-ES',
+                  "es-ES",
                 )}
               </dd>
             </div>
@@ -110,13 +114,13 @@ const CustomerDetail = ({
               <dd className="flex items-center gap-1">
                 <span
                   style={{
-                    color: (customer as any).rating < 4 ? '#ef4444' : '#f59e0b',
+                    color: (customer as any).rating < 4 ? "#ef4444" : "#f59e0b",
                   }}
                 >
-                  {'★'.repeat((customer as any).rating)}
+                  {"★".repeat((customer as any).rating)}
                 </span>
                 <span className="text-neutral-400">
-                  {'☆'.repeat(5 - (customer as any).rating)}
+                  {"☆".repeat(5 - (customer as any).rating)}
                 </span>
               </dd>
             </div>
@@ -139,15 +143,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const [business, setBusiness] = useState<Business | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [batchSending, setBatchSending] = useState(false);
   const [detail, setDetail] = useState<Customer | null>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [showCsv, setShowCsv] = useState(false);
-  const [addForm, setAddForm] = useState({ name: '', email: '', phone: '' });
-  const [csvResult, setCsvResult] = useState('');
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "" });
+  const [csvResult, setCsvResult] = useState("");
   const [features, setFeatures] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
@@ -171,12 +175,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       await sendInvitation(customerId);
       setCustomers((prev) =>
         prev.map((c) =>
-          c.id === customerId ? { ...c, status: 'invited' } : c,
+          c.id === customerId ? { ...c, status: "invited" } : c,
         ),
       );
     } catch (e) {
       alert(
-        'Error al enviar: ' + (e instanceof Error ? e.message : 'desconocido'),
+        "Error al enviar: " + (e instanceof Error ? e.message : "desconocido"),
       );
     }
     setSendingId(null);
@@ -214,27 +218,27 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   const handleDelete = async (customerId: string) => {
-    if (!confirm('¿Eliminar este cliente?')) return;
+    if (!confirm("¿Eliminar este cliente?")) return;
     try {
       await deleteCustomer(customerId);
       setCustomers((prev) => prev.filter((c) => c.id !== customerId));
     } catch (e) {
       alert(
-        'Error al eliminar: ' +
-          (e instanceof Error ? e.message : 'desconocido'),
+        "Error al eliminar: " +
+          (e instanceof Error ? e.message : "desconocido"),
       );
     }
   };
 
   const handleClearCompleted = () => {
-    setFilter('pending');
+    setFilter("pending");
   };
 
   const handleDeleteSelected = async () => {
     const ids = Array.from(selected);
     if (
       !confirm(
-        `¿Eliminar ${ids.length} cliente${ids.length !== 1 ? 's' : ''} seleccionado${ids.length !== 1 ? 's' : ''}?`,
+        `¿Eliminar ${ids.length} cliente${ids.length !== 1 ? "s" : ""} seleccionado${ids.length !== 1 ? "s" : ""}?`,
       )
     )
       return;
@@ -244,18 +248,23 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       setSelected(new Set());
     } catch (e) {
       alert(
-        'Error al eliminar: ' +
-          (e instanceof Error ? e.message : 'desconocido'),
+        "Error al eliminar: " +
+          (e instanceof Error ? e.message : "desconocido"),
       );
     }
   };
 
   const handleDeleteBusiness = async () => {
-    if (!window.confirm('¿Eliminar este negocio? Todos sus clientes se borrarán permanentemente.')) return;
+    if (
+      !window.confirm(
+        "¿Eliminar este negocio? Todos sus clientes se borrarán permanentemente.",
+      )
+    )
+      return;
     setDeleting(true);
     try {
       await deleteBusiness(id);
-      router.push('/business');
+      router.push("/business");
     } catch (err: any) {
       alert(err.message);
       setDeleting(false);
@@ -266,13 +275,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     e.preventDefault();
     try {
       await addCustomerBatch(id, [{ ...addForm }]);
-      setAddForm({ name: '', email: '', phone: '' });
+      setAddForm({ name: "", email: "", phone: "" });
       setShowAdd(false);
       await load();
     } catch (err) {
       alert(
-        'Error al añadir cliente: ' +
-          (err instanceof Error ? err.message : 'desconocido'),
+        "Error al añadir cliente: " +
+          (err instanceof Error ? err.message : "desconocido"),
       );
     }
   };
@@ -281,31 +290,31 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const text = await file.text();
-    const lines = text.trim().split('\n');
+    const lines = text.trim().split("\n");
     if (lines.length < 2) {
-      setCsvResult('El CSV debe tener al menos 2 líneas (cabecera + datos)');
+      setCsvResult("El CSV debe tener al menos 2 líneas (cabecera + datos)");
       return;
     }
 
-    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
     const nameIdx =
-      headers.indexOf('nombre') !== -1
-        ? headers.indexOf('nombre')
-        : headers.indexOf('name');
+      headers.indexOf("nombre") !== -1
+        ? headers.indexOf("nombre")
+        : headers.indexOf("name");
     const emailIdx =
-      headers.indexOf('email') !== -1
-        ? headers.indexOf('email')
-        : headers.indexOf('correo') !== -1
-          ? headers.indexOf('correo')
-          : headers.indexOf('mail');
+      headers.indexOf("email") !== -1
+        ? headers.indexOf("email")
+        : headers.indexOf("correo") !== -1
+          ? headers.indexOf("correo")
+          : headers.indexOf("mail");
     const phoneIdx =
-      headers.indexOf('telefono') !== -1
-        ? headers.indexOf('telefono')
-        : headers.indexOf('phone') !== -1
-          ? headers.indexOf('phone')
-          : headers.indexOf('teléfono') !== -1
-            ? headers.indexOf('teléfono')
-            : headers.indexOf('tlf');
+      headers.indexOf("telefono") !== -1
+        ? headers.indexOf("telefono")
+        : headers.indexOf("phone") !== -1
+          ? headers.indexOf("phone")
+          : headers.indexOf("teléfono") !== -1
+            ? headers.indexOf("teléfono")
+            : headers.indexOf("tlf");
 
     if (emailIdx === -1) {
       setCsvResult('El CSV debe tener una columna "email"');
@@ -319,9 +328,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const customers = lines
       .slice(1)
       .map((line) => {
-        const cols = line.split(',').map((c) => c.trim());
+        const cols = line.split(",").map((c) => c.trim());
         return {
-          name: nameIdx >= 0 ? cols[nameIdx] : '',
+          name: nameIdx >= 0 ? cols[nameIdx] : "",
           email: cols[emailIdx],
           phone: cols[phoneIdx],
         };
@@ -332,16 +341,16 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setCsvResult(
       `Importados ${result.created} cliente(s). ${result.errors} error(es).`,
     );
-    e.target.value = '';
+    e.target.value = "";
     await load();
   };
 
   const filtered =
-    filter === 'all' ? customers : customers.filter((c) => c.status === filter);
+    filter === "all" ? customers : customers.filter((c) => c.status === filter);
 
   const total = customers.length;
-  const invited = customers.filter((c) => c.status === 'invited').length;
-  const completed = customers.filter((c) => c.status === 'completed').length;
+  const invited = customers.filter((c) => c.status === "invited").length;
+  const completed = customers.filter((c) => c.status === "completed").length;
 
   return (
     <div className="flex flex-col gap-10 sm:gap-12">
@@ -365,12 +374,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             )}
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold">
-                {business?.name ?? 'Cargando...'}
+                {business?.name ?? "Cargando..."}
               </h1>
               <div className="flex items-center gap-2 mt-2">
                 <p className="text-sm text-neutral-500">
-                  {total} cliente{total !== 1 ? 's' : ''} registrado
-                  {total !== 1 ? 's' : ''}
+                  {total} cliente{total !== 1 ? "s" : ""} registrado
+                  {total !== 1 ? "s" : ""}
                 </p>
                 {business?.slug && (
                   <>
@@ -428,7 +437,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="flex flex-col gap-5">
         <div>
           <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 00-3-3.87" />
@@ -449,7 +466,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               if (selected.size > 0) {
                 handleDeleteSelected();
               } else {
-                alert('Selecciona uno o más clientes de la tabla para eliminar');
+                alert(
+                  "Selecciona uno o más clientes de la tabla para eliminar",
+                );
               }
             }}
           >
@@ -478,60 +497,64 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex gap-3 flex-wrap">
-              {['all', 'pending', 'invited', 'completed'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`text-[11px] sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border transition-colors cursor-pointer ${
-                    filter === f
-                      ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                      : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
-                  }`}
-                >
-                  {f === 'all'
-                    ? 'Todos'
-                    : ({
-                        pending: 'Pendiente',
-                        invited: 'Invitado',
-                        completed: 'Completado',
-                      }[f] ?? f)}
-                </button>
-              ))}
+            {["all", "pending", "invited", "completed"].map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`text-[11px] sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border transition-colors cursor-pointer ${
+                  filter === f
+                    ? "border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950"
+                    : "border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100"
+                }`}
+              >
+                {f === "all"
+                  ? "Todos"
+                  : ({
+                      pending: "Pendiente",
+                      invited: "Invitado",
+                      completed: "Completado",
+                    }[f] ?? f)}
+              </button>
+            ))}
           </div>
           <div className="flex gap-2">
-              {customers.filter((c) => c.status === 'completed').length > 0 &&
-                filter !== 'pending' && (
-                  <Button
-                    variant="secondary"
-                    className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                    onClick={handleClearCompleted}
-                  >
-                    <span className="hidden sm:inline">Ocultar completados</span>
-                    <span className="sm:hidden">Ocultar</span>
-                  </Button>
-                )}
-              {selected.size > 0 && (
+            {customers.filter((c) => c.status === "completed").length > 0 &&
+              filter !== "pending" && (
                 <Button
-                  variant="primary"
+                  variant="secondary"
                   className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                  onClick={handleBatchSend}
-                  disabled={batchSending}
+                  onClick={handleClearCompleted}
                 >
-                  {batchSending
-                    ? '...'
-                    : `${selected.size}`}
+                  <span className="hidden sm:inline">Ocultar completados</span>
+                  <span className="sm:hidden">Ocultar</span>
                 </Button>
               )}
+            {selected.size > 0 && (
+              <Button
+                variant="primary"
+                className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                onClick={handleBatchSend}
+                disabled={batchSending}
+              >
+                {batchSending ? "..." : `${selected.size}`}
+              </Button>
+            )}
           </div>
         </div>
-
-
 
         {/* Tabla */}
         {filtered.length === 0 ? (
           <Card neumorphic className="p-6">
             <div className="flex flex-col items-center gap-3 py-8">
-              <svg className="w-10 h-10 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                className="w-10 h-10 text-neutral-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <path d="M8 15c0 0 1.5-2 4-2s4 2 4 2" />
                 <line x1="9" y1="9" x2="9.01" y2="9" />
@@ -539,8 +562,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </svg>
               <p className="text-sm text-neutral-400 text-center">
                 {customers.length === 0
-                  ? 'Todavía no hay clientes registrados. Comparte el código QR del negocio.'
-                  : 'No hay clientes con este estado.'}
+                  ? "Todavía no hay clientes registrados. Comparte el código QR del negocio."
+                  : "No hay clientes con este estado."}
               </p>
             </div>
           </Card>
@@ -590,7 +613,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <tr
                     key={c.id}
                     onClick={() => setDetail(c)}
-                    className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? 'animate-pulse-bg bg-red-50/50 dark:bg-red-950/10' : ''}`}
+                    className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? "animate-pulse-bg bg-red-50/50 dark:bg-red-950/10" : ""}`}
                   >
                     <td
                       className="py-3.5 pr-2"
@@ -604,7 +627,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       />
                     </td>
                     <td className="py-3.5 pr-4">
-                      <span className="font-medium">{c.name ?? '—'}</span>
+                      <span className="font-medium">{c.name ?? "—"}</span>
                     </td>
                     <td className="py-3.5 pr-4 text-neutral-500 hidden sm:table-cell">
                       {c.phone}
@@ -615,12 +638,12 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <td className="py-3.5 pr-4">
                       <span
                         className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                          c.status === 'completed' &&
+                          c.status === "completed" &&
                           c.rating != null &&
                           c.rating < 4
-                            ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                             : (statusColor[c.status] ??
-                              'bg-neutral-100 text-neutral-500')
+                              "bg-neutral-100 text-neutral-500")
                         }`}
                       >
                         {statusLabel[c.status] ?? c.status}
@@ -630,10 +653,10 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                       {c.rating ? (
                         <span
                           style={{
-                            color: c.rating < 4 ? '#ef4444' : '#f59e0b',
+                            color: c.rating < 4 ? "#ef4444" : "#f59e0b",
                           }}
                         >
-                          {'★'.repeat(c.rating)}
+                          {"★".repeat(c.rating)}
                         </span>
                       ) : (
                         <span className="text-neutral-300">—</span>
@@ -657,7 +680,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         className="flex items-center gap-1.5 sm:gap-3"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {c.status !== 'completed' && (
+                        {c.status !== "completed" && (
                           <Button
                             variant="primary"
                             className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
@@ -665,20 +688,20 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                             disabled={sendingId === c.id}
                           >
                             {sendingId === c.id ? (
-                              '...'
+                              "..."
                             ) : (
                               <>
                                 <span className="sm:hidden">Mail</span>
                                 <span className="hidden sm:inline">
-                                  {c.status === 'invited'
-                                    ? 'Reenviar mail'
-                                    : 'Enviar mail'}
+                                  {c.status === "invited"
+                                    ? "Reenviar mail"
+                                    : "Enviar mail"}
                                 </span>
                               </>
                             )}
                           </Button>
                         )}
-                        {c.status === 'completed' && (
+                        {c.status === "completed" && (
                           <svg
                             className="w-4 h-4 text-emerald-500"
                             fill="none"
@@ -695,10 +718,10 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         )}
                         {c.phone &&
                           business?.googleLink &&
-                          c.status !== 'completed' && (
+                          c.status !== "completed" && (
                             <a
-                              href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, '')}?text=${encodeURIComponent(
-                                `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${business.name}?`,
+                              href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, "")}?text=${encodeURIComponent(
+                                `Hola ${c.name ?? ""}, ¿cómo valorarías tu experiencia en ${business.name}?`,
                               )}`}
                               target="_blank"
                               rel="noopener noreferrer"
@@ -803,7 +826,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               className="fixed inset-0 bg-black/50 z-40"
               onClick={() => {
                 setShowCsv(false);
-                setCsvResult('');
+                setCsvResult("");
               }}
             />
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -830,7 +853,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     type="button"
                     onClick={() => {
                       setShowCsv(false);
-                      setCsvResult('');
+                      setCsvResult("");
                     }}
                   >
                     Cerrar
@@ -845,23 +868,34 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Reseñas de Google */}
       <GoogleReviewsSection
         businessId={id}
-        googleLink={business?.googleLink ?? ''}
+        googleLink={business?.googleLink ?? ""}
         features={features}
       />
 
       {/* Reporte PDF (plan Pro) */}
-      {features.includes('pdf-reports') && (
+      {features.includes("pdf-reports") && (
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-          <h2 className="text-sm font-semibold mb-1">Reporte de plan de acción</h2>
+          <h2 className="text-sm font-semibold mb-1">
+            Reporte de plan de acción
+          </h2>
           <p className="text-xs text-neutral-400 mb-3">
-            Genera un informe basado en las reseñas negativas con recomendaciones y plan de acción.
+            Genera un informe basado en las reseñas negativas con
+            recomendaciones y plan de acción.
           </p>
           <a
             href={`/api/report/${id}`}
             target="_blank"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -874,7 +908,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Eliminar negocio */}
       <div className="border border-red-200 dark:border-red-900/50 rounded-xl p-6 flex flex-col items-center gap-3">
         <p className="text-xs text-neutral-400 text-center">
-          Eliminará permanentemente este negocio y todos sus clientes. Esta acción no se puede deshacer.
+          Eliminará permanentemente este negocio y todos sus clientes. Esta
+          acción no se puede deshacer.
         </p>
         <button
           type="button"
@@ -882,7 +917,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           disabled={deleting}
           className="text-xs font-medium px-4 py-2 rounded-md border border-red-200 dark:border-red-900/50 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-50 transition-colors cursor-pointer"
         >
-          {deleting ? 'Eliminando...' : 'Eliminar negocio'}
+          {deleting ? "Eliminando..." : "Eliminar negocio"}
         </button>
       </div>
     </div>
