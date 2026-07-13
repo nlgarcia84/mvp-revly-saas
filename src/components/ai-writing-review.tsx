@@ -152,7 +152,7 @@ const AiWritingReview = () => {
   const isTextVisible = phase === 'text-in' || phase === 'icon-in';
 
   return (
-    <div className="w-full max-w-sm mx-auto mt-12 h-[360px] flex flex-col items-center justify-center">
+    <div className="w-full max-w-sm mx-auto mt-12 h-[560px] flex flex-col items-center justify-center">
       {/* Pregunta */}
       <p
         className={`text-xl sm:text-2xl font-bold text-center mb-4 transition-all duration-700 ease-in-out ${
