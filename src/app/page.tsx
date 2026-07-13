@@ -1,3 +1,4 @@
+import AiWritingReview from "@/components/ai-writing-review";
 import MobileMenu from "@/components/mobile-menu";
 import Button from "@/components/ui/button";
 import DarkToggle from "@/components/ui/dark-toggle";
@@ -8,7 +9,6 @@ import LandingCard, {
   LandingCardTitle,
 } from "@/components/ui/landing-card";
 import { Sparkles, Star, TrendingUp } from "lucide-react";
-import AiWritingReview from "@/components/ai-writing-review";
 
 // ──────────────────────────────────────────────
 // HomePage (Landing)
@@ -51,35 +51,55 @@ const HomePage = () => {
         </div>
       </header>
 
-      <main className="flex-1 min-h-screen pt-32 sm:pt-36 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden bg-neutral-50 dark:bg-neutral-950">
-        <div className="w-full max-w-[90%] sm:max-w-xl lg:max-w-3xl text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] mb-4 text-neutral-950 dark:text-neutral-100">
-            Consigue más reseñas de Google con IA
-          </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-neutral-500 leading-relaxed mb-8 max-w-2xl mx-auto">
-            Automatiza solicitudes de reseña por QR, email y factura.
-            Responde con inteligencia artificial y construye una reputación
-            online imparable.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button
-              as="link"
-              variant="primary"
-              href="/sign-up"
-              className="px-6 sm:px-7 py-3 text-sm sm:text-base"
-            >
-              Comenzar gratis
-            </Button>
-            <Button
-              as="link"
-              variant="secondary"
-              href="/sign-in"
-              className="px-6 sm:px-7 py-3 text-sm sm:text-base"
-            >
-              Iniciar sesión
-            </Button>
+      <main className="px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 relative overflow-hidden bg-neutral-50 dark:bg-neutral-950">
+        <div className="absolute inset-0 -z-10">
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="w-full h-full object-cover opacity-25 dark:opacity-12"
+          >
+            <source src="/videos/mobilevideo.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-linear-to-b from-white/45 via-white/20 to-white/55 dark:from-neutral-950/40 dark:via-neutral-950/16 dark:to-neutral-950/45" />
+        </div>
+
+        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.42)_38%,rgba(0,0,0,0.14)_62%,rgba(0,0,0,0)_80%)]" />
+
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:grid md:grid-cols-2 md:items-center md:gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:items-center lg:gap-12">
+          <div className="w-full max-w-[92%] sm:max-w-2xl text-center md:text-left md:max-w-none">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.06] mb-4 text-neutral-950 dark:text-neutral-100 [text-shadow:0_1px_2px_rgba(255,255,255,0.65)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
+              Consigue más reseñas de Google con IA
+            </h1>
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed mb-8 max-w-2xl mx-auto md:mx-0 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+              Automatiza solicitudes de reseña por QR, email y factura. Responde
+              con inteligencia artificial y construye una reputación online
+              imparable.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+              <Button
+                as="link"
+                variant="primary"
+                href="/sign-up"
+                className="px-6 sm:px-7 py-3 text-sm sm:text-base"
+              >
+                Comenzar gratis
+              </Button>
+              <Button
+                as="link"
+                variant="secondary"
+                href="/sign-in"
+                className="px-6 sm:px-7 py-3 text-sm sm:text-base"
+              >
+                Iniciar sesión
+              </Button>
+            </div>
           </div>
-          <AiWritingReview />
+
+          <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-none mx-auto md:mx-0 md:justify-self-end">
+            <AiWritingReview />
+          </div>
         </div>
       </main>
 
@@ -90,9 +110,9 @@ const HomePage = () => {
               Todo lo que necesitas para dominar tu reputación online
             </h2>
             <p className="mt-3 text-sm sm:text-base leading-7 text-neutral-500 dark:text-neutral-400">
-              Desde el primer código QR hasta el análisis de reseñas con IA.
-              Una plataforma que convierte clientes satisfechos en reseñas de
-              5 estrellas.
+              Desde el primer código QR hasta el análisis de reseñas con IA. Una
+              plataforma que convierte clientes satisfechos en reseñas de 5
+              estrellas.
             </p>
           </div>
 
@@ -100,9 +120,7 @@ const HomePage = () => {
             <LandingCard>
               <LandingCardHeader>
                 <Sparkles className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>
-                  Solicitudes automatizadas
-                </LandingCardTitle>
+                <LandingCardTitle>Solicitudes automatizadas</LandingCardTitle>
                 <LandingCardDescription>
                   QR, email o factura. Solicita reseñas en el momento justo sin
                   esfuerzo manual.
@@ -120,9 +138,7 @@ const HomePage = () => {
             <LandingCard>
               <LandingCardHeader>
                 <Star className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>
-                  Respuestas con IA
-                </LandingCardTitle>
+                <LandingCardTitle>Respuestas con IA</LandingCardTitle>
                 <LandingCardDescription>
                   Responde a cada reseña con contexto generado por inteligencia
                   artificial en segundos.
@@ -140,12 +156,10 @@ const HomePage = () => {
             <LandingCard>
               <LandingCardHeader>
                 <TrendingUp className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>
-                  Analítica y crecimiento
-                </LandingCardTitle>
+                <LandingCardTitle>Analítica y crecimiento</LandingCardTitle>
                 <LandingCardDescription>
-                  Mide, aprende y mejora tu reputación digital con datos
-                  claros y accionables.
+                  Mide, aprende y mejora tu reputación digital con datos claros
+                  y accionables.
                 </LandingCardDescription>
               </LandingCardHeader>
               <LandingCardContent>

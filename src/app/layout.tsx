@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -7,7 +8,7 @@ const geist = localFont({
   variable: "--font-geist-sans",
 });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Revly | Gestión de reviews para negocios",
   description: "Plantilla inicial para un SaaS",
 };
@@ -34,7 +35,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       </head>
       <body
-        className="bg-white dark:bg-neutral-950 text-neutral-950 dark:text-neutral-100 transition-colors"
+        className="bg-slate-50 text-neutral-950 dark:bg-neutral-950 dark:text-neutral-100 transition-colors"
         style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
       >
         {children}
