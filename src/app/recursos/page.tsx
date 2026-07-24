@@ -1,5 +1,5 @@
 import BackButton from '@/components/back-button';
-import { BookOpen, HelpCircle, MessageSquareMore, Search } from 'lucide-react';
+import { BookOpen, HelpCircle, Search } from 'lucide-react';
 
 const faqs = [
   {
@@ -31,12 +31,6 @@ const resourceCards = [
     description: 'Consejos para mejorar tu reputación online y convertir reseñas en negocio.',
     icon: BookOpen,
     href: '/blog',
-  },
-  {
-    title: 'Contacto',
-    description: 'Habla con el equipo si necesitas ayuda, una demo o una propuesta personalizada.',
-    icon: MessageSquareMore,
-    href: '/contacto',
   },
 ];
 

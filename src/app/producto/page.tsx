@@ -120,28 +120,6 @@ const ProductPage = () => {
             );
           })}
         </section>
-
-        <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-xl font-semibold">Recursos</h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
-              Encuentra guías, preguntas frecuentes y ayuda para sacar el máximo partido a Revly.
-            </p>
-            <Button as="link" href="/recursos" variant="primary" className="mt-5 px-4 py-2.5">
-              Ver recursos
-            </Button>
-          </div>
-
-          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-xl font-semibold">Legal</h2>
-            <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
-              Consulta la información legal, la política de privacidad y las condiciones de uso del servicio.
-            </p>
-            <Button as="link" href="/legal" variant="secondary" className="mt-5 px-4 py-2.5">
-              Ver información legal
-            </Button>
-          </div>
-        </section>
       </div>
     </div>
   );

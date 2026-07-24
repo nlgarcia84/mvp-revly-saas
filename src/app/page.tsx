@@ -184,7 +184,7 @@ const HomePage = () => {
                 eficiente.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">
                   Producto
@@ -211,6 +211,46 @@ const HomePage = () => {
 
               <div>
                 <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">
+                  Soporte
+                </h4>
+                <ul className="flex flex-col gap-3">
+                  <li>
+                    <a
+                      href="/contacto"
+                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                    >
+                      Contacta con nosotros
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">
+                  Recursos
+                </h4>
+                <ul className="flex flex-col gap-3">
+                  <li>
+                    <a
+                      href="/recursos"
+                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                    >
+                      Preguntas frecuentes
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="/blog"
+                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                    >
+                      Blog y novedades
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4">
                   Legal
                 </h4>
                 <ul className="flex flex-col gap-3">
@@ -224,18 +264,10 @@ const HomePage = () => {
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="/legal#terminos"
                       className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
                     >
-                      Términos
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
-                    >
-                      Cookies
+                      Términos y condiciones
                     </a>
                   </li>
                 </ul>
