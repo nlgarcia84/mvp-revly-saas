@@ -1,5 +1,6 @@
 import BackButton from '@/components/back-button';
 import ContactForm from '@/components/contact-form';
+import IncidentReporter from '@/components/incident-reporter';
 
 const ContactPage = async ({ searchParams }: { searchParams: Promise<{ success?: string; error?: string } | undefined> }) => {
   const resolvedSearchParams = await searchParams;
@@ -18,6 +19,7 @@ const ContactPage = async ({ searchParams }: { searchParams: Promise<{ success?:
         </div>
 
         <ContactForm initialSuccess={success} initialError={error} />
+        <IncidentReporter />
       </div>
     </div>
   );

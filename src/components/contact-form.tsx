@@ -69,7 +69,7 @@ export default function ContactForm({ initialSuccess = false, initialError = fal
         <div className="mt-5 space-y-4 text-sm text-neutral-600 dark:text-neutral-400">
           <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950">
             <Mail className="h-4 w-4" />
-            <span>revlyreviwes@gmail.com</span>
+            <span>hello@revly.es</span>
           </div>
           <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-200/60 p-3 dark:border-neutral-800 dark:bg-neutral-950">
             <Phone className="h-4 w-4" />

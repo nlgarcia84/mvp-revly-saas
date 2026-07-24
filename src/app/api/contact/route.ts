@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: 'Revly Support <support@revly.es>',
-        to: ['revlyreviwes@gmail.com'],
+        to: ['revlyreviwes@gmail.com', 'hello@revly.es'],
         replyTo: email,
         subject: `Nuevo mensaje de contacto de ${name} [${ticketId}]`,
         html: `
