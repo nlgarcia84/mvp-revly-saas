@@ -192,18 +192,18 @@ const HomePage = () => {
                 <ul className="flex flex-col gap-3">
                   <li>
                     <a
-                      href="/sign-up"
+                      href="/producto"
                       className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
                     >
-                      Comenzar gratis
+                      Conoce Revly
                     </a>
                   </li>
                   <li>
                     <a
-                      href="/sign-in"
+                      href="/sign-up"
                       className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
                     >
-                      Iniciar sesión
+                      Comenzar gratis
                     </a>
                   </li>
                 </ul>
@@ -220,6 +220,22 @@ const HomePage = () => {
                       className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
                     >
                       Política de privacidad
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                    >
+                      Términos
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      className="text-sm text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+                    >
+                      Cookies
                     </a>
                   </li>
                 </ul>
