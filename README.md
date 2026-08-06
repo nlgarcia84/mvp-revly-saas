@@ -178,3 +178,58 @@ NEXT_PUBLIC_APP_URL=          # http://localhost:3000 en desarrollo
 # IA
 GROQ_API_KEY=                 # Para generar respuestas a reseñas
 ```
+
+## Pagos con Stripe — pruebas en local
+
+Para probar el flujo de pago completo (incluyendo webhooks) en desarrollo local necesitas **Stripe CLI**.
+
+### 1. Instalar Stripe CLI
+
+```powershell
+winget install Stripe.StripeCli
+```
+
+Cierra y vuelve a abrir PowerShell.
+
+### 2. Autenticarse
+
+```powershell
+stripe login
+```
+
+Abre el navegador, autoriza tu cuenta de Stripe y listo.
+
+### 3. Arrancar webhook forwarding (terminal aparte)
+
+Con `npm run dev` ya corriendo, en otra terminal:
+
+```powershell
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+Este comando imprime un `whsec_...`. Cópialo y ponlo en `.env.local`:
+
+```env
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+### 4. Tarjeta de prueba
+
+Usa siempre esta tarjeta en modo test:
+
+| Campo | Valor |
+|---|---|
+| Número | `4242 4242 4242 4242` |
+| Fecha | Cualquiera futura |
+| CVC | Cualquiera (3 dígitos) |
+
+### 5. Variables en producción (Vercel)
+
+Cuando despliegues, añade en Vercel Dashboard > Settings > Environment Variables:
+
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET` (el de producción, no el del CLI)
+- `NEXT_PUBLIC_APP_URL` = `https://www.revly.es`
+
+El código ya usa `process.env.NEXT_PUBLIC_APP_URL` dinámicamente, sin necesidad de cambios entre entornos.
