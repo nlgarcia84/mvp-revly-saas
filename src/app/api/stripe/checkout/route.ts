@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
-// Mapa de price IDs de Stripe a nombres de planes
-// {{ATENCION}} Reemplazar con los price IDs reales de Stripe
 const PRICE_TO_PLAN: Record<string, string> = {
-  'price_1R41NhGGc0u0LW2eH0y6Q3mh': 'avanzado',
-  'price_PRO_PLACEHOLDER': 'pro',
+  'price_1U1WfmR8J40peD82mTLBUosR': 'avanzado',
+  'price_1U1WhkR8J40peD825bfelw3g': 'pro',
 };
 
 export async function POST(request: Request) {

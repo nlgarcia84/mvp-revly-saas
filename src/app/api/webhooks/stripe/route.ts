@@ -31,8 +31,8 @@ export async function POST(request: Request) {
         if (!plan && subscriptionId) {
           const sub: any = await stripe.subscriptions.retrieve(subscriptionId);
           const priceId = sub.items?.data?.[0]?.price?.id;
-          if (priceId === 'price_1R41NhGGc0u0LW2eH0y6Q3mh') plan = 'avanzado';
-          else if (priceId === 'price_PRO_PLACEHOLDER') plan = 'pro';
+          if (priceId === 'price_1U1WfmR8J40peD82mTLBUosR') plan = 'avanzado';
+          else if (priceId === 'price_1U1WhkR8J40peD825bfelw3g') plan = 'pro';
           else plan = 'avanzado';
         }
 

@@ -26,7 +26,7 @@ const PLANS = {
     maxBusinesses: 5,
     label: 'Avanzado',
     price: 9,
-    stripePriceId: 'price_1R41NhGGc0u0LW2eH0y6Q3mh', // {{REEMPLAZAR}} con ID real de Stripe
+    stripePriceId: 'price_1U1WfmR8J40peD82mTLBUosR',
     features: [
       'qr-points',
       'invoice-claims',
@@ -45,7 +45,7 @@ const PLANS = {
     maxBusinesses: 999,
     label: 'Pro',
     price: 19,
-    stripePriceId: 'price_PRO_PLACEHOLDER', // {{REEMPLAZAR}} con ID real de Stripe
+    stripePriceId: 'price_1U1WhkR8J40peD825bfelw3g',
     features: [
       'qr-points',
       'invoice-claims',
