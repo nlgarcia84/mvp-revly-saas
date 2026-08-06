@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import { ChartLine } from '@/components/ui/chart';
@@ -6,6 +7,7 @@ import { getPlan } from '@/lib/subscription';
 import { nCard } from '@/components/ui/card';
 import BusinessList from '@/components/business-list';
 import AnimatedCounter from '@/components/ui/animated-counter';
+import CheckoutSuccessBanner from '@/components/checkout-success-banner';
 
 const iconColor: Record<string, string> = {
   blue: 'text-blue-500',
@@ -154,6 +156,10 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
       </div>
+
+      <Suspense fallback={null}>
+        <CheckoutSuccessBanner currentPlan={plan} />
+      </Suspense>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

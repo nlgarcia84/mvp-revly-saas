@@ -40,7 +40,7 @@ const plans = [
       'Reseñas sin responder',
       'Importar clientes por CSV',
     ],
-    priceId: 'price_1R41NhGGc0u0LW2eH0y6Q3mh',
+    priceId: 'price_1U1WfmR8J40peD82mTLBUosR',
     popular: true,
   },
   {
@@ -58,7 +58,7 @@ const plans = [
       'Valoraciones con estrellas',
       'Analytics completo',
     ],
-    priceId: 'price_PRO_PLACEHOLDER',
+    priceId: 'price_1U1WhkR8J40peD825bfelw3g',
   },
 ];
 
