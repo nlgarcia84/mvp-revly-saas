@@ -51,7 +51,7 @@ export async function refreshAccessToken(
   });
 
   if (!res.ok) {
-    console.error("[BusinessProfile] Error renovando token:", await res.text());
+    console.error(`[BusinessProfile] Error renovando token | HTTP ${res.status}`);
     return null;
   }
 
@@ -91,17 +91,19 @@ export async function getBusinessLocations(
   accessToken: string,
   accountId: string,
 ) {
-  const res = await fetch(
-    `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations?pageSize=100`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
+  const url = `https://mybusinessbusinessinformation.googleapis.com/v1/${accountId}/locations?pageSize=100`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
 
   if (!res.ok) {
     const body = await res.text();
-    console.error("[BusinessProfile] Error listando ubicaciones:", body);
+    console.error(
+      `[BusinessProfile] Error listando ubicaciones | HTTP ${res.status} | URL: ${url} | ${body}`,
+    );
     return {
       locations: [],
-      error: `No se pudo listar Google Business Profile (${res.status}). ${body}`,
+      error: `No se pudo listar ubicaciones (${res.status}). ${body}`,
     };
   }
 
@@ -138,7 +140,7 @@ export async function getBusinessReviews(
   let pageToken: string | undefined;
 
   do {
-    let url = `https://mybusiness.googleapis.com/v1/accounts/${accountId}/locations/${locationId}/reviews?pageSize=50`;
+    let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50`;
     if (pageToken) url += `&pageToken=${pageToken}`;
 
     const res = await fetch(url, {
@@ -146,11 +148,13 @@ export async function getBusinessReviews(
     });
 
     if (!res.ok) {
+      const reviewsBody = await res.text();
       console.error(
-        "[BusinessProfile] Error obteniendo reseñas:",
-        await res.text(),
+        `[BusinessProfile] Error obteniendo reseñas | HTTP ${res.status} | URL: ${url} | ${reviewsBody}`,
       );
-      break;
+      throw new Error(
+        `Google Business Profile: error ${res.status} al obtener reseñas`,
+      );
     }
 
     const data = await res.json();
@@ -212,17 +216,19 @@ export async function getBusinessProfileData(
   locationId: string,
 ): Promise<BusinessProfileData | null> {
   // Primero obtener datos de la ubicación (nombre, rating)
-  const locRes = await fetch(
-    `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${accountId}/locations/${locationId}?readMask=title,rating`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
+  const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/${locationId}?readMask=title,rating`;
+  const locRes = await fetch(locUrl, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
 
   if (!locRes.ok) {
+    const locBody = await locRes.text();
     console.error(
-      "[BusinessProfile] Error obteniendo datos de ubicación:",
-      await locRes.text(),
+      `[BusinessProfile] Error obteniendo datos de ubicación | HTTP ${locRes.status} | URL: ${locUrl} | ${locBody}`,
     );
-    return null;
+    throw new Error(
+      `Google Business Profile: error ${locRes.status} al obtener ubicación`,
+    );
   }
 
   const location = await locRes.json();

@@ -95,9 +95,10 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
         };
       }
     } catch (e) {
-      // Si falla la API de Business Profile, simplemente
-      // continuamos con Places API como fallback
-      console.error('[GoogleReviews] Business Profile API falló, usando Places API:', e);
+      console.error('[GoogleReviews] Business Profile API falló:', e);
+      throw new Error(
+        `Google Business Profile API: ${e instanceof Error ? e.message : 'Error desconocido'}`,
+      );
     }
   }
 

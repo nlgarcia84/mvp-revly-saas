@@ -110,6 +110,31 @@ Cliente                          Cajero
 - **Google Business Profile API** (opcional): si el negocio conecta su cuenta verificada vía OAuth, devuelve **todas** las reseñas
 - Si Business Profile falla, cae automáticamente en Places API
 
+### Google Business Profile — Detalles de implementación
+
+**OAuth:** se solicita el scope `https://www.googleapis.com/auth/business.manage` con `access_type=offline` y `prompt=consent` para obtener refresh token.
+
+**IDs almacenados en BD (`Business`):**
+| Campo | Formato | Ejemplo |
+|---|---|---|
+| `googleBusinessAccountId` | Resource name completo | `accounts/123456789` |
+| `googleBusinessLocationId` | Resource name completo | `accounts/123456789/locations/987654321` |
+
+Google devuelve los resource names con los prefijos `accounts/` y `locations/` incluidos. Para evitar duplicación, las URLs de la API se construyen inyectando estos valores directamente en el path, **sin añadir prefijos estáticos adicionales**:
+
+| Operación | API | URL |
+|---|---|---|
+| Listar ubicaciones | `mybusinessbusinessinformation.googleapis.com/v1` | `/v1/${accountId}/locations` |
+| Obtener ubicación | `mybusinessbusinessinformation.googleapis.com/v1` | `/v1/${locationId}` |
+| Listar reseñas | `mybusiness.googleapis.com/v4` | `/v4/${locationId}/reviews` |
+
+**Ejemplo concreto de URL final para reseñas:**
+```
+https://mybusiness.googleapis.com/v4/accounts/123456789/locations/987654321/reviews?pageSize=50
+```
+
+**Paginación:** se itera con `nextPageToken` hasta obtener todas las páginas. Si la API devuelve error (4xx/5xx), se lanza una excepción con el HTTP status y la respuesta de Google. Durante la fase de diagnóstico no hay fallback silencioso a Places API cuando Business Profile está conectado.
+
 ## Rutas principales
 
 | Ruta | Tipo | Descripción |

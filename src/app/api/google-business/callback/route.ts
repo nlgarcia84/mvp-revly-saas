@@ -62,17 +62,12 @@ export async function GET(request: Request) {
     });
 
     if (!tokenRes.ok) {
-      const errBody = await tokenRes.text();
+      const errStatus = tokenRes.status;
       console.error(
-        "[GoogleBusiness/Callback] Error intercambiando código:",
-        errBody,
-        "REDIRECT_URI:",
-        REDIRECT_URI,
-        "CLIENT_ID:",
-        GOOGLE_CLIENT_ID?.slice(0, 20) + "...",
+        `[GoogleBusiness/Callback] Error intercambiando código | HTTP ${errStatus}`,
       );
       return NextResponse.redirect(
-        `${settingsUrl}?bp_error=Error al obtener tokens de Google (${tokenRes.status})`,
+        `${settingsUrl}?bp_error=Error al obtener tokens de Google (${errStatus})`,
       );
     }
 
