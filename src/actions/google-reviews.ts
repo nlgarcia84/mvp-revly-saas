@@ -81,7 +81,7 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
         business.googleBusinessAccountId,
         business.googleBusinessLocationId,
       );
-      if (bpData && bpData.reviews.length > 0) {
+      if (bpData) {
         // Extraemos el Place ID del enlace de Google para ponerlo en la respuesta
         const resolvedUrl = await resolveShortUrl(business.googleLink);
         const placeId = extractPlaceId(resolvedUrl) ?? '';

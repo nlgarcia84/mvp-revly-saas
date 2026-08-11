@@ -131,13 +131,21 @@ function starRatingToNumber(rating: string): number {
 // con paginación (nextPageToken). Vamos pidiendo páginas
 // hasta que no haya más.
 // ─────────────────────────────────────────────────────
+export type BusinessReviewsResult = {
+  reviews: BusinessProfileReview[];
+  averageRating: number;
+  totalReviewCount: number;
+};
+
 export async function getBusinessReviews(
   accessToken: string,
   accountId: string,
   locationId: string,
-): Promise<BusinessProfileReview[]> {
+): Promise<BusinessReviewsResult> {
   const reviews: BusinessProfileReview[] = [];
   let pageToken: string | undefined;
+  let averageRating = 0;
+  let totalReviewCount = 0;
 
   do {
     let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50`;
@@ -159,6 +167,13 @@ export async function getBusinessReviews(
 
     const data = await res.json();
 
+    if (typeof data.averageRating === "number") {
+      averageRating = data.averageRating;
+    }
+    if (typeof data.totalReviewCount === "number") {
+      totalReviewCount = data.totalReviewCount;
+    }
+
     if (data.reviews) {
       for (const r of data.reviews) {
         reviews.push({
@@ -177,7 +192,7 @@ export async function getBusinessReviews(
     pageToken = data.nextPageToken;
   } while (pageToken);
 
-  return reviews;
+  return { reviews, averageRating, totalReviewCount };
 }
 
 // ─── Calcula el tiempo relativo desde una fecha ──────
@@ -215,8 +230,13 @@ export async function getBusinessProfileData(
   accountId: string,
   locationId: string,
 ): Promise<BusinessProfileData | null> {
-  // Primero obtener datos de la ubicación (nombre, rating)
-  const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/${locationId}?readMask=title,rating`;
+  // Primero obtener datos de la ubicación (nombre)
+  // En la API de Business Information (v1) un local se
+  // consulta por su ID en la ruta /locations/{locationId},
+  // no con la ruta antigua accounts/{accountId}/locations...
+  const numericLocationId =
+    locationId.match(/locations\/([^/]+)$/)?.[1] ?? locationId;
+  const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${numericLocationId}?readMask=title`;
   const locRes = await fetch(locUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
@@ -234,15 +254,13 @@ export async function getBusinessProfileData(
   const location = await locRes.json();
 
   // Luego obtener todas las reseñas
-  const reviews = await getBusinessReviews(accessToken, accountId, locationId);
-
-  // Google a veces devuelve el rating como objeto { averageRating: 4.2 }
-  const rating = location.rating?.averageRating ?? 0;
+  const { reviews, averageRating, totalReviewCount } =
+    await getBusinessReviews(accessToken, accountId, locationId);
 
   return {
     name: location.title ?? "",
-    rating,
-    userRatingsTotal: reviews.length,
+    rating: averageRating,
+    userRatingsTotal: totalReviewCount > 0 ? totalReviewCount : reviews.length,
     reviews,
   };
 }
