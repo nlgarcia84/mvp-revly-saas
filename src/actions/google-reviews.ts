@@ -95,10 +95,11 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
         };
       }
     } catch (e) {
-      console.error('[GoogleReviews] Business Profile API falló:', e);
-      throw new Error(
-        `Google Business Profile API: ${e instanceof Error ? e.message : 'Error desconocido'}`,
-      );
+      // La API de Business Profile puede fallar (503/403, quota,
+      // región no soportada, etc.). Si es así seguimos adelante y
+      // usamos el fallback de Places API para que el usuario
+      // siempre vea al menos las 5 últimas reseñas.
+      console.error('[GoogleReviews] Business Profile API falló, usando fallback:', e);
     }
   }
 
