@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { extractPlaceId, fetchPlaceDetails, resolveShortUrl, type GoogleReview } from '@/lib/google-places';
+import { extractPlaceId, fetchPlaceDetails, resolveShortUrl, resolveWithTextSearch, type GoogleReview } from '@/lib/google-places';
 import { refreshAccessToken, getBusinessProfileData } from '@/lib/google-business-profile';
 
 // ─── Obtiene un access token válido ───────────────────
@@ -109,7 +109,13 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
   // devuelve las últimas 5 reseñas.
   // ────────────────────────────────────────────────────
   const resolvedUrl = await resolveShortUrl(business.googleLink);
-  const placeId = extractPlaceId(resolvedUrl);
+  let placeId = extractPlaceId(resolvedUrl);
+  // Si no hay Place ID en la URL (p.ej. enlaces "share.google" que
+  // redirigen a google.com/search), buscamos el sitio por el nombre
+  // del negocio con Text Search.
+  if (!placeId) {
+    placeId = (await resolveWithTextSearch(business.name, resolvedUrl)) ?? '';
+  }
   if (!placeId) {
     console.error(`[GoogleReviews] No se pudo extraer Place ID del enlace: ${business.googleLink} (resuelto: ${resolvedUrl})`);
     return null;

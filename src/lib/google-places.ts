@@ -27,10 +27,11 @@ export type PlaceDetails = {
 export async function resolveShortUrl(url: string): Promise<string> {
   try {
     const u = new URL(url);
-    // Solo seguimos redirecciones si el dominio termina
-    // en "goo.gl" (incluye maps.app.goo.gl)
-    if (u.hostname.endsWith('goo.gl')) {
-      const res = await fetch(url, { method: 'HEAD', redirect: 'follow' });
+    // Solo seguimos redirecciones si el dominio es de acceso corto
+    // de Google: "goo.gl" (incluye maps.app.goo.gl) o "share.google",
+    // que redirigen a la URL final de Google Maps / Search.
+    if (u.hostname.endsWith('goo.gl') || u.hostname === 'share.google') {
+      const res = await fetch(url, { method: 'GET', redirect: 'follow' });
       return res.url;
     }
   } catch {}
@@ -95,7 +96,7 @@ function nameMatches(resultName: string, queryName: string): boolean {
   return a.includes(b) || b.includes(a);
 }
 
-async function resolveWithTextSearch(queryName: string, url?: string): Promise<string | null> {
+export async function resolveWithTextSearch(queryName: string, url?: string): Promise<string | null> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
   const coords = url ? extractLatLng(url) : null;
 
