@@ -28,6 +28,31 @@ export type BusinessProfileData = {
   reviews: BusinessProfileReview[];
 };
 
+// ─── Formulario oficial para pedir acceso a la GBP API ──
+const GBP_ACCESS_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfC_FKSWzbSae_5rOpgwFeIUzXUF1JCQnlsZM_gC1I2UHjA3w/viewform";
+
+// ─── Convierte un error de la API en un mensaje claro ──
+// Cuando el proyecto no está aprobado por Google para la
+// My Business API, las respuestas llegan con 403 y texto
+// de SERVICE_DISABLED / AUTH_PERMISSION_DENIED. En vez de
+// mostrar el error crudo, damos instrucciones accionables.
+// ─────────────────────────────────────────────────────
+export function friendlyBusinessProfileError(
+  status: number,
+  body: string,
+): string {
+  const isDisabled =
+    /SERVICE_DISABLED|not been used in project|is disabled|AUTH_PERMISSION_DENIED/.test(
+      body,
+    );
+  if (isDisabled) {
+    return `Google aún no ha habilitado la My Business API para tu proyecto. Solicita el acceso en el formulario oficial (${GBP_ACCESS_FORM_URL}) y, tras la aprobación (quota 300 QPM), vuelve a conectar la cuenta.`;
+  }
+  const detail = body.slice(0, 500);
+  return `No se pudo acceder a Google Business Profile (${status}). ${detail}`;
+}
+
 // ─── Renueva el token de acceso cuando caduca ────────
 // El token de acceso de OAuth solo dura 1 hora. Google
 // nos da un "refresh token" para renovarlo sin que el
@@ -77,7 +102,7 @@ export async function getBusinessAccounts(accessToken: string) {
     console.error("[BusinessProfile] Error listando cuentas:", body);
     return {
       accounts: [],
-      error: `No se pudo acceder a Google Business Profile (${res.status}). ${body}`,
+      error: friendlyBusinessProfileError(res.status, body),
     };
   }
 
@@ -107,7 +132,7 @@ export async function getBusinessLocations(
     );
     return {
       locations: [],
-      error: `No se pudo listar ubicaciones (${res.status}). ${body}`,
+      error: friendlyBusinessProfileError(res.status, body),
     };
   }
 
@@ -164,9 +189,7 @@ export async function getBusinessReviews(
       console.error(
         `[BusinessProfile] Error obteniendo reseñas | HTTP ${res.status} | URL: ${url} | ${reviewsBody}`,
       );
-      throw new Error(
-        `Google Business Profile: error ${res.status} al obtener reseñas`,
-      );
+      throw new Error(friendlyBusinessProfileError(res.status, reviewsBody));
     }
 
     const data = await res.json();
