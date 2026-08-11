@@ -81,7 +81,7 @@ export async function GET(request: Request) {
     const accountsResult = await getBusinessAccounts(accessToken);
     if (accountsResult.error) {
       return NextResponse.redirect(
-        `${settingsUrl}?bp_error=Google Business Profile no está disponible para esta cuenta o región. Puedes seguir usando Google Places API con el enlace de reseñas.`,
+        `${settingsUrl}?bp_error=${encodeURIComponent(`Google Business Profile no está disponible para esta cuenta o región (cuentas). Detalle: ${accountsResult.error.slice(0, 500)}`)}`,
       );
     }
 
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     const locationsResult = await getBusinessLocations(accessToken, "-");
     if (locationsResult.error) {
       return NextResponse.redirect(
-        `${settingsUrl}?bp_error=Google Business Profile no está disponible para esta cuenta o región. Puedes seguir usando Google Places API con el enlace de reseñas.`,
+        `${settingsUrl}?bp_error=${encodeURIComponent(`Google Business Profile no está disponible para esta cuenta o región (ubicaciones). Detalle: ${locationsResult.error.slice(0, 500)}`)}`,
       );
     }
 
