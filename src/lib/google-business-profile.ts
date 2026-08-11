@@ -65,8 +65,10 @@ export async function refreshAccessToken(
 // cuentas de Business Profile. Normalmente es solo una.
 // ─────────────────────────────────────────────────────
 export async function getBusinessAccounts(accessToken: string) {
+  // El listado de cuentas vive en la Account Management API,
+  // NO en la Business Information API (ahí no existe /accounts).
   const res = await fetch(
-    "https://mybusinessbusinessinformation.googleapis.com/v1/accounts",
+    "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
@@ -91,7 +93,9 @@ export async function getBusinessLocations(
   accessToken: string,
   accountId: string,
 ) {
-  const url = `https://mybusinessbusinessinformation.googleapis.com/v1/${accountId}/locations?pageSize=100`;
+  // Se acepta "accounts/123", "123" o el comodín "-" (todas las cuentas)
+  const normalizedAccountId = accountId.replace(/^accounts\//, "");
+  const url = `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${normalizedAccountId}/locations?pageSize=100&readMask=name,title`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });

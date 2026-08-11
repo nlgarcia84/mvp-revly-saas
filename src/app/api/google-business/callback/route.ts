@@ -95,8 +95,10 @@ export async function GET(request: Request) {
     const accountId = accounts[0].name; // viene como "accounts/123456789"
     const accountName = accounts[0].accountName ?? "";
 
-    // Obtenemos ubicaciones de esa cuenta
-    const locationsResult = await getBusinessLocations(accessToken, accountId);
+    // Obtenemos ubicaciones de la cuenta (usamos el comodín "-"
+    // para listar locales de todas las cuentas a las que el
+    // usuario tiene acceso, y no solo de la primera cuenta)
+    const locationsResult = await getBusinessLocations(accessToken, "-");
     if (locationsResult.error) {
       return NextResponse.redirect(
         `${settingsUrl}?bp_error=Google Business Profile no está disponible para esta cuenta o región. Puedes seguir usando Google Places API con el enlace de reseñas.`,
