@@ -45,16 +45,16 @@ export async function GET(request: Request) {
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const REDIRECT_URI = `${APP_URL}/api/instagram/callback`;
 
-    // Permisos necesarios:
-    //  - instagram_basic: leer perfil y publicaciones de la cuenta
-    //  - instagram_manage_comments: leer y responder comentarios
+    // Permisos necesarios (Instagram Graph API):
+    //  - instagram_business_basic: leer perfil y publicaciones de la cuenta
+    //  - instagram_business_manage_comments: leer y responder comentarios
     //  - pages_show_list / pages_read_engagement: encontrar la página
     //    de Facebook vinculada y su cuenta de Instagram.
     const params = new URLSearchParams({
       client_id: META_CLIENT_ID,
       redirect_uri: REDIRECT_URI,
       response_type: "code",
-      scope: "instagram_basic,instagram_manage_comments,pages_show_list,pages_read_engagement",
+      scope: "instagram_business_basic,instagram_business_manage_comments,pages_show_list,pages_read_engagement",
       state: businessId,
     });
 

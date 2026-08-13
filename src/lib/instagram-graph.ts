@@ -5,7 +5,7 @@
 // negocio debe:
 //   1. Tener una cuenta de Instagram Business o Creator
 //   2. Vincularla a una página de Facebook (permisos:
-//      instagram_basic, instagram_manage_comments,
+//      instagram_business_basic, instagram_business_manage_comments,
 //      pages_show_list, pages_read_engagement)
 //   3. Conectar su cuenta desde Settings vía Facebook Login
 //
