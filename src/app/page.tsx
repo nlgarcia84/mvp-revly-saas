@@ -52,7 +52,7 @@ const HomePage = () => {
       </header>
 
       <main className="px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 relative overflow-hidden bg-neutral-50 dark:bg-neutral-950">
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 -z-10 overflow-hidden">
           <video
             autoPlay
             muted
@@ -62,10 +62,13 @@ const HomePage = () => {
           >
             <source src="/videos/mobilevideo.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-linear-to-b from-white/45 via-white/20 to-white/55 dark:from-neutral-950/40 dark:via-neutral-950/16 dark:to-neutral-950/45" />
+          <div className="absolute inset-0 bg-linear-to-b from-white/60 via-white/25 to-white/60 dark:from-neutral-950/55 dark:via-neutral-950/15 dark:to-neutral-950/50" />
+          <div className="pointer-events-none absolute -top-32 -left-32 h-[42rem] w-[42rem] rounded-full bg-emerald-400/20 dark:bg-emerald-500/15 blur-3xl animate-float-slow" />
+          <div
+            className="pointer-events-none absolute -bottom-40 -right-32 h-[38rem] w-[38rem] rounded-full bg-indigo-400/20 dark:bg-indigo-500/15 blur-3xl animate-float-slow"
+            style={{ animationDelay: "-4.5s" }}
+          />
         </div>
-
-        <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.72)_0%,rgba(0,0,0,0.42)_38%,rgba(0,0,0,0.14)_62%,rgba(0,0,0,0)_80%)]" />
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:grid md:grid-cols-2 md:items-center md:gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:items-center lg:gap-12">
           <div className="w-full max-w-[92%] sm:max-w-2xl text-center md:text-left md:max-w-none">

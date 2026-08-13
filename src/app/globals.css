@@ -110,7 +110,22 @@ html.dark ::selection {
   animation: fadeSlideIn 0.4s ease-out;
 }
 
-@keyframes cross-spin {
+@keyframes face-sway {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-face-sway {
+  animation: face-sway 1.6s ease-in-out infinite;
+  transform-origin: 50% 60%;
+}
+
+@keyframes eye-spin {
   from {
     transform: rotate(0deg);
   }
@@ -119,10 +134,39 @@ html.dark ::selection {
   }
 }
 
-.animate-cross-spin {
-  animation: cross-spin 3s linear infinite;
+.animate-eye-spin {
+  animation: eye-spin 1.2s linear infinite;
 }
 
-.animate-cross-spin-reverse {
-  animation: cross-spin 3s linear infinite reverse;
+.animate-eye-spin-back {
+  animation: eye-spin 1.2s linear infinite reverse;
+}
+
+@keyframes mouth-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+.animate-mouth-breathe {
+  animation: mouth-breathe 0.9s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(24px, -20px, 0) scale(1.08);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 9s ease-in-out infinite;
 }

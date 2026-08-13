@@ -7,6 +7,7 @@ import {
   uploadBusinessImage,
 } from "@/actions/business";
 import { getBusinessProfileStatus } from "@/actions/google-reviews";
+import { getInstagramConnectionStatus } from "@/actions/instagram";
 import { updateVerificationPin } from "@/actions/redeem";
 import {
   searchBusinessOnGoogle,
@@ -51,6 +52,12 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [searching, setSearching] = useState(false);
   const [urlFound, setUrlFound] = useState("");
   const [bpStatus, setBpStatus] = useState<{ connected: boolean } | null>(null);
+  const [igStatus, setIgStatus] = useState<{
+    connected: boolean;
+    username?: string | null;
+    expiresAt?: Date | string | null;
+    expired?: boolean;
+  } | null>(null);
   const [pin, setPin] = useState("");
   const [savingPin, setSavingPin] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
@@ -64,12 +71,20 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const params = new URLSearchParams(window.location.search);
     const success = params.get("bp_success");
     const error = params.get("bp_error");
+    const igSuccess = params.get("ig_success");
+    const igError = params.get("ig_error");
     if (success) {
       setMsg(success);
       // Limpiamos la URL para que no se vea el parámetro
       window.history.replaceState({}, "", window.location.pathname);
     } else if (error) {
       setMsg(error);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (igSuccess) {
+      setMsg(igSuccess);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (igError) {
+      setMsg(igError);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -83,6 +98,15 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       getBusinessProfileStatus(id)
         .then(setBpStatus)
         .catch(() => setBpStatus(null));
+    }
+  }, [id]);
+
+  // ── Comprueba si el negocio tiene Instagram conectado ──
+  useEffect(() => {
+    if (id) {
+      getInstagramConnectionStatus(id)
+        .then(setIgStatus)
+        .catch(() => setIgStatus(null));
     }
   }, [id]);
 
@@ -653,6 +677,95 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Conectar con Google
+          </Button>
+        )}
+      </div>
+
+      {/* ── Conexión con Instagram ────────────────────── */}
+      {/* Aquí el usuario conecta su cuenta profesional de
+          Instagram (Business/Creator vinculada a una página
+          de Facebook) para leer y responder los comentarios
+          desde el dashboard con ayuda de la IA. */}
+      <div className={`${nCard} p-6 flex flex-col gap-5`}>
+        <div>
+          <h2 className="text-sm font-semibold mb-1">Instagram</h2>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Conecta tu cuenta profesional (Business o Creator) de Instagram
+            para ver los comentarios de tus publicaciones y responderlos con
+            IA. La cuenta debe estar vinculada a una página de Facebook.
+          </p>
+          <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+            El acceso vía Meta dura 60 días. Cuando caduque, solo tendrás que
+            reconectar pulsando el botón una vez más.
+          </p>
+        </div>
+
+        {igStatus === null ? (
+          <p className="text-xs text-neutral-400">Comprobando conexión...</p>
+        ) : igStatus.connected ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 rounded-md border border-emerald-200 dark:border-emerald-800">
+              <svg
+                className="w-4 h-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {igStatus.expired
+                ? "Conectado pero el acceso de Meta ha caducado — vuelve a conectar"
+                : `Conectado a Instagram${igStatus.username ? ` (@${igStatus.username})` : ""}`}
+            </div>
+            {!igStatus.expired && igStatus.expiresAt && (
+              <p className="text-xs text-neutral-400">
+                El acceso expira el{" "}
+                {new Date(igStatus.expiresAt as string).toLocaleDateString(
+                  "es-ES",
+                )}
+                . Vuelve a conectar antes de esa fecha para no perderlo.
+              </p>
+            )}
+            <a
+              href={`/api/instagram/disconnect?businessId=${id}`}
+              className="text-xs text-red-400 hover:text-red-500 underline transition-colors w-fit cursor-pointer"
+            >
+              Desconectar
+            </a>
+            <p className="text-xs text-neutral-400">
+              Cuando conectes, los comentarios de tus últimas publicaciones se
+              mostrarán en la página del negocio y podrás responderlos con IA.
+            </p>
+          </div>
+        ) : (
+          <Button
+            as="a"
+            href={`/api/instagram/connect?businessId=${id}`}
+            variant="primary"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
+              <rect
+                x="2"
+                y="2"
+                width="20"
+                height="20"
+                rx="5"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="4.5"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
+              <circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" />
+            </svg>
+            Conectar con Instagram
           </Button>
         )}
       </div>

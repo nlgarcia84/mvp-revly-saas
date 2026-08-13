@@ -15,6 +15,7 @@ import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
 import BusinessQR from "@/components/business-qr";
 import GoogleReviewsSection from "@/components/google-reviews-section";
+import InstagramCommentsSection from "@/components/instagram-comments-section";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -871,6 +872,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         googleLink={business?.googleLink ?? ""}
         features={features}
       />
+
+      {/* Comentarios de Instagram */}
+      <InstagramCommentsSection businessId={id} features={features} />
 
       {/* Reporte PDF (plan Pro) */}
       {features.includes("pdf-reports") && (

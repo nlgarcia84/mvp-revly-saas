@@ -82,6 +82,20 @@ model Business {
   googleBusinessLocationId   String?   // ID de la ubicación/local en Google Business Profile
   // ─────────────────────────────────────────────────
 
+  // ── Instagram / Meta Graph API ──────────────────────
+  // Si el usuario conecta su Instagram profesional
+  // (Business/Creator vinculado a una página de Facebook),
+  // guardamos aquí el token (long-lived, 60 días) y los
+  // IDs de la página de Facebook y de la cuenta de
+  // Instagram. Así podemos leer comentarios y responder
+  // desde el dashboard con la ayuda de la IA.
+  instagramAccessToken     String?   // token long-lived de Meta (60 días)
+  instagramTokenExpiry     DateTime? // cuándo caduca el access token (60 días)
+  instagramPageId          String?   // ID de la página de Facebook vinculada
+  instagramBusinessAccountId String? // ID de la cuenta profesional de Instagram (IGSID)
+  instagramUsername        String?   // nombre de usuario de Instagram (para mostrarlo en Settings)
+  // ─────────────────────────────────────────────────
+
   @@unique([name, userId])
 }
 

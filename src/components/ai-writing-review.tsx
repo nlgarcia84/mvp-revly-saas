@@ -41,30 +41,68 @@ const examples = [
   },
 ];
 
-const DeadFace = () => (
-  <svg
-    viewBox="0 0 100 100"
-    className="w-20 h-20 sm:w-24 sm:h-24 text-white"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="50" cy="50" r="45" />
-    <g className="animate-cross-spin" style={{ transformOrigin: "35px 38px" }}>
-      <line x1="27" y1="30" x2="43" y2="46" />
-      <line x1="43" y1="30" x2="27" y2="46" />
-    </g>
-    <g
-      className="animate-cross-spin-reverse"
-      style={{ transformOrigin: "65px 38px" }}
+const DizzyFace = () => (
+  <div className="relative w-16 h-16 sm:w-20 sm:h-20 text-neutral-900 dark:text-white animate-face-sway">
+    {/* Cabeza */}
+    <svg
+      viewBox="0 0 100 100"
+      className="w-full h-full"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <line x1="57" y1="30" x2="73" y2="46" />
-      <line x1="73" y1="30" x2="57" y2="46" />
-    </g>
-    <path d="M32 70 Q50 60 68 70" />
-  </svg>
+      <circle cx="50" cy="50" r="45" />
+      {/* Cejas fruncidas, "¿y ahora qué respondo?" */}
+      <path d="M26 26 Q35 20 44 24" />
+      <path d="M56 26 Q64 20 74 25" />
+    </svg>
+
+    {/* Ojo izquierdo: espiral dando vueltas */}
+    <div className="absolute left-[23%] top-[33%] w-[26%] h-[26%] animate-eye-spin">
+      <svg
+        viewBox="0 0 32 32"
+        className="w-full h-full"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      >
+        <circle cx="16" cy="16" r="10" opacity="0.35" />
+        <path d="M16 6 A10 10 0 0 1 26 16" />
+      </svg>
+    </div>
+
+    {/* Ojo derecho: espiral en sentido contrario */}
+    <div className="absolute left-[51%] top-[33%] w-[26%] h-[26%] animate-eye-spin-back">
+      <svg
+        viewBox="0 0 32 32"
+        className="w-full h-full"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      >
+        <circle cx="16" cy="16" r="10" opacity="0.35" />
+        <path d="M16 6 A10 10 0 0 1 26 16" />
+      </svg>
+    </div>
+
+    {/* Boca de "agobiado" respirando */}
+    <div className="absolute left-[41%] top-[64%] w-[18%] h-[13%] animate-mouth-breathe">
+      <svg
+        viewBox="0 0 32 24"
+        className="w-full h-full"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      >
+        <ellipse cx="16" cy="12" rx="10" ry="8" />
+      </svg>
+    </div>
+  </div>
 );
 
 const AiWritingReview = () => {
@@ -80,25 +118,25 @@ const AiWritingReview = () => {
 
   useEffect(() => {
     if (phase !== "text-in") return;
-    const t = setTimeout(() => setPhase("icon-in"), 2000);
+    const t = setTimeout(() => setPhase("icon-in"), 1500);
     return () => clearTimeout(t);
   }, [phase]);
 
   useEffect(() => {
     if (phase !== "icon-in") return;
-    const t = setTimeout(() => setPhase("text-out"), 2500);
+    const t = setTimeout(() => setPhase("text-out"), 1600);
     return () => clearTimeout(t);
   }, [phase]);
 
   useEffect(() => {
     if (phase !== "text-out") return;
-    const t = setTimeout(() => setPhase("card-in"), 600);
+    const t = setTimeout(() => setPhase("card-in"), 450);
     return () => clearTimeout(t);
   }, [phase]);
 
   useEffect(() => {
     if (phase !== "card-in") return;
-    const t = setTimeout(() => setPhase("animating"), 500);
+    const t = setTimeout(() => setPhase("animating"), 400);
     return () => clearTimeout(t);
   }, [phase]);
 
@@ -158,48 +196,14 @@ const AiWritingReview = () => {
   const showCard = phase !== "text-in" && phase !== "icon-in";
 
   return (
-    <div className="relative w-full max-w-sm mx-auto mt-12 min-h-[520px]">
-      {/* Pregunta */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-in-out ${
-          showIntro ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <p
-          className="text-xl sm:text-2xl font-bold text-center text-white"
-          style={{
-            fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-            transform: showIntro ? "translateY(0) scale(1)" : "translateY(-10px) scale(0.95)",
-            transition: "transform 0.7s ease-in-out, opacity 0.7s ease-in-out",
-          }}
-        >
-          ¿Te da pereza contestar?
-        </p>
-      </div>
-
-      {/* Cara grande */}
-      <div
-        className={`absolute inset-0 flex items-center justify-center transition-all duration-700 ease-in-out ${
-          phase === "icon-in" ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div
-          style={{
-            transform: phase === "icon-in" ? "translateY(0) scale(1)" : "translateY(10px) scale(0.5)",
-            transition: "transform 0.7s ease-in-out",
-          }}
-        >
-          <DeadFace />
-        </div>
-      </div>
-
-      {/* Card de reseñas - siempre en el DOM, sin hidden ni display none */}
+    <div className="relative w-full max-w-sm">
+      {/* Card de reseñas - siempre ocupa el alto real, el intro se superpone */}
       <div
         className={`transition-all duration-500 ease-out ${
           showCard ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         style={{
-          transform: showCard ? "scale(1)" : "scale(0.95)",
+          transform: showCard ? "scale(1)" : "scale(0.96)",
         }}
       >
         <div className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-5">
@@ -225,7 +229,7 @@ const AiWritingReview = () => {
                   </svg>
                 ))}
               </div>
-              <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+              <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 min-h-[72px]">
                 {reviewText}
                 {typingPhase === "typing-review" && phase === "animating" && (
                   <span className="inline-block w-[2px] h-3.5 bg-neutral-400 ml-0.5 align-text-bottom animate-pulse" />
@@ -252,26 +256,67 @@ const AiWritingReview = () => {
               </div>
             </div>
 
-            {typingPhase !== "typing-review" && phase === "animating" && (
-              <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-4">
-                <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-                  {replyText}
-                  {typingPhase === "typing-reply" && (
-                    <span className="inline-block w-[2px] h-3.5 bg-neutral-950 dark:bg-neutral-100 ml-0.5 align-text-bottom animate-pulse" />
-                  )}
-                </p>
-              </div>
-            )}
+            {/* Reply box: siempre presente con altura fija para que la card no cambie de alto */}
+            <div
+              className={`rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-4 min-h-[172px] max-h-[172px] overflow-hidden transition-opacity duration-300 ${
+                typingPhase !== "typing-review" && phase === "animating"
+                  ? "opacity-100"
+                  : "opacity-0"
+              }`}
+            >
+              <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300 min-h-[140px]">
+                {replyText}
+                {typingPhase === "typing-reply" && (
+                  <span className="inline-block w-[2px] h-3.5 bg-neutral-950 dark:bg-neutral-100 ml-0.5 align-text-bottom animate-pulse" />
+                )}
+              </p>
+            </div>
 
-            {typingPhase === "done" && phase === "animating" && (
-              <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 animate-fade-slide-in">
-                <span>😊</span>
-                Reseña respondida automáticamente con IA
-              </div>
-            )}
+            <div
+              className={`mt-3 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 min-h-[18px] ${
+                typingPhase === "done" && phase === "animating"
+                  ? "opacity-100 animate-fade-slide-in"
+                  : "opacity-0"
+              }`}
+            >
+              <span>😊</span>
+              Reseña respondida automáticamente con IA
+            </div>
           </div>
         </div>
+
+      {/* Intro superpuesto sobre la card: texto y cara ocupan el mismo espacio */}
+      <div
+        className={`absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white dark:bg-neutral-950 transition-all duration-500 ${
+          showIntro ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+            phase === "text-in" ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            transform:
+              phase === "text-in" ? "translateY(0)" : "translateY(-10px)",
+          }}
+        >
+          <p className="text-xl sm:text-2xl font-bold text-center text-neutral-900 dark:text-neutral-100 px-6">
+            ¿Te da pereza contestar?
+          </p>
+        </div>
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-500 ${
+            phase === "icon-in" ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            transform:
+              phase === "icon-in" ? "translateY(0) scale(1)" : "translateY(10px) scale(0.5)",
+          }}
+        >
+          <DizzyFace />
+        </div>
       </div>
+    </div>
   );
 };
 
