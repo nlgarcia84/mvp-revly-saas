@@ -2,16 +2,17 @@ import prisma from "@/lib/db";
 import {
   exchangeForLongLivedToken,
   friendlyMetaError,
+  getInstagramUserProfile,
 } from "@/lib/instagram-graph";
 import { NextResponse } from "next/server";
 
-// ─── Facebook nos llama aquí tras autorizar (o negar) ──
+// ─── Instagram nos llama aquí tras autorizar (o negar) ─
 // el acceso en la pantalla de consentimiento.
 //
 //   1. Recibimos un "code" que cambiamos por un token corto
+//      (POST a api.instagram.com/oauth/access_token)
 //   2. Lo cambiamos por un long-lived token (60 días)
-//   3. Buscamos la página de Facebook vinculada y su
-//      cuenta profesional de Instagram
+//   3. Obtenemos el username de la cuenta profesional
 //   4. Guardamos todo en la base de datos
 //   5. Redirigimos de vuelta a Settings
 // ─────────────────────────────────────────────────────
@@ -44,26 +45,29 @@ export async function GET(request: Request) {
       );
     }
 
-    const META_CLIENT_ID = process.env.META_CLIENT_ID!;
-    const META_CLIENT_SECRET = process.env.META_CLIENT_SECRET!;
+    const INSTAGRAM_CLIENT_ID = process.env.META_CLIENT_ID!;
+    const INSTAGRAM_CLIENT_SECRET = process.env.META_CLIENT_SECRET!;
     const REDIRECT_URI = `${APP_URL}/api/instagram/callback`;
 
-    if (!META_CLIENT_ID || !META_CLIENT_SECRET) {
+    if (!INSTAGRAM_CLIENT_ID || !INSTAGRAM_CLIENT_SECRET) {
       return NextResponse.redirect(
-        `${settingsUrl}?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (faltan META_CLIENT_ID y META_CLIENT_SECRET)")}`,
+        `${settingsUrl}?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (faltan el App ID y App Secret de Instagram)")}`,
       );
     }
 
-    // 1. Cambiamos el código por un token (validez ~2 horas)
+    // 1. Cambiamos el código por un token corto (validez ~1 hora)
     const tokenParams = new URLSearchParams({
-      client_id: META_CLIENT_ID,
-      client_secret: META_CLIENT_SECRET,
+      client_id: INSTAGRAM_CLIENT_ID,
+      client_secret: INSTAGRAM_CLIENT_SECRET,
+      grant_type: "authorization_code",
       redirect_uri: REDIRECT_URI,
       code,
     });
-    const tokenRes = await fetch(
-      `https://graph.facebook.com/v21.0/oauth/access_token?${tokenParams.toString()}`,
-    );
+    const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: tokenParams.toString(),
+    });
 
     if (!tokenRes.ok) {
       const body = await tokenRes.text();
@@ -73,10 +77,13 @@ export async function GET(request: Request) {
       );
     }
 
-    const tokenData = (await tokenRes.json()) as { access_token?: string };
-    if (!tokenData.access_token) {
+    const tokenData = (await tokenRes.json()) as {
+      access_token?: string;
+      user_id?: string;
+    };
+    if (!tokenData.access_token || !tokenData.user_id) {
       return NextResponse.redirect(
-        `${settingsUrl}?ig_error=Meta no devolvió un token de acceso`,
+        `${settingsUrl}?ig_error=Instagram no devolvió un token de acceso`,
       );
     }
 
@@ -85,65 +92,30 @@ export async function GET(request: Request) {
       tokenData.access_token,
     );
 
-    // 3. Buscamos las páginas de Facebook del usuario y su
-    //    cuenta de Instagram asociada. La conexión va ligada
-    //    a la página, por eso pedimos páginas_show_list.
-    const pagesRes = await fetch(
-      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account{id,username}&access_token=${encodeURIComponent(accessToken)}`,
-    );
-
-    if (!pagesRes.ok) {
-      const body = await pagesRes.text();
-      return NextResponse.redirect(
-        `${settingsUrl}?ig_error=${encodeURIComponent(friendlyMetaError(pagesRes.status, body))}`,
-      );
-    }
-
-    const pagesData = (await pagesRes.json()) as {
-      data?: Array<{
-        id: string;
-        name?: string;
-        instagram_business_account?: { id?: string; username?: string };
-      }>;
-    };
-    const pages = pagesData.data ?? [];
-
-    // Buscamos la cuenta de Instagram asociada a cualquiera de
-    // las páginas (priorizamos la que coincida con el negocio)
-    const business = await prisma.business.findUnique({
-      where: { id: businessId },
-    });
-    let match =
-      pages.find(
-        (p) =>
-          p.name?.toLowerCase().includes(business?.name.toLowerCase() ?? "____"),
-      ) ?? pages.find((p) => p.instagram_business_account);
-
-    if (!match?.instagram_business_account?.id) {
+    // 3. Obtenemos el username de la cuenta conectada
+    const profile = await getInstagramUserProfile(accessToken, tokenData.user_id);
+    if (!profile.username) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=${encodeURIComponent(
-          "Ninguna de tus páginas de Facebook tiene una cuenta profesional de Instagram vinculada. Convierte tu Instagram a Business/Creator y vincúlalo a una página de Facebook (Configuración de Instagram → Cuenta profesional → Página vinculada).",
+          "No se pudo obtener el usuario de Instagram. Comprueba que la cuenta sea profesional (Business o Creator).",
         )}`,
       );
     }
 
-    const igAccount = match.instagram_business_account;
-
-    // 4. Guardamos tokens, IDs de página/Instagram y usuario
+    // 4. Guardamos token, ID de cuenta e Instagram y username
     await prisma.business.update({
       where: { id: businessId },
       data: {
         instagramAccessToken: accessToken,
         instagramTokenExpiry: expiresAt,
-        instagramPageId: match.id,
-        instagramBusinessAccountId: igAccount.id,
-        instagramUsername: igAccount.username ?? null,
+        instagramBusinessAccountId: profile.id,
+        instagramUsername: profile.username,
       },
     });
 
     // 5. Redirigimos a Settings con mensaje de éxito
     return NextResponse.redirect(
-      `${settingsUrl}?ig_success=${encodeURIComponent(`Conectado correctamente a Instagram (@${igAccount.username ?? "cuenta"})`)}`,
+      `${settingsUrl}?ig_success=${encodeURIComponent(`Conectado correctamente a Instagram (@${profile.username})`)}`,
     );
   } catch (e) {
     console.error("[Instagram/Callback] Error:", e);

@@ -692,7 +692,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           <p className="text-xs text-neutral-400 leading-relaxed">
             Conecta tu cuenta profesional (Business o Creator) de Instagram
             para ver los comentarios de tus publicaciones y responderlos con
-            IA. La cuenta debe estar vinculada a una página de Facebook.
+            IA.
           </p>
           <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
             El acceso vía Meta dura 60 días. Cuando caduque, solo tendrás que

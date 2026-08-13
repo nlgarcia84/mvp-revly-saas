@@ -1,21 +1,24 @@
-// ─── Instagram Graph API (Meta) ─────────────────────
-// Esta API permite leer las publicaciones de una cuenta
-// profesional de Instagram (Business o Creator) y sus
-// comentarios, además de responderlos. Para usarla, el
-// negocio debe:
-//   1. Tener una cuenta de Instagram Business o Creator
-//   2. Vincularla a una página de Facebook (permisos:
-//      instagram_business_basic, instagram_business_manage_comments,
-//      pages_show_list, pages_read_engagement)
-//   3. Conectar su cuenta desde Settings vía Facebook Login
+// ─── Instagram API with Instagram Login (Business Login) ──
+// Este flujo N0 requiere página de Facebook: el usuario se
+// autentica directamente en Instagram (instagram.com/oauth/
+// authorize) y la app hace llamadas a graph.instagram.com.
 //
-// El token long-lived dura 60 días. A diferencia de Google,
-// Meta NO permite renovarlo con un refresh token: si caduca,
-// el usuario vuelve a conectar. Por eso avisamos de la fecha
-// de caducidad y devolvemos un error claro si ya expiró.
+//   1. El negocio debe tener una cuenta profesional de
+//      Instagram (Business o Creator).
+//   2. La app en Meta se crea con el uso de caso "API de
+//      Instagram" y las claves son el App ID y App Secret
+//      de Instagram (distintos de los de Facebook).
+//   3. Se pide permiso instagram_business_basic e
+//      instagram_business_manage_comments.
+//
+// Tokens: code -> short-lived (~1h) -> long-lived (60 días).
+// NO se puede hacer renovación indefinida: si caduca, el
+// usuario vuelve a conectar. Por eso avisamos de la fecha
+// de caducidad.
 // ─────────────────────────────────────────────────────
 
-const HOST = "https://graph.facebook.com/v21.0";
+const GRAPH_HOST = "https://graph.instagram.com";
+const TOKEN_ENDPOINT = "https://api.instagram.com/oauth/access_token";
 const TOKEN_TTL_DAYS = 60;
 
 type GraphResponse = {
@@ -52,7 +55,13 @@ export type InstagramMediaWithComments = InstagramMedia & {
   comments: InstagramComment[];
 };
 
-// ─── Convierte un error de la Graph API en mensaje claro ──
+export type InstagramUserProfile = {
+  id: string;
+  username: string;
+  accountType: "BUSINESS" | "CREATOR" | string;
+};
+
+// ─── Convierte un error de la API en mensaje claro ────
 export function friendlyMetaError(status: number, body: string): string {
   let message = body.slice(0, 400);
   try {
@@ -62,33 +71,26 @@ export function friendlyMetaError(status: number, body: string): string {
       return "El token de Instagram ha caducado. Vuelve a conectar la cuenta desde Configuración.";
     }
     if (parsed?.error?.code === 200) {
-      return `Meta no tiene acceso a esta cuenta: ${parsed.error.message}. Revisa los permisos de la app (App Review) o que la cuenta sea Business/Creator vinculada a una página de Facebook.`;
+      return `Instagram no tiene acceso a esta cuenta: ${parsed.error.message}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
     }
   } catch {
     // no es JSON, usamos el texto tal cual
   }
-  return `Meta Graph API error ${status}: ${message}`;
+  return `Instagram API error ${status}: ${message}`;
 }
 
-// ─── Extiende un token corto a long-lived ────────────
-// Tras el OAuth de Facebook Login obtenemos un token que
-// solo dura ~2 horas. Con fb_exchange_token lo cambiamos
-// por uno de 60 días usando App ID + Secret (server-side).
-// ─────────────────────────────────────────────────────
+// ─── Convierte un token corto en long-lived (60 días) ──
 export async function exchangeForLongLivedToken(
   accessToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
-  const APP_ID = process.env.META_CLIENT_ID!;
-  const APP_SECRET = process.env.META_CLIENT_SECRET!;
+  const clientSecret = process.env.META_CLIENT_SECRET!;
 
   const params = new URLSearchParams({
-    grant_type: "fb_exchange_token",
-    client_id: APP_ID,
-    client_secret: APP_SECRET,
-    fb_exchange_token: accessToken,
+    grant_type: "ig_exchange_token",
+    client_secret: clientSecret,
+    access_token: accessToken,
   });
-  const url = `${HOST}/oauth/access_token?${params.toString()}`;
-  const res = await fetch(url);
+  const res = await fetch(`${GRAPH_HOST}/access_token?${params.toString()}`);
 
   if (!res.ok) {
     const body = await res.text();
@@ -96,7 +98,7 @@ export async function exchangeForLongLivedToken(
   }
 
   const data = (await res.json()) as GraphResponse;
-  if (!data?.access_token) throw new Error("Meta no devolvió un token long-lived");
+  if (!data?.access_token) throw new Error("Instagram no devolvió un token long-lived");
 
   const expiresIn = data.expires_in ?? TOKEN_TTL_DAYS * 86400;
   return {
@@ -112,36 +114,28 @@ export function isInstagramTokenExpired(expiresAt: Date | null): boolean {
   return expiresAt.getTime() - 2 * 86400 * 1000 < Date.now();
 }
 
-// ─── Obtiene la cuenta de Business de Instagram ──────
-// A partir del ID de la página de Facebook obtenemos el
-// ID de la cuenta profesional de Instagram asociada.
-// ─────────────────────────────────────────────────────
-export async function getInstagramBusinessData(
+// ─── Obtiene el perfil de la cuenta (username) ───────
+export async function getInstagramUserProfile(
   accessToken: string,
-  pageId: string,
-): Promise<{ instagramId: string; pageName: string } | null> {
-  const url = `${HOST}/${pageId}?fields=id,name,instagram_business_account&access_token=${encodeURIComponent(accessToken)}`;
+  userId: string,
+): Promise<InstagramUserProfile> {
+  const url = `${GRAPH_HOST}/${userId}?fields=id,username,account_type&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url);
 
   if (!res.ok) {
     const body = await res.text();
-    console.error("[Instagram] Error obteniendo cuenta de negocio:", body);
     throw new Error(friendlyMetaError(res.status, body));
   }
 
-  const data = (await res.json()) as GraphResponse & {
-    name?: string;
-    instagram_business_account?: { id?: string };
+  const data = (await res.json()) as {
+    id?: string;
+    username?: string;
+    account_type?: string;
   };
-  if (!data?.instagram_business_account?.id) {
-    throw new Error(
-      "La página de Facebook vinculada no tiene una cuenta profesional de Instagram asociada. Comprueba que la cuenta sea Business o Creator.",
-    );
-  }
-
   return {
-    instagramId: data.instagram_business_account.id,
-    pageName: data.name ?? "",
+    id: data.id ?? userId,
+    username: data.username ?? "",
+    accountType: (data.account_type ?? "").toUpperCase(),
   };
 }
 
@@ -152,7 +146,7 @@ export async function getRecentMedia(
   limit = 12,
 ): Promise<InstagramMedia[]> {
   const media: InstagramMedia[] = [];
-  let url = `${HOST}/${instagramUserId}/media?fields=id,caption,timestamp,media_type,permalink,thumbnail_url,media_url,comments_count&limit=${Math.min(limit, 25)}&access_token=${encodeURIComponent(accessToken)}`;
+  let url = `${GRAPH_HOST}/${instagramUserId}/media?fields=id,caption,timestamp,media_type,permalink,thumbnail_url,media_url,comments_count&limit=${Math.min(limit, 25)}&access_token=${encodeURIComponent(accessToken)}`;
 
   // Pedimos como mucho 2 páginas (paginación con cursor)
   for (let page = 0; page < 2; page++) {
@@ -174,16 +168,13 @@ export async function getRecentMedia(
 }
 
 // ─── Obtiene los comentarios de una publicación ──────
-// Devuelve solo comentarios de nivel superior y sus
-// respuestas (replies). Máximo 50 comentarios por llamada.
-// ─────────────────────────────────────────────────────
 export async function getMediaComments(
   accessToken: string,
   mediaId: string,
 ): Promise<InstagramComment[]> {
   const fields =
     "id,text,timestamp,username,from{id,username},replies{id,text,timestamp,username,from{id,username}}";
-  const url = `${HOST}/${mediaId}/comments?fields=${fields}&limit=50&access_token=${encodeURIComponent(accessToken)}`;
+  const url = `${GRAPH_HOST}/${mediaId}/comments?fields=${fields}&limit=50&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url);
 
   if (!res.ok) {
@@ -251,16 +242,13 @@ export async function getInstagramCommentsData(
 }
 
 // ─── Publica una respuesta a un comentario ───────────
-// POST /{comment-id}/replies?message=... — es lo que usa
-// la app "Responder con IA" para contestar directamente.
-// ─────────────────────────────────────────────────────
 export async function postCommentReply(
   accessToken: string,
   commentId: string,
   message: string,
 ): Promise<{ ok: boolean; replyId?: string; error?: string }> {
   const safeMessage = message.slice(0, 1000);
-  const url = `${HOST}/${commentId}/replies?message=${encodeURIComponent(safeMessage)}&access_token=${encodeURIComponent(accessToken)}`;
+  const url = `${GRAPH_HOST}/${commentId}/replies?message=${encodeURIComponent(safeMessage)}&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url, { method: "POST" });
 
   if (!res.ok) {

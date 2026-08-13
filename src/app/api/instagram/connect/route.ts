@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/db";
 
-// ─── Inicia la conexión con Instagram (Meta) ─────────
+// ─── Inicia la conexión con Instagram (Business Login) ─
 // Botón "Conectar con Instagram" en Settings.
 //   1. Verifica que el usuario esté autenticado
-//   2. Guarda el ID del negocio en la URL de callback
-//   3. Redirige a Facebook Login (OAuth) para pedir
-//      acceso a la página de Facebook vinculada y a los
-//      comentarios de la cuenta de Instagram.
+//   2. Guarda el ID del negocio en el state
+//   3. Redirige a instagram.com/oauth/authorize para pedir
+//      acceso a la cuenta profesional de Instagram y a los
+//      comentarios (sin necesidad de página de Facebook).
 //
-// Cuando el usuario autorice, Facebook llamará a nuestra
+// Cuando el usuario autorice, Instagram llamará a nuestra
 // ruta /api/instagram/callback con un código.
 // ─────────────────────────────────────────────────────
 export async function GET(request: Request) {
@@ -34,32 +34,30 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/business", request.url));
     }
 
-    const META_CLIENT_ID = process.env.META_CLIENT_ID;
-    if (!META_CLIENT_ID) {
+    const INSTAGRAM_CLIENT_ID = process.env.META_CLIENT_ID;
+    if (!INSTAGRAM_CLIENT_ID) {
       console.error("[Instagram/Connect] Falta META_CLIENT_ID en .env.local");
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/business/${businessId}/settings?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (falta META_CLIENT_ID)")}`,
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/business/${businessId}/settings?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (falta el App ID de Instagram)")}`,
       );
     }
 
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const REDIRECT_URI = `${APP_URL}/api/instagram/callback`;
 
-    // Permisos necesarios (Instagram Graph API):
-    //  - instagram_business_basic: leer perfil y publicaciones de la cuenta
+    // Permisos (Instagram API with Instagram Login):
+    //  - instagram_business_basic: leer perfil y publicaciones
     //  - instagram_business_manage_comments: leer y responder comentarios
-    //  - pages_show_list / pages_read_engagement: encontrar la página
-    //    de Facebook vinculada y su cuenta de Instagram.
     const params = new URLSearchParams({
-      client_id: META_CLIENT_ID,
+      client_id: INSTAGRAM_CLIENT_ID,
       redirect_uri: REDIRECT_URI,
       response_type: "code",
-      scope: "instagram_business_basic,instagram_business_manage_comments,pages_show_list,pages_read_engagement",
+      scope: "instagram_business_basic,instagram_business_manage_comments",
       state: businessId,
     });
 
     return NextResponse.redirect(
-      `https://www.facebook.com/v21.0/dialog/oauth?${params.toString()}`,
+      `https://www.instagram.com/oauth/authorize?${params.toString()}`,
     );
   } catch (e) {
     console.error("[Instagram/Connect] Error:", e);
