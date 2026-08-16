@@ -117,6 +117,18 @@ export async function resolveWithTextSearch(queryName: string, url?: string): Pr
     const res = await fetch(searchUrl);
     if (!res.ok) continue;
     const data = await res.json();
+    // Si la API está denegada (sin billing) o excedimos la cuota,
+    // lanzamos el error para que el usuario vea el motivo real en
+    // vez de un "no hay reseñas" genérico.
+    if (data.status === 'REQUEST_DENIED') {
+      throw new Error(`Google Places API: ${data.error_message ?? 'acceso denegado'}`);
+    }
+    if (data.status === 'OVER_QUERY_LIMIT') {
+      throw new Error('Google Places API: límite de consultas excedido');
+    }
+    if (data.status === 'INVALID_REQUEST') {
+      throw new Error(`Google Places API: solicitud inválida - ${data.error_message ?? ''}`);
+    }
     if (data.status !== 'OK' || !data.results?.length) continue;
 
     // Prefer result whose name matches the business name
