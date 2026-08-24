@@ -224,6 +224,14 @@ Renueva el access token → obtiene y guarda `googleBusinessAccountId` → obtie
 
 **Fallback (siempre activo):** si el negocio no tiene tokens o la API falla, la app usa Places API → 5 reseñas (es un límite de Google, no un bug).
 
+## Despliegue en producción
+
+- El código de la integración está **commiteado y desplegado en producción** (2026-08-24):
+  - Commit: `2b29b14` → `origin/main` → Vercel (deploy Ready).
+  - URL de producción: https://revly.es (responde `200`).
+- La funcionalidad de **todas las reseñas** quedará operativa en producción en cuanto **Google apruebe el caso `1-6681000041467`** (revisión 7–10 días hábiles).
+- Al aprobarse, NO hace falta re-desplegar: solo conectar el perfil (paso 6). El código ya está en producción.
+
 ## Notas
 
 - Modo Prueba: los refresh tokens caducan a los 7 días. En producción hay que publicar la app.
