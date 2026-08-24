@@ -94,6 +94,21 @@ model Business {
   instagramPageId          String?   // ID de la página de Facebook vinculada
   instagramBusinessAccountId String? // ID de la cuenta profesional de Instagram (IGSID)
   instagramUsername        String?   // nombre de usuario de Instagram (para mostrarlo en Settings)
+  instagramCacheAt         DateTime? // cuándo se guardó la última caché de comentarios
+  instagramCache           Json?     // resultado de publicaciones+comentarios cacheado en BD
+  // ─────────────────────────────────────────────────
+
+  // ── Página de Facebook ──────────────────────────────
+  // Si el usuario conecta una Página de Facebook (token de
+  // página con pages_show_list), guardamos aquí el token y
+  // los IDs para leer comentarios, responder y publicar.
+  facebookAccessToken     String?   // token de la Página de Facebook
+  facebookTokenExpiry     DateTime? // cuándo caduca el access token
+  facebookPageId          String?   // ID de la Página de Facebook
+  facebookPageName        String?   // nombre de la página (para Settings)
+  facebookUsername        String?   // username/handle de la página si existe
+  facebookCacheAt         DateTime? // cuándo se guardó la última caché de comentarios
+  facebookCache           Json?     // resultado de publicaciones+comentarios cacheado en BD
   // ─────────────────────────────────────────────────
 
   @@unique([name, userId])

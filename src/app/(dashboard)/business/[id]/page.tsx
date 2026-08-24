@@ -15,13 +15,14 @@ import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
 import BusinessQR from "@/components/business-qr";
 import GoogleReviewsSection from "@/components/google-reviews-section";
-import InstagramCommentsSection from "@/components/instagram-comments-section";
+import SocialInbox from "@/components/social-inbox";
+import SocialConnectionsSection from "@/components/social-connections-section";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
@@ -157,18 +158,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const businesses = await getBusinesses();
     const found = businesses.find((b) => b.id === id);
     setBusiness(found ?? null);
     if (found) setCustomers(await getCustomers(id));
     const userFeatures = await getUserFeatures();
     setFeatures(userFeatures);
-  };
+  }, [id]);
 
   useEffect(() => {
     load();
-  }, [id]);
+  }, [id, load]);
 
   const handleSend = async (customerId: string) => {
     setSendingId(customerId);
@@ -866,6 +867,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         )}
       </div>
 
+      {/* Conexión con perfiles sociales y Google */}
+      <SocialConnectionsSection businessId={id} onConnected={load} />
+
       {/* Reseñas de Google */}
       <GoogleReviewsSection
         businessId={id}
@@ -873,8 +877,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         features={features}
       />
 
-      {/* Comentarios de Instagram */}
-      <InstagramCommentsSection businessId={id} features={features} />
+      {/* Bandeja de redes sociales (una a la vez) */}
+      <SocialInbox businessId={id} features={features} />
 
       {/* Reporte PDF (plan Pro) */}
       {features.includes("pdf-reports") && (

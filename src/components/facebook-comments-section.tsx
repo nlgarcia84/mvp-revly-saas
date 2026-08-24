@@ -2,25 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  getBusinessInstagramData,
-  getInstagramConnectionStatus,
-  replyToInstagramComment,
-  type InstagramSectionData,
-} from '@/actions/instagram';
+  getBusinessFacebookData,
+  getFacebookConnectionStatus,
+  replyToFacebookComment,
+  type FacebookSectionData,
+} from '@/actions/facebook';
 import {
   generateCommentResponse,
 } from '@/actions/generate-response';
 import { isIslamophobic, isLikelyNegative } from '@/lib/sentiment';
 import { nCard } from '@/components/ui/card';
 
-type Post = InstagramSectionData['posts'][number];
-type Comment = Post['comments'][number];
+type Post = FacebookSectionData['posts'][number];
+type Comment = NonNullable<Post['comments']>[number];
 
 type FlatItem = {
   comment: Comment;
   post: Post;
-  postIndex: number;
-  commentIndex: number;
 };
 
 const fmtDate = (iso: string) =>
@@ -31,31 +29,15 @@ const fmtDate = (iso: string) =>
     minute: '2-digit',
   });
 
-const IgLogo = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none">
-    <rect
-      x="2"
-      y="2"
-      width="20"
-      height="20"
-      rx="5"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <circle
-      cx="12"
-      cy="12"
-      r="4.5"
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" />
+const FbLogo = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.021 1.792-4.688 4.532-4.688 1.313 0 2.686.235 2.686.235v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.256h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
   </svg>
 );
 
 const Avatar = ({ username, className = '' }: { username: string; className?: string }) => (
   <div
-    className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-fuchsia-500 to-pink-500 text-white text-xs font-semibold select-none ${className}`}
+    className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-blue-600 to-sky-500 text-white text-xs font-semibold select-none ${className}`}
   >
     {(username.trim()[0] || '?').toUpperCase()}
   </div>
@@ -63,14 +45,14 @@ const Avatar = ({ username, className = '' }: { username: string; className?: st
 
 type Filter = 'all' | 'critical' | 'pending';
 
-const InstagramCommentsSection = ({
+const FacebookCommentsSection = ({
   businessId,
   features,
 }: {
   businessId: string;
   features?: string[];
 }) => {
-  const [data, setData] = useState<InstagramSectionData | null>(null);
+  const [data, setData] = useState<FacebookSectionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState<boolean | null>(null);
@@ -89,10 +71,10 @@ const InstagramCommentsSection = ({
     setLoading(true);
     setError('');
     try {
-      const result = await getBusinessInstagramData(businessId);
+      const result = await getBusinessFacebookData(businessId);
       setData(result);
       if (!result) {
-        const status = await getInstagramConnectionStatus(businessId);
+        const status = await getFacebookConnectionStatus(businessId);
         setConnected(status.connected);
       } else {
         setConnected(true);
@@ -110,9 +92,9 @@ const InstagramCommentsSection = ({
   const items = useMemo<FlatItem[]>(() => {
     if (!data) return [];
     const flat: FlatItem[] = [];
-    data.posts.forEach((post, postIndex) => {
-      post.comments.forEach((comment, commentIndex) => {
-        flat.push({ comment, post, postIndex, commentIndex });
+    data.posts.forEach((post) => {
+      (post.comments ?? []).forEach((comment) => {
+        flat.push({ comment, post });
       });
     });
     return flat.sort(
@@ -152,8 +134,8 @@ const InstagramCommentsSection = ({
     }
     return Array.from(map.values()).sort(
       (a, b) =>
-        new Date(b.post.timestamp).getTime() -
-        new Date(a.post.timestamp).getTime(),
+        new Date(b.post.created_time).getTime() -
+        new Date(a.post.created_time).getTime(),
     );
   }, [filtered]);
 
@@ -203,8 +185,8 @@ const InstagramCommentsSection = ({
     setPublishing(true);
     setResult(null);
     try {
-      await replyToInstagramComment(businessId, selected.comment.id, draft);
-      setResult({ ok: true, msg: 'Respuesta publicada en Instagram' });
+      await replyToFacebookComment(businessId, selected.comment.id, draft);
+      setResult({ ok: true, msg: 'Respuesta publicada en Facebook' });
       setDraft('');
       setTimeout(load, 1200);
     } catch (e) {
@@ -225,7 +207,7 @@ const InstagramCommentsSection = ({
     return (
       <div className={`${nCard} p-5 sm:p-6`}>
         <p className="text-sm text-neutral-400">
-          Cargando comentarios de Instagram...
+          Cargando comentarios de Facebook...
         </p>
       </div>
     );
@@ -252,15 +234,15 @@ const InstagramCommentsSection = ({
       <div className={`${nCard} p-5 sm:p-6`}>
         <div className="flex flex-col items-start gap-3">
           <div className="flex items-center gap-2">
-            <IgLogo className="w-5 h-5 text-neutral-500" />
+            <FbLogo className="w-5 h-5 text-blue-600" />
             <h2 className="text-sm font-medium text-blue-600 uppercase tracking-wider">
-              Comentarios de Instagram
+              Comentarios de Facebook
             </h2>
           </div>
           <p className="text-sm text-neutral-400">
             {connected === false
-              ? 'Conecta tu cuenta profesional de Instagram para ver los comentarios de tus publicaciones y responderlos con IA.'
-              : 'No hay publicaciones recientes para mostrar. Conecta Instagram en Configuración.'}
+              ? 'Conecta tu Página de Facebook para ver los comentarios de tus publicaciones y responderlos con IA.'
+              : 'No hay publicaciones recientes para mostrar. Conecta Facebook en Configuración.'}
           </p>
           <a
             href={`/business/${businessId}/settings`}
@@ -286,17 +268,17 @@ const InstagramCommentsSection = ({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-0 sm:justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2">
-            <IgLogo className="w-5 h-5 text-neutral-950 dark:text-neutral-100" />
-            <h2 className="text-sm font-medium text-blue-600 uppercase tracking-wider">
-              Bandeja de Instagram
+            <FbLogo className="w-5 h-5 text-blue-600" />
+            <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              Bandeja de Facebook
             </h2>
             {data.username && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 normal-case tracking-normal">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 normal-case tracking-normal">
                 @{data.username}
               </span>
             )}
@@ -369,43 +351,36 @@ const InstagramCommentsSection = ({
               <div key={post.id} className="flex flex-col gap-1">
                 {/* Cabecera del post */}
                 <div className="flex items-center gap-2 px-2 pt-1 pb-1.5">
-                  {post.thumbnailUrl && (
+                  {post.full_picture && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={post.thumbnailUrl}
+                      src={post.full_picture}
                       alt=""
                       className="w-9 h-9 rounded-lg object-cover shrink-0 bg-neutral-100 dark:bg-neutral-800"
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300">
-                        {post.mediaType === 'CAROUSEL_ALBUM'
-                          ? 'Álbum'
-                          : post.mediaType === 'REELS'
-                            ? 'Reel'
-                            : post.mediaType.toLowerCase()}
-                      </span>
-                      <span className="text-[10px] text-neutral-400">
-                        {fmtDate(post.timestamp)} · {comments.length}{' '}
-                        {comments.length !== 1 ? 'comentarios' : 'comentario'}
-                      </span>
-                    </div>
-                    {post.caption && (
+                    <span className="text-[10px] text-neutral-400">
+                      {fmtDate(post.created_time)} · {comments.length}{' '}
+                      {comments.length !== 1 ? 'comentarios' : 'comentario'}
+                    </span>
+                    {post.message && (
                       <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-snug line-clamp-1 mt-0.5">
-                        {post.caption}
+                        {post.message}
                       </p>
                     )}
                   </div>
-                  <a
-                    href={post.permalink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors shrink-0"
-                    title="Abrir publicación"
-                  >
-                    Abrir ↗
-                  </a>
+                  {post.permalink_url && (
+                    <a
+                      href={post.permalink_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors shrink-0"
+                      title="Abrir publicación"
+                    >
+                      Abrir ↗
+                    </a>
+                  )}
                 </div>
 
                 {/* Comentarios de este post */}
@@ -431,7 +406,7 @@ const InstagramCommentsSection = ({
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-xs font-medium text-neutral-950 dark:text-neutral-100 truncate">
-                              @{comment.username}
+                              {comment.username}
                             </span>
                             <span className="text-[10px] text-neutral-400 shrink-0">
                               {fmtDate(comment.timestamp)}
@@ -476,40 +451,38 @@ const InstagramCommentsSection = ({
             <div className={`${nCard} p-5 sm:p-6 flex flex-col gap-4`}>
               {/* Contexto de la publicación */}
               <div className="flex items-start gap-3">
-                {selected.post.thumbnailUrl && (
+                {selected.post.full_picture && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={selected.post.thumbnailUrl}
+                    src={selected.post.full_picture}
                     alt=""
                     className="w-14 h-14 rounded-lg object-cover shrink-0 bg-neutral-100 dark:bg-neutral-800"
                   />
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300">
-                      {selected.post.mediaType === 'CAROUSEL_ALBUM'
-                        ? 'Álbum'
-                        : selected.post.mediaType === 'REELS'
-                          ? 'Reel'
-                          : selected.post.mediaType.toLowerCase()}
+                    <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      Publicación
                     </span>
                     <span className="text-xs text-neutral-400">
-                      {fmtDate(selected.post.timestamp)}
+                      {fmtDate(selected.post.created_time)}
                     </span>
                   </div>
-                  {selected.post.caption && (
+                  {selected.post.message && (
                     <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed line-clamp-2 mt-1">
-                      {selected.post.caption}
+                      {selected.post.message}
                     </p>
                   )}
-                  <a
-                    href={selected.post.permalink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
-                  >
-                    Ver publicación →
-                  </a>
+                  {selected.post.permalink_url && (
+                    <a
+                      href={selected.post.permalink_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 underline transition-colors"
+                    >
+                      Ver publicación →
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -521,7 +494,7 @@ const InstagramCommentsSection = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-sm font-medium">
-                      @{selected.comment.username}
+                      {selected.comment.username}
                     </span>
                     <span className="text-xs text-neutral-400">
                       {fmtDate(selected.comment.timestamp)}
@@ -543,13 +516,13 @@ const InstagramCommentsSection = ({
                         <div key={reply.id}>
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-medium text-neutral-500">
-                              @{reply.username}
+                              {reply.username}
                             </span>
                             <span className="text-[10px] text-neutral-400">
                               {fmtDate(reply.timestamp)}
                             </span>
                             {reply.username === data.username && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300">
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                                 Tu respuesta
                               </span>
                             )}
@@ -604,7 +577,7 @@ const InstagramCommentsSection = ({
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder="Escribe tu respuesta aquí..."
                   rows={4}
-                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-fuchsia-500 resize-y leading-relaxed"
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-blue-500 resize-y leading-relaxed"
                 />
 
                 {result && (
@@ -620,7 +593,7 @@ const InstagramCommentsSection = ({
                     <button
                       onClick={handlePublish}
                       disabled={publishing || !draft.trim()}
-                      className="text-xs font-medium px-4 py-2 rounded-lg bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                      className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-opacity disabled:opacity-50 cursor-pointer"
                     >
                       {publishing ? 'Publicando...' : 'Publicar respuesta'}
                     </button>
@@ -632,14 +605,16 @@ const InstagramCommentsSection = ({
                       Copiar
                     </button>
                   </div>
-                  <a
-                    href={selected.post.permalink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                  >
-                    Abrir en Instagram
-                  </a>
+                  {selected.post.permalink_url && (
+                    <a
+                      href={selected.post.permalink_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    >
+                      Abrir en Facebook
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
@@ -650,4 +625,4 @@ const InstagramCommentsSection = ({
   );
 };
 
-export default InstagramCommentsSection;
+export default FacebookCommentsSection;

@@ -10,6 +10,25 @@ import {
   type InstagramMedia,
 } from '@/lib/instagram-graph';
 
+// La caché evita llamar a la Graph API de Instagram en cada
+// apertura del dashboard (rate-limit ~200 llamadas/hora y
+// riesgo de que Meta marque la app por uso automatizado).
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutos
+
+type InstagramData = {
+  username: string;
+  posts: {
+    id: string;
+    caption: string;
+    timestamp: string;
+    mediaType: string;
+    permalink: string;
+    thumbnailUrl: string;
+    comments: InstagramComment[];
+  }[];
+  totalComments: number;
+};
+
 // ─── Obtiene el access token si la conexión es válida ──
 // A diferencia de Google, Meta no permite renovar el token
 // con un refresh token: dura 60 días y luego el usuario debe
@@ -64,6 +83,20 @@ export const getBusinessInstagramData = async (businessId: string) => {
   const now = Date.now();
   const cutoff = new Date(now - 90 * 86400 * 1000);
 
+  // 1. ¿Tenemos caché reciente? La devolvemos sin llamar a
+  //    la Graph API (evita el rate-limit y bloqueos de Meta).
+  const cached = await prisma.business.findUnique({
+    where: { id: businessId },
+    select: { instagramCacheAt: true, instagramCache: true },
+  });
+  if (
+    cached?.instagramCacheAt &&
+    now - cached.instagramCacheAt.getTime() < CACHE_TTL_MS &&
+    cached.instagramCache
+  ) {
+    return cached.instagramCache as unknown as InstagramData;
+  }
+
   const media = await getInstagramCommentsData(
     conn.accessToken,
     conn.businessAccountId,
@@ -84,7 +117,7 @@ export const getBusinessInstagramData = async (businessId: string) => {
       comments: m.comments ?? [],
     }));
 
-  return {
+  const normalized: InstagramData = {
     username: conn.username ?? '',
     posts,
     totalComments: posts.reduce(
@@ -93,6 +126,15 @@ export const getBusinessInstagramData = async (businessId: string) => {
       0,
     ),
   };
+
+  // 2. Guardamos en caché para no volver a llamar a la API
+  //    en las próximas aperturas.
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { instagramCacheAt: new Date(), instagramCache: normalized as object },
+  });
+
+  return normalized;
 };
 
 // ─── Estado de la conexión con Instagram ─────────────

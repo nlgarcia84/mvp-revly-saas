@@ -7,6 +7,7 @@ import {
   uploadBusinessImage,
 } from "@/actions/business";
 import { getBusinessProfileStatus } from "@/actions/google-reviews";
+import { getFacebookConnectionStatus } from "@/actions/facebook";
 import { getInstagramConnectionStatus } from "@/actions/instagram";
 import { updateVerificationPin } from "@/actions/redeem";
 import {
@@ -58,6 +59,12 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     expiresAt?: Date | string | null;
     expired?: boolean;
   } | null>(null);
+  const [fbStatus, setFbStatus] = useState<{
+    connected: boolean;
+    pageName?: string | null;
+    expiresAt?: Date | string | null;
+    expired?: boolean;
+  } | null>(null);
   const [pin, setPin] = useState("");
   const [savingPin, setSavingPin] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
@@ -73,6 +80,8 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const error = params.get("bp_error");
     const igSuccess = params.get("ig_success");
     const igError = params.get("ig_error");
+    const fbSuccess = params.get("fb_success");
+    const fbError = params.get("fb_error");
     if (success) {
       setMsg(success);
       // Limpiamos la URL para que no se vea el parámetro
@@ -85,6 +94,12 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       window.history.replaceState({}, "", window.location.pathname);
     } else if (igError) {
       setMsg(igError);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (fbSuccess) {
+      setMsg(fbSuccess);
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (fbError) {
+      setMsg(fbError);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -107,6 +122,15 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
       getInstagramConnectionStatus(id)
         .then(setIgStatus)
         .catch(() => setIgStatus(null));
+    }
+  }, [id]);
+
+  // ── Comprueba si el negocio tiene Facebook conectado ──
+  useEffect(() => {
+    if (id) {
+      getFacebookConnectionStatus(id)
+        .then(setFbStatus)
+        .catch(() => setFbStatus(null));
     }
   }, [id]);
 
@@ -766,6 +790,79 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <circle cx="17.5" cy="6.5" r="1.3" fill="currentColor" />
             </svg>
             Conectar con Instagram
+          </Button>
+        )}
+      </div>
+
+      {/* ── Conexión con Facebook ────────────────────── */}
+      {/* Aquí el usuario conecta su Página de Facebook
+          para leer y responder comentarios desde el
+          dashboard y publicar contenido en la página. */}
+      <div className={`${nCard} p-6 flex flex-col gap-5`}>
+        <div>
+          <h2 className="text-sm font-semibold mb-1">Facebook</h2>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Conecta tu Página de Facebook para ver los comentarios de tus
+            publicaciones, responderlos con IA y publicar contenido
+            directamente desde Revly.
+          </p>
+          <p className="text-xs text-neutral-500 mt-2 leading-relaxed">
+            Necesitas administrar una Página de Facebook con tu cuenta. El
+            acceso de usuario dura 60 días; cuando caduque, solo tendrás que
+            reconectar pulsando el botón una vez más.
+          </p>
+        </div>
+
+        {fbStatus === null ? (
+          <p className="text-xs text-neutral-400">Comprobando conexión...</p>
+        ) : fbStatus.connected ? (
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 rounded-md border border-emerald-200 dark:border-emerald-800">
+              <svg
+                className="w-4 h-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {fbStatus.expired
+                ? "Conectado pero el acceso de Facebook ha caducado — vuelve a conectar"
+                : `Conectado a Facebook${fbStatus.pageName ? ` (${fbStatus.pageName})` : ""}`}
+            </div>
+            {!fbStatus.expired && fbStatus.expiresAt && (
+              <p className="text-xs text-neutral-400">
+                El acceso expira el{" "}
+                {new Date(fbStatus.expiresAt as string).toLocaleDateString(
+                  "es-ES",
+                )}
+                . Vuelve a conectar antes de esa fecha para no perderlo.
+              </p>
+            )}
+            <a
+              href={`/api/facebook/disconnect?businessId=${id}`}
+              className="text-xs text-red-400 hover:text-red-500 underline transition-colors w-fit cursor-pointer"
+            >
+              Desconectar
+            </a>
+            <p className="text-xs text-neutral-400">
+              Los comentarios de tus publicaciones se mostrarán en la página
+              del negocio y podrás responderlos con IA y publicar contenido.
+            </p>
+          </div>
+        ) : (
+          <Button
+            as="a"
+            href={`/api/facebook/connect?businessId=${id}`}
+            variant="primary"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+              <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.021 1.792-4.688 4.532-4.688 1.313 0 2.686.235 2.686.235v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.256h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
+            </svg>
+            Conectar con Facebook
           </Button>
         )}
       </div>
