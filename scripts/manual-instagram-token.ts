@@ -20,13 +20,17 @@ Pasos:
 `;
 
 async function main() {
-  const clientId = process.env.META_CLIENT_ID;
-  const clientSecret = process.env.META_CLIENT_SECRET;
+  const clientId =
+    process.env.META_INSTAGRAM_CLIENT_ID || process.env.META_CLIENT_ID;
+  const clientSecret =
+    process.env.META_INSTAGRAM_CLIENT_SECRET || process.env.META_CLIENT_SECRET;
   const shortToken = process.env.INSTAGRAM_SHORT_TOKEN;
   const businessId = process.env.INSTAGRAM_BUSINESS_ID;
 
   if (!clientId || !clientSecret) {
-    console.error('Faltan META_CLIENT_ID / META_CLIENT_SECRET en .env.local');
+    console.error(
+      'Faltan META_INSTAGRAM_CLIENT_ID / META_INSTAGRAM_CLIENT_SECRET (o META_CLIENT_ID / META_CLIENT_SECRET) en .env.local',
+    );
     process.exit(1);
   }
   if (!shortToken || !businessId) {

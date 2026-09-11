@@ -8,7 +8,7 @@ import prisma from './db';
 // ──────────────────────────────────────────────────
 const PLANS = {
   basico: {
-    maxBusinesses: 1,
+    maxBusinesses: 999,
     label: 'Básico',
     price: 0,
     stripePriceId: null,
@@ -20,6 +20,7 @@ const PLANS = {
       'manual-customers',
       'email-invitations',
       'basic-analytics',
+      'ai-responses',
     ],
   },
   avanzado: {
@@ -124,7 +125,10 @@ export const getPlan = async (userId: string) => {
   }
 
   const sub = user.subscription;
-  const plan = sub.plan as PlanKey;
+  // La BD guarda "free" por defecto, pero los planes definidos
+  // son basico/avanzado/pro. Normalizamos cualquier valor
+  // desconocido a "basico" para evitar lookups indefinidos.
+  const plan: PlanKey = (sub.plan in PLANS ? sub.plan : 'basico') as PlanKey;
 
   const trialDaysLeft = sub.trialEndsAt && sub.trialEndsAt > new Date()
     ? Math.ceil((sub.trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24))

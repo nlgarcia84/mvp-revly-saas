@@ -3,7 +3,7 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { extractPlaceId, fetchPlaceDetails, resolveShortUrl, resolveWithTextSearch, type GoogleReview } from '@/lib/google-places';
-import { refreshAccessToken, getBusinessProfileData } from '@/lib/google-business-profile';
+import { refreshAccessToken, getBusinessProfileData, replyToBusinessReview } from '@/lib/google-business-profile';
 
 // ─── Obtiene un access token válido ───────────────────
 // Si el token actual ha caducado, usa el refresh token
@@ -159,6 +159,54 @@ export const getBusinessProfileStatus = async (businessId: string) => {
     accountId: business.googleBusinessAccountId,
     locationId: business.googleBusinessLocationId,
   };
+};
+
+// ─── Publica una respuesta en Google ─────────────────
+// Requiere que el negocio esté conectado por OAuth y que
+// Google haya aprobado la cuota de la Business Profile API.
+// `reviewName` viene de las reseñas de Business Profile
+// (las de Places API no se pueden responder por API).
+// ─────────────────────────────────────────────────────
+export const replyToGoogleReview = async (
+  businessId: string,
+  reviewName: string,
+  comment: string,
+): Promise<{ ok: boolean; error?: string }> => {
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const userId = session?.user?.id ?? '';
+  if (!userId) throw new Error('No autenticado');
+
+  if (!reviewName || !comment.trim()) {
+    return { ok: false, error: 'Faltan datos para publicar la respuesta.' };
+  }
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+    select: {
+      googleBusinessAccountId: true,
+      googleBusinessLocationId: true,
+    },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+  if (!business.googleBusinessAccountId || !business.googleBusinessLocationId) {
+    return {
+      ok: false,
+      error: 'El negocio no está conectado a Google Business Profile.',
+    };
+  }
+
+  const accessToken = await getValidAccessToken(businessId);
+  if (!accessToken) {
+    return {
+      ok: false,
+      error: 'No hay una conexión válida con Google. Vuelve a conectar la cuenta.',
+    };
+  }
+
+  return replyToBusinessReview(accessToken, reviewName, comment.trim());
 };
 
 export const getAllGoogleReviews = async () => {

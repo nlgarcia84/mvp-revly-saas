@@ -21,6 +21,28 @@ const GRAPH_HOST = "https://graph.instagram.com";
 const TOKEN_ENDPOINT = "https://api.instagram.com/oauth/access_token";
 const TOKEN_TTL_DAYS = 60;
 
+// ─── Credenciales de Instagram ───────────────────────
+// El flujo "Instagram API with Instagram Login" usa el
+// Instagram App ID / App Secret, que en Meta son DISTINTOS
+// del App ID/Secret de Facebook. Si no están definidos,
+// caemos a META_CLIENT_ID/SECRET por compatibilidad.
+// ─────────────────────────────────────────────────────
+export function getInstagramClientId(): string {
+  return (
+    process.env.META_INSTAGRAM_CLIENT_ID ||
+    process.env.META_CLIENT_ID ||
+    ""
+  );
+}
+
+export function getInstagramClientSecret(): string {
+  return (
+    process.env.META_INSTAGRAM_CLIENT_SECRET ||
+    process.env.META_CLIENT_SECRET ||
+    ""
+  );
+}
+
 type GraphResponse = {
   id?: string;
   access_token?: string;
@@ -83,7 +105,7 @@ export function friendlyMetaError(status: number, body: string): string {
 export async function exchangeForLongLivedToken(
   accessToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
-  const clientSecret = process.env.META_CLIENT_SECRET!;
+  const clientSecret = getInstagramClientSecret();
 
   const params = new URLSearchParams({
     grant_type: "ig_exchange_token",

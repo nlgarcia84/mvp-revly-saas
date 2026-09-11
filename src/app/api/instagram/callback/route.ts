@@ -2,6 +2,8 @@ import prisma from "@/lib/db";
 import {
   exchangeForLongLivedToken,
   friendlyMetaError,
+  getInstagramClientId,
+  getInstagramClientSecret,
   getInstagramUserProfile,
 } from "@/lib/instagram-graph";
 import { NextResponse } from "next/server";
@@ -45,8 +47,8 @@ export async function GET(request: Request) {
       );
     }
 
-    const INSTAGRAM_CLIENT_ID = process.env.META_CLIENT_ID!;
-    const INSTAGRAM_CLIENT_SECRET = process.env.META_CLIENT_SECRET!;
+    const INSTAGRAM_CLIENT_ID = getInstagramClientId();
+    const INSTAGRAM_CLIENT_SECRET = getInstagramClientSecret();
     const REDIRECT_URI = `${APP_URL}/api/instagram/callback`;
 
     if (!INSTAGRAM_CLIENT_ID || !INSTAGRAM_CLIENT_SECRET) {

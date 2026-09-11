@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { getBusinessGoogleReviews, getBusinessProfileStatus } from '@/actions/google-reviews';
+import { getBusinessGoogleReviews, getBusinessProfileStatus, replyToGoogleReview } from '@/actions/google-reviews';
 import { generateReviewResponse } from '@/actions/generate-response';
 import { nCard } from '@/components/ui/card';
 
@@ -17,6 +17,7 @@ type GoogleData = {
     time: number;
     profilePhotoUrl: string;
     relativeTimeDescription: string;
+    reviewName?: string;
   }[];
 };
 
@@ -94,9 +95,12 @@ const ReviewToast = ({ review, onClose }: { review: BadReview; onClose: () => vo
   );
 };
 
-const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { text: string; authorName: string; placeId: string; googleLink?: string; onClose: () => void }) => {
+const ResponseModal = ({ text, authorName, placeId, googleLink, reviewName, businessId, onClose }: { text: string; authorName: string; placeId: string; googleLink?: string; reviewName?: string; businessId: string; onClose: () => void }) => {
   const [copied, setCopied] = useState(false);
   const [displayed, setDisplayed] = useState('');
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState('');
+  const [published, setPublished] = useState(false);
 
   useEffect(() => {
     setDisplayed('');
@@ -115,6 +119,25 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handlePublish = async () => {
+    if (!reviewName) return;
+    setPublishing(true);
+    setPublishError('');
+    try {
+      const res = await replyToGoogleReview(businessId, reviewName, text);
+      if (res.ok) {
+        setPublished(true);
+      } else {
+        setPublishError(res.error ?? 'No se pudo publicar la respuesta.');
+      }
+    } catch (e) {
+      setPublishError(
+        e instanceof Error ? e.message : 'No se pudo publicar la respuesta.',
+      );
+    }
+    setPublishing(false);
+  };
+
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
@@ -130,22 +153,47 @@ const ResponseModal = ({ text, authorName, placeId, googleLink, onClose }: { tex
               <span className="inline-block w-0.5 h-4 bg-neutral-950 dark:bg-neutral-100 ml-0.5 animate-pulse align-text-bottom" />
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleCopy}
-              className="text-xs font-medium px-4 py-2 rounded-lg bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity"
-            >
-              {copied ? 'Copiado' : 'Copiar respuesta'}
-            </button>
-            <a
-              href={googleLink || `https://www.google.com/maps/place/?q=place_id:${placeId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-            >
-              Ir a Google a responder
-            </a>
-          </div>
+          {published ? (
+            <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              Respuesta publicada en Google.
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={handleCopy}
+                  className="text-xs font-medium px-4 py-2 rounded-lg bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity"
+                >
+                  {copied ? 'Copiado' : 'Copiar respuesta'}
+                </button>
+                {reviewName && (
+                  <button
+                    onClick={handlePublish}
+                    disabled={publishing}
+                    className="text-xs font-medium px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors disabled:opacity-50"
+                  >
+                    {publishing ? 'Publicando...' : 'Publicar en Google'}
+                  </button>
+                )}
+                <a
+                  href={googleLink || `https://www.google.com/maps/place/?q=place_id:${placeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  Ir a Google a responder
+                </a>
+              </div>
+              {!reviewName && (
+                <p className="text-xs text-neutral-400 mt-3">
+                  Conecta Google Business Profile para publicar la respuesta directamente desde aquí.
+                </p>
+              )}
+            </>
+          )}
+          {publishError && (
+            <p className="text-xs text-red-500 mt-3">{publishError}</p>
+          )}
         </div>
       </div>
     </>
@@ -162,16 +210,16 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [generating, setGenerating] = useState<string | null>(null);
-  const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string } | null>(null);
+  const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string; reviewName?: string } | null>(null);
   const [generateError, setGenerateError] = useState('');
 
-  const handleGenerate = async (review: { authorName: string; text: string; rating: number }, placeId: string) => {
+  const handleGenerate = async (review: { authorName: string; text: string; rating: number; reviewName?: string }, placeId: string) => {
     const key = `${review.authorName}|${review.text.slice(0, 20)}`;
     setGenerating(key);
     setGenerateError('');
     try {
       const response = await generateReviewResponse(review.text, data?.name ?? '', review.rating);
-      setResponseModal({ text: response, authorName: review.authorName, placeId });
+      setResponseModal({ text: response, authorName: review.authorName, placeId, reviewName: review.reviewName });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Error al generar respuesta';
       setGenerateError(msg);
@@ -458,6 +506,8 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
           text={responseModal.text}
           authorName={responseModal.authorName}
           placeId={responseModal.placeId}
+          reviewName={responseModal.reviewName}
+          businessId={businessId}
           googleLink={googleLink}
           onClose={() => setResponseModal(null)}
         />

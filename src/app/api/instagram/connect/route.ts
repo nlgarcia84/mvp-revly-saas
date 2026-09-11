@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getInstagramClientId } from "@/lib/instagram-graph";
 import prisma from "@/lib/db";
 
 // ─── Inicia la conexión con Instagram (Business Login) ─
@@ -34,9 +35,9 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/business", request.url));
     }
 
-    const INSTAGRAM_CLIENT_ID = process.env.META_CLIENT_ID;
+    const INSTAGRAM_CLIENT_ID = getInstagramClientId();
     if (!INSTAGRAM_CLIENT_ID) {
-      console.error("[Instagram/Connect] Falta META_CLIENT_ID en .env.local");
+      console.error("[Instagram/Connect] Falta META_INSTAGRAM_CLIENT_ID / META_CLIENT_ID en .env.local");
       return NextResponse.redirect(
         `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/business/${businessId}/settings?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (falta el App ID de Instagram)")}`,
       );

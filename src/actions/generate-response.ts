@@ -2,6 +2,10 @@
 
 const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+// Modelo de Groq. `llama-3.3-70b-versatile` fue retirado por Groq;
+// usamos `qwen/qwen3.8-27b`, que devuelve el texto en `message.content`.
+const MODEL = 'qwen/qwen3.8-27b';
+
 // ─── Llamada base a Groq ─────────────────────────────
 // Todas las funciones de IA comparten la misma llamada a
 // la API. El system + prompt varía según el canal
@@ -18,7 +22,7 @@ async function callGroq(system: string, prompt: string, maxTokens = 400) {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: MODEL,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: prompt },

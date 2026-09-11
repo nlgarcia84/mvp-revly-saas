@@ -19,6 +19,10 @@ export type BusinessProfileReview = {
   relativeTimeDescription: string;
   hasReply: boolean;
   reviewId?: string;
+  // Nombre completo del recurso de la reseña:
+  // "accounts/{account}/locations/{location}/reviews/{reviewId}".
+  // Es lo que necesita el endpoint de respuesta (reply).
+  reviewName?: string;
 };
 
 export type BusinessProfileData = {
@@ -212,6 +216,7 @@ export async function getBusinessReviews(
           relativeTimeDescription: calcularTiempoRelativo(r.createTime),
           hasReply: !!r.reviewReply,
           reviewId: r.reviewId ?? undefined,
+          reviewName: r.name ?? undefined,
         });
       }
     }
@@ -290,4 +295,38 @@ export async function getBusinessProfileData(
     userRatingsTotal: totalReviewCount > 0 ? totalReviewCount : reviews.length,
     reviews,
   };
+}
+
+// ─── Publica una respuesta a una reseña ──────────────
+// Usa el endpoint v4 de reviews. `reviewName` es el nombre
+// completo del recurso:
+//   "accounts/{account}/locations/{location}/reviews/{reviewId}"
+// Requiere que Google haya aprobado la cuota de la Business
+// Profile API; si no, responde 429/403.
+// ─────────────────────────────────────────────────────
+export async function replyToBusinessReview(
+  accessToken: string,
+  reviewName: string,
+  comment: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const url = `https://mybusiness.googleapis.com/v4/${reviewName}/reply`;
+
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ comment }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(
+      `[BusinessProfile] Error publicando respuesta | HTTP ${res.status} | URL: ${url} | ${body}`,
+    );
+    return { ok: false, error: friendlyBusinessProfileError(res.status, body) };
+  }
+
+  return { ok: true };
 }
