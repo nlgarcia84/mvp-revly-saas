@@ -29,6 +29,8 @@ export async function GET(request: Request) {
         instagramPageId: null,
         instagramBusinessAccountId: null,
         instagramUsername: null,
+        instagramCacheAt: null,
+        instagramCache: null,
       },
     });
 

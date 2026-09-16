@@ -34,12 +34,16 @@ async function callGroq(system: string, prompt: string, maxTokens = 400) {
 
   if (!res.ok) {
     const body = await res.text();
+    console.error(`[AI] Groq API error ${res.status}:`, body);
     throw new Error(`Groq API error ${res.status}: ${body}`);
   }
 
   const data = await res.json();
   const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error('Groq no devolvió contenido');
+  if (!text) {
+    console.error('[AI] Groq no devolvió contenido:', JSON.stringify(data));
+    throw new Error('Groq no devolvió contenido');
+  }
 
   return text.trim();
 }
@@ -62,7 +66,14 @@ export async function generateReviewResponse(
 
 Escribe solo la respuesta, sin presentaciones ni despedidas adicionales. Empieza directamente con "Estimado/a" o similar.`;
 
-  return callGroq(system, prompt);
+  try {
+    return await callGroq(system, prompt);
+  } catch (e) {
+    console.error('[AI] generateReviewResponse falló:', e);
+    throw new Error(
+      e instanceof Error ? e.message : 'Error al generar la respuesta con IA',
+    );
+  }
 }
 
 // ─── Responde a un comentario de Instagram ───────────
@@ -75,7 +86,7 @@ export async function generateCommentResponse(
   commentText: string,
   businessName: string,
   negative: boolean,
-  platform: 'instagram' = 'instagram',
+  platform: 'instagram' | 'facebook' = 'instagram',
 ): Promise<string> {
   const system = negative
     ? `Eres el community manager de "${businessName}" en ${platform === 'instagram' ? 'Instagram' : 'Facebook'}. Responde a este comentario en castellano. Sé cercano, natural y breve (2 frases máximo, sin hashtags). Agradece el aviso, discúlpate si toca y termina invitando a escribir por mensaje directo para resolverlo. Usa un emoji de apoyo como máximo. No seas genérico: menciona algo concreto del comentario.`
@@ -85,5 +96,12 @@ export async function generateCommentResponse(
 
 Escribe solo la respuesta del negocio, sin presentaciones ni despedidas adicionales.`;
 
-  return callGroq(system, prompt, 150);
+  try {
+    return await callGroq(system, prompt, 150);
+  } catch (e) {
+    console.error('[AI] generateCommentResponse falló:', e);
+    throw new Error(
+      e instanceof Error ? e.message : 'Error al generar la respuesta con IA',
+    );
+  }
 }

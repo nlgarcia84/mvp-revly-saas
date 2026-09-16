@@ -6,6 +6,7 @@ import {
   getInstagramCommentsData,
   isInstagramTokenExpired,
   postCommentReply,
+  refreshLongLivedToken,
   type InstagramComment,
   type InstagramMedia,
 } from '@/lib/instagram-graph';
@@ -14,6 +15,11 @@ import {
 // apertura del dashboard (rate-limit ~200 llamadas/hora y
 // riesgo de que Meta marque la app por uso automatizado).
 const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutos
+
+// Renovamos el token long-lived cuando le quedan menos de
+// 7 días. Meta exige que hayan pasado al menos 24 h desde
+// su emisión; con 60 días de vida útil se cumple de sobra.
+const REFRESH_WINDOW_MS = 7 * 86400 * 1000;
 
 type InstagramData = {
   username: string;
@@ -34,13 +40,16 @@ type InstagramData = {
 // con un refresh token: dura 60 días y luego el usuario debe
 // volver a conectar. Si está caducado devolvemos null.
 // ─────────────────────────────────────────────────────
-async function getValidInstagramToken(businessId: string): Promise<{
+async function getValidInstagramToken(
+  businessId: string,
+  userId: string,
+): Promise<{
   accessToken: string;
   businessAccountId: string;
   username?: string;
 } | null> {
-  const business = await prisma.business.findUnique({
-    where: { id: businessId },
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
     select: {
       instagramAccessToken: true,
       instagramTokenExpiry: true,
@@ -57,8 +66,32 @@ async function getValidInstagramToken(businessId: string): Promise<{
     return null;
   }
 
+  let accessToken = business.instagramAccessToken;
+  let expiry = business.instagramTokenExpiry;
+
+  // Si al token le quedan menos de 7 días, intentamos
+  // renovarlo para no obligar al usuario a reconectar. Si
+  // la renovación falla seguimos usando el token actual
+  // (aún válido) y avisamos por consola.
+  if (expiry && expiry.getTime() - Date.now() < REFRESH_WINDOW_MS) {
+    try {
+      const refreshed = await refreshLongLivedToken(accessToken);
+      accessToken = refreshed.accessToken;
+      expiry = refreshed.expiresAt;
+      await prisma.business.update({
+        where: { id: businessId },
+        data: {
+          instagramAccessToken: accessToken,
+          instagramTokenExpiry: expiry,
+        },
+      });
+    } catch (e) {
+      console.error('[Instagram] No se pudo renovar el token:', e);
+    }
+  }
+
   return {
-    accessToken: business.instagramAccessToken,
+    accessToken,
     businessAccountId: business.instagramBusinessAccountId,
     username: business.instagramUsername ?? undefined,
   };
@@ -77,7 +110,7 @@ export const getBusinessInstagramData = async (businessId: string) => {
   const userId = session?.user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
-  const conn = await getValidInstagramToken(businessId);
+  const conn = await getValidInstagramToken(businessId, userId);
   if (!conn) return null;
 
   const now = Date.now();
@@ -186,11 +219,19 @@ export const replyToInstagramComment = async (
   const userId = session?.user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
-  const conn = await getValidInstagramToken(businessId);
+  const conn = await getValidInstagramToken(businessId, userId);
   if (!conn) throw new Error('Instagram no conectado o token caducado. Reconecta en Configuración.');
 
   const result = await postCommentReply(conn.accessToken, commentId, message);
   if (!result.ok) throw new Error(result.error ?? 'No se pudo publicar la respuesta');
+
+  // Invalidamos la caché para que el dashboard muestre la
+  // respuesta recién publicada al recargar.
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { instagramCacheAt: null, instagramCache: null },
+  });
+
   return { ok: true, replyId: result.replyId };
 };
 

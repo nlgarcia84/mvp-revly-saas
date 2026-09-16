@@ -48,7 +48,13 @@ type GraphResponse = {
   access_token?: string;
   expires_in?: number;
   data?: unknown[];
-  error?: { type?: string; message?: string; code?: number };
+  error?: {
+    type?: string;
+    message?: string;
+    code?: number;
+    error_subcode?: number;
+    fbtrace_id?: string;
+  };
   paging?: { next?: string; cursors?: { after?: string } };
 };
 
@@ -86,19 +92,34 @@ export type InstagramUserProfile = {
 // ─── Convierte un error de la API en mensaje claro ────
 export function friendlyMetaError(status: number, body: string): string {
   let message = body.slice(0, 400);
+  let diag = "";
   try {
-    const parsed = JSON.parse(body);
-    if (parsed?.error?.message) message = parsed.error.message;
-    if (parsed?.error?.code === 190) {
+    const parsed = JSON.parse(body) as GraphResponse;
+    const err = parsed?.error;
+    if (err?.message) message = err.message;
+
+    // Añadimos los datos técnicos del error (subcódigo y
+    // fbtrace_id) para poder diagnosticar y reportar a Meta.
+    if (err) {
+      const bits: string[] = [];
+      if (err.type) bits.push(`tipo ${err.type}`);
+      if (typeof err.code !== "undefined") bits.push(`código ${err.code}`);
+      if (typeof err.error_subcode !== "undefined")
+        bits.push(`subcódigo ${err.error_subcode}`);
+      if (err.fbtrace_id) bits.push(`trace ${err.fbtrace_id}`);
+      if (bits.length) diag = ` (${bits.join(", ")})`;
+    }
+
+    if (err?.code === 190) {
       return "El token de Instagram ha caducado. Vuelve a conectar la cuenta desde Configuración.";
     }
-    if (parsed?.error?.code === 200) {
-      return `Instagram no tiene acceso a esta cuenta: ${parsed.error.message}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
+    if (err?.code === 200) {
+      return `Instagram no tiene acceso a esta cuenta: ${message}${diag}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
     }
   } catch {
     // no es JSON, usamos el texto tal cual
   }
-  return `Instagram API error ${status}: ${message}`;
+  return `Instagram API error ${status}: ${message}${diag}`;
 }
 
 // ─── Convierte un token corto en long-lived (60 días) ──
@@ -129,6 +150,38 @@ export async function exchangeForLongLivedToken(
   };
 }
 
+// ─── Renueva un token long-lived (otros 60 días) ─────
+// Meta permite refrescar un token long-lived una vez ha
+// pasado al menos 24 h desde su emisión, sin que el usuario
+// tenga que volver a autenticarse. Se usa cuando el token
+// está cerca de caducar.
+// ─────────────────────────────────────────────────────
+export async function refreshLongLivedToken(
+  accessToken: string,
+): Promise<{ accessToken: string; expiresAt: Date }> {
+  const params = new URLSearchParams({
+    grant_type: "ig_refresh_token",
+    access_token: accessToken,
+  });
+  const res = await fetch(
+    `${GRAPH_HOST}/refresh_access_token?${params.toString()}`,
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(friendlyMetaError(res.status, body));
+  }
+
+  const data = (await res.json()) as GraphResponse;
+  if (!data?.access_token) throw new Error("Instagram no devolvió un token renovado");
+
+  const expiresIn = data.expires_in ?? TOKEN_TTL_DAYS * 86400;
+  return {
+    accessToken: data.access_token,
+    expiresAt: new Date(Date.now() + expiresIn * 1000),
+  };
+}
+
 // ─── Comprueba si el token está caducado ─────────────
 export function isInstagramTokenExpired(expiresAt: Date | null): boolean {
   if (!expiresAt) return true;
@@ -139,23 +192,28 @@ export function isInstagramTokenExpired(expiresAt: Date | null): boolean {
 // ─── Obtiene el perfil de la cuenta (username) ───────
 export async function getInstagramUserProfile(
   accessToken: string,
-  userId: string,
+  userId?: string,
 ): Promise<InstagramUserProfile> {
-  const url = `${GRAPH_HOST}/${userId}?fields=id,username,account_type&access_token=${encodeURIComponent(accessToken)}`;
+  // Usamos /me en vez de /{user_id}: con Instagram Login el
+  // ID devuelto en el token no siempre es válido para el
+  // Graph API, y /me devuelve el ID correcto de la cuenta.
+  const url = `${GRAPH_HOST}/me?fields=user_id,username,account_type&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url);
 
   if (!res.ok) {
     const body = await res.text();
+    console.error("[Instagram] Error obteniendo perfil:", body);
     throw new Error(friendlyMetaError(res.status, body));
   }
 
   const data = (await res.json()) as {
     id?: string;
+    user_id?: string;
     username?: string;
     account_type?: string;
   };
   return {
-    id: data.id ?? userId,
+    id: data.user_id ?? data.id ?? userId ?? "",
     username: data.username ?? "",
     accountType: (data.account_type ?? "").toUpperCase(),
   };

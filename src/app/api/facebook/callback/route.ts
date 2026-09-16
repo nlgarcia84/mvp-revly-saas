@@ -1,7 +1,9 @@
 import prisma from "@/lib/db";
 import {
   friendlyFacebookError,
+  getBusinessOwnedPages,
   getUserFacebookPages,
+  subscribePageToWebhooks,
 } from "@/lib/facebook-graph";
 import { NextResponse } from "next/server";
 
@@ -11,8 +13,9 @@ import { NextResponse } from "next/server";
 //   1. Recibimos un "code" que cambiamos por un token
 //      short-lived de usuario (POST /oauth/access_token)
 //   2. Lo cambiamos por un long-lived (60 días)
-//   3. Listamos las páginas que administra el usuario y
-//      guardamos la primera como página del negocio
+//   3. Listamos las páginas que administra el usuario. Si
+//      hay una sola la conectamos; si hay varias, guardamos
+//      la lista y el usuario elige en Settings
 //   4. Redirigimos de vuelta a Settings
 // ─────────────────────────────────────────────────────
 const GRAPH_HOST = "https://graph.facebook.com/v21.0";
@@ -112,22 +115,57 @@ export async function GET(request: Request) {
       (longData.access_token ? new Date(Date.now() + expiresIn * 1000) : null) ??
       new Date(Date.now() + 400 * 86400 * 1000);
 
-    // 3. Listamos las páginas que administra el usuario
-    const pages = await getUserFacebookPages(userToken);
+    // 3. Listamos las páginas que administra el usuario.
+    //    Si /me/accounts viene vacío (típico en páginas
+    //    que pertenecen a un portfolio empresarial),
+    //    probamos por los businesses con business_management.
+    let pages = await getUserFacebookPages(userToken);
     if (pages.length === 0) {
+      pages = await getBusinessOwnedPages(userToken);
+    }
+    if (pages.length === 0) {
+      console.error("[Facebook/Callback] El token no devolvió ninguna Página.");
       return NextResponse.redirect(
         `${settingsUrl}?fb_error=${encodeURIComponent(
-          "No se encontró ninguna Página de Facebook vinculada a tu cuenta. Administra al menos una página y vuelve a intentarlo.",
+          "No se encontró ninguna Página de Facebook. Comprueba que la cuenta con la que autorizas administra la Página y que concediste acceso a las Páginas al autorizar.",
         )}`,
       );
     }
 
-    // Usamos la primera página (la más probable que administre
-    // el negocio). El token de página no caduca salvo que se
-    // revoque, pero usamos la fecha del token de usuario.
-    const page = pages[0];
+    // 4. Guardamos el token de usuario long-lived (necesario
+    //    para obtener el token de la página) junto con la
+    //    lista de páginas. Si administra varias, dejamos que
+    //    el usuario elija en Settings; si solo hay una, la
+    //    conectamos directamente.
+    const pendingPayload = {
+      token: userToken,
+      expiry: expiry.toISOString(),
+      at: new Date().toISOString(),
+      pages: pages.map((p) => ({
+        id: p.id,
+        name: p.name,
+        username: p.username ?? null,
+      })),
+    };
 
-    // 4. Guardamos página y token en la base de datos
+    if (pages.length > 1) {
+      await prisma.business.update({
+        where: { id: businessId },
+        data: {
+          facebookPending: pendingPayload,
+          facebookAccessToken: null,
+          facebookTokenExpiry: null,
+          facebookPageId: null,
+          facebookPageName: null,
+          facebookUsername: null,
+          facebookCacheAt: null,
+          facebookCache: null,
+        },
+      });
+      return NextResponse.redirect(`${settingsUrl}?fb_select=1`);
+    }
+
+    const page = pages[0];
     await prisma.business.update({
       where: { id: businessId },
       data: {
@@ -136,8 +174,17 @@ export async function GET(request: Request) {
         facebookPageId: page.id,
         facebookPageName: page.name,
         facebookUsername: page.username ?? null,
+        facebookPending: null,
       },
     });
+
+    // Suscribimos la página a los webhooks (comentarios en
+    // tiempo real). No bloquea la conexión si falla.
+    try {
+      await subscribePageToWebhooks(page.access_token, page.id);
+    } catch (e) {
+      console.error("[Facebook/Callback] No se pudo suscribir a webhooks:", e);
+    }
 
     // 5. Redirigimos a Settings con mensaje de éxito
     return NextResponse.redirect(

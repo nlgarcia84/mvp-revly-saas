@@ -45,18 +45,23 @@ export async function GET(request: Request) {
     const REDIRECT_URI = `${APP_URL}/api/facebook/callback`;
 
     // Permisos (Login with Facebook + Pages API):
-    //  - email, public_profile: perfil del usuario
+    //  - public_profile: perfil básico del usuario
     //  - pages_show_list: listar las páginas que administra
     //  - pages_read_engagement: leer publicaciones y comentarios
     //  - pages_manage_posts: publicar contenido en la página
-    //  - pages_manage_comments: responder comentarios
+    //  - pages_manage_engagement: moderar/responder comentarios
+    //  - business_management: necesario para que /me/accounts
+    //    devuelva páginas que pertenecen a un portfolio
+    //    empresarial (Business Manager).
+    // No pedimos `email`: no lo usamos y Meta lo marca como
+    // scope inválido si la app no tiene el caso de login.
     const params = new URLSearchParams({
       client_id: FACEBOOK_CLIENT_ID,
       redirect_uri: REDIRECT_URI,
       response_type: "code",
       state: businessId,
       scope:
-        "email,public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_comments",
+        "public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_engagement,business_management",
     });
 
     return NextResponse.redirect(

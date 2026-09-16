@@ -169,6 +169,7 @@ const FacebookCommentsSection = ({
         selected.comment.text,
         data?.username ? `@${data.username}` : 'el negocio',
         isLikelyNegative(selected.comment.text),
+        'facebook',
       );
       setDraft(text);
     } catch (e) {

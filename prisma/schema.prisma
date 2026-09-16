@@ -109,6 +109,7 @@ model Business {
   facebookUsername        String?   // username/handle de la página si existe
   facebookCacheAt         DateTime? // cuándo se guardó la última caché de comentarios
   facebookCache           Json?     // resultado de publicaciones+comentarios cacheado en BD
+  facebookPending         Json?     // páginas pendientes de elegir tras el OAuth (si administra varias)
   // ─────────────────────────────────────────────────
 
   @@unique([name, userId])

@@ -27,6 +27,7 @@ export async function GET(request: Request) {
         facebookUsername: null,
         facebookCacheAt: null,
         facebookCache: null,
+        facebookPending: null,
       },
     });
 

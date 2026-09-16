@@ -44,6 +44,29 @@
 >   `\n` final (corregido).
 > - **Places API:** no requiere OAuth ni usuarios de prueba (solo la API key de servidor).
 >   El login de la app es **email+contraseña** o **Facebook** (no hay login con Google).
+>
+> **Actualizado: 2026-09-16 — META / INSTAGRAM + FACEBOOK OPERATIVOS.**
+> - **App de Meta nueva:** `Revly ES` (App ID Facebook `2068655290396140`, App Secret rotado).
+>   La app antigua `1586509406537232` resultó ser la **app de Instagram** ("Revly ES-IG"), no la de Facebook.
+> - **Variables** (Vercel Production + `.env.local`):
+>   `META_CLIENT_ID=2068655290396140`, `META_CLIENT_SECRET=<nuevo>`,
+>   `META_INSTAGRAM_CLIENT_ID=1586509406537232`, `META_INSTAGRAM_CLIENT_SECRET=<antiguo>`,
+>   `META_WEBHOOK_VERIFY_TOKEN`.
+> - **Permisos Facebook válidos:** `public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_engagement,business_management`.
+>   ⚠️ `pages_manage_comments` y `email` **no** son válidos; `pages_manage_engagement` obliga a activar
+>   también `pages_read_user_content`. La app debe tener el dominio `revly.es` en *Dominios de la aplicación*.
+> - **Páginas de portfolio:** `/me/accounts` devuelve `[]` si la Página pertenece a un portfolio
+>   empresarial. Se resolvió con `business_management` + fallback `/me/businesses` → `/{business-id}/owned_pages`.
+> - **Instagram:** flujo *Instagram Login* operativo con las credenciales propias. El perfil se lee con
+>   `/me?fields=user_id,username,account_type` (no `/{user_id}`, que da "Unsupported get request").
+> - **Bugs corregidos:** los comentarios de Facebook no se leían (Meta no devuelve el `summary` y además
+>   `summary=total_count` iba mal dentro de `fields`); responder en Facebook usa `POST /{comment-id}/comments`
+>   (no `/replies`, que da "Unsupported post request").
+> - **Webhooks:** nueva ruta `/api/webhooks/meta` (verificación `hub.challenge` + firma HMAC + invalidación de caché).
+>   Se suscribe la Página con `/{page-id}/subscribed_apps`. La caché se invalida al responder/publicar.
+> - **Seguridad:** los token getters de Instagram/Facebook filtran por `userId` (IDOR corregido).
+> - **Migración:** `20260915000000_add_facebook_pending` (selección de Página si administra varias).
+> - **Estado:** Facebook e Instagram conectan, leen comentarios, responden con IA y publican en producción.
 
 ## Objetivo
 
@@ -365,5 +388,6 @@ Renueva el access token → obtiene y guarda `googleBusinessAccountId` → obtie
 - El login de la app es **email+contraseña** (Supabase) o **Facebook**; no hay login con Google.
 - Responder reseñas de Google desde el dashboard (`replyToGoogleReview`) **requiere** la cuota
   de la Business Profile API aprobada; hoy devuelve el error de cuota.
-- La app de **Meta** está pendiente de arreglar (ver arriba): hasta entonces Instagram/Facebook
-  no conectan. El flujo de Instagram usa `META_INSTAGRAM_CLIENT_ID`/`SECRET`.
+- **Meta (Facebook/Instagram) operativo** (2026-09-16): conectan, leen comentarios, responden con IA y publican.
+  Facebook usa `META_CLIENT_ID`/`SECRET` (app `Revly ES`) e Instagram `META_INSTAGRAM_CLIENT_ID`/`SECRET`
+  (app `Revly ES-IG`, ID `1586509406537232`). Webhook en `/api/webhooks/meta`.

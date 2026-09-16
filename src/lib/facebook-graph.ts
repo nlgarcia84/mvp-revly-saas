@@ -167,8 +167,7 @@ export async function getPostComments(
   accessToken: string,
   postId: string,
 ): Promise<FacebookComment[]> {
-  const fields =
-    "id,message,created_time,from{id,name},parent_id&summary=total_count";
+  const fields = "id,message,created_time,from{id,name},parent_id";
   const url = `${GRAPH_HOST}/${postId}/comments?fields=${encodeURIComponent(fields)}&limit=100&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url);
 
@@ -226,14 +225,15 @@ export async function getFacebookCommentsData(
 ): Promise<FacebookPost[]> {
   const posts = await getPagePosts(accessToken, pageId, limit);
 
+  // Consultamos SIEMPRE los comentarios de cada publicación.
+  // Antes se usaba `comments_count` (el summary de Meta) para
+  // saltarse la llamada, pero Meta no siempre devuelve ese
+  // summary, quedaba en 0 y los comentarios nunca se leían.
   const withComments = await Promise.all(
-    posts.map(async (p) => {
-      // Solo consultamos comentarios si la publicación tiene alguno
-      if ((p.comments_count ?? 0) > 0) {
-        return { ...p, comments: await getPostComments(accessToken, p.id) };
-      }
-      return { ...p, comments: [] };
-    }),
+    posts.map(async (p) => ({
+      ...p,
+      comments: await getPostComments(accessToken, p.id),
+    })),
   );
 
   return withComments;
@@ -246,7 +246,10 @@ export async function postFacebookCommentReply(
   message: string,
 ): Promise<{ ok: boolean; replyId?: string; error?: string }> {
   const safeMessage = message.slice(0, 1000);
-  const url = `${GRAPH_HOST}/${commentId}/replies?message=${encodeURIComponent(safeMessage)}&access_token=${encodeURIComponent(accessToken)}`;
+  // En Facebook las respuestas a un comentario se crean en
+  // el edge /comments (no en /replies, que da "Unsupported
+  // post request").
+  const url = `${GRAPH_HOST}/${commentId}/comments?message=${encodeURIComponent(safeMessage)}&access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url, { method: "POST" });
 
   if (!res.ok) {
@@ -297,6 +300,26 @@ export async function publishPagePhotoPost(
   return { ok: true, postId: data.id };
 }
 
+// ─── Suscribe la página a los webhooks de la app ─────
+// Sin esta llamada Meta no envía notificaciones (p. ej.
+// comentarios nuevos) a /api/webhooks/meta. Es opcional:
+// si falla, la app sigue funcionando con la caché.
+// ─────────────────────────────────────────────────────
+export async function subscribePageToWebhooks(
+  accessToken: string,
+  pageId: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const url = `${GRAPH_HOST}/${pageId}/subscribed_apps?subscribed_fields=feed&access_token=${encodeURIComponent(accessToken)}`;
+  const res = await fetch(url, { method: "POST" });
+
+  if (!res.ok) {
+    const body = await res.text();
+    return { ok: false, error: friendlyFacebookError(res.status, body) };
+  }
+
+  return { ok: true };
+}
+
 // ─── Lista las páginas que administra un token de usuario ─
 export async function getUserFacebookPages(
   accessToken: string,
@@ -326,4 +349,62 @@ export async function getUserFacebookPages(
       username: p.username ?? undefined,
       access_token: p.access_token!,
     }));
+}
+
+// ─── Páginas de los portfolios empresariales ─────────
+// /me/accounts NO devuelve las páginas que pertenecen a
+// un portfolio empresarial (Business Manager). Para esas
+// hay que listar /me/businesses y luego
+// /{business-id}/owned_pages. Requiere business_management.
+// ─────────────────────────────────────────────────────
+export async function getBusinessOwnedPages(
+  accessToken: string,
+): Promise<FacebookManagedPage[]> {
+  const bizUrl = `${GRAPH_HOST}/me/businesses?fields=id,name&access_token=${encodeURIComponent(accessToken)}`;
+  const bizRes = await fetch(bizUrl);
+  if (!bizRes.ok) {
+    console.error(
+      "[Facebook] Error listando businesses:",
+      await bizRes.text(),
+    );
+    return [];
+  }
+
+  const bizData = (await bizRes.json()) as {
+    data?: Array<{ id: string; name?: string }>;
+  };
+  const businesses = bizData?.data ?? [];
+
+  const pages: FacebookManagedPage[] = [];
+  for (const biz of businesses) {
+    const url = `${GRAPH_HOST}/${biz.id}/owned_pages?fields=id,name,username,access_token&limit=100&access_token=${encodeURIComponent(accessToken)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(
+        `[Facebook] Error owned_pages de ${biz.id}:`,
+        await res.text(),
+      );
+      continue;
+    }
+    const data = (await res.json()) as {
+      data?: Array<{
+        id: string;
+        name?: string;
+        username?: string;
+        access_token?: string;
+      }>;
+    };
+    for (const p of data?.data ?? []) {
+      if (p.access_token) {
+        pages.push({
+          id: p.id,
+          name: p.name ?? "",
+          username: p.username ?? undefined,
+          access_token: p.access_token,
+        });
+      }
+    }
+  }
+
+  return pages;
 }

@@ -202,7 +202,26 @@ NEXT_PUBLIC_APP_URL=          # http://localhost:3000 en desarrollo
 
 # IA
 GROQ_API_KEY=                 # Para generar respuestas a reseñas
+
+# Meta — Facebook Pages + Instagram (OAuth)
+META_CLIENT_ID=               # App ID de Facebook (Facebook Login / Pages)
+META_CLIENT_SECRET=           # App Secret de Facebook
+META_INSTAGRAM_CLIENT_ID=     # Instagram App ID (Instagram API with Instagram Login)
+META_INSTAGRAM_CLIENT_SECRET= # Instagram App Secret (Instagram API with Instagram Login)
+META_WEBHOOK_VERIFY_TOKEN=    # Token que definimos en Meta para verificar /api/webhooks/meta
 ```
+
+## Meta (Facebook + Instagram)
+
+La integración permite leer publicaciones y comentarios, responderlos con IA y publicar en la Página.
+
+- **Facebook:** OAuth con `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `pages_manage_engagement` y `business_management`. Este último es necesario para que `/me/accounts` devuelva páginas que pertenecen a un portfolio empresarial (si no, se usa el fallback `/me/businesses` → `owned_pages`).
+- **Instagram:** usa `META_INSTAGRAM_CLIENT_ID`/`SECRET` (Instagram Login), con los permisos `instagram_business_basic` e `instagram_business_manage_comments`. La cuenta debe ser profesional (Business/Creator).
+- **Redirect URIs** que hay que registrar en el panel de Meta:
+  - `https://www.revly.es/api/facebook/callback`
+  - `https://www.revly.es/api/instagram/callback`
+  - (y sus equivalentes en `http://localhost:3000` para desarrollo)
+- **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
 ## Pagos con Stripe — pruebas en local
 

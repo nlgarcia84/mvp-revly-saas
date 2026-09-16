@@ -1,7 +1,10 @@
 "use client";
 
 import { getBusinessProfileStatus } from "@/actions/google-reviews";
-import { getFacebookConnectionStatus } from "@/actions/facebook";
+import {
+  connectFacebookPage,
+  getFacebookConnectionStatus,
+} from "@/actions/facebook";
 import { getInstagramConnectionStatus } from "@/actions/instagram";
 import { nCard } from "@/components/ui/card";
 import { useCallback, useEffect, useState } from "react";
@@ -72,6 +75,8 @@ const SocialConnectionsSection = ({
   const [facebook, setFacebook] = useState<FacebookStatus | null>(null);
   const [instagram, setInstagram] = useState<InstagramStatus | null>(null);
   const [mask, setMask] = useState(false);
+  const [fbSelecting, setFbSelecting] = useState(false);
+  const [fbSelectError, setFbSelectError] = useState("");
 
   const load = useCallback(async () => {
     setMask(true);
@@ -93,6 +98,20 @@ const SocialConnectionsSection = ({
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleSelectFacebookPage = async (pageId: string) => {
+    setFbSelecting(true);
+    setFbSelectError("");
+    try {
+      await connectFacebookPage(businessId, pageId);
+      await load();
+    } catch (e) {
+      setFbSelectError(
+        e instanceof Error ? e.message : "No se pudo conectar la página",
+      );
+    }
+    setFbSelecting(false);
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -148,6 +167,37 @@ const SocialConnectionsSection = ({
                 className="text-xs text-red-400 hover:text-red-500 underline transition-colors w-fit cursor-pointer"
               >
                 Desconectar Facebook
+              </a>
+            </div>
+          ) : facebook.pendingPages && facebook.pendingPages.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-xs text-neutral-400">
+                Tu cuenta administra varias Páginas. Elige con cuál quieres
+                conectar Revly.
+              </p>
+              <div className="flex flex-col gap-2">
+                {facebook.pendingPages.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectFacebookPage(p.id)}
+                    disabled={fbSelecting}
+                    className="text-left text-xs px-3 py-2 rounded-md border border-neutral-200 dark:border-neutral-700 hover:border-blue-500 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <span className="font-medium">{p.name}</span>
+                    {p.username && (
+                      <span className="text-neutral-400"> · @{p.username}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {fbSelectError && (
+                <p className="text-xs text-red-500">{fbSelectError}</p>
+              )}
+              <a
+                href={`/api/facebook/connect?businessId=${businessId}`}
+                className="text-xs text-neutral-400 hover:text-neutral-600 underline w-fit cursor-pointer"
+              >
+                Volver a autenticar
               </a>
             </div>
           ) : (

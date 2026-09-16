@@ -7,7 +7,10 @@ import {
   uploadBusinessImage,
 } from "@/actions/business";
 import { getBusinessProfileStatus } from "@/actions/google-reviews";
-import { getFacebookConnectionStatus } from "@/actions/facebook";
+import {
+  connectFacebookPage,
+  getFacebookConnectionStatus,
+} from "@/actions/facebook";
 import { getInstagramConnectionStatus } from "@/actions/instagram";
 import { updateVerificationPin } from "@/actions/redeem";
 import {
@@ -64,7 +67,10 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     pageName?: string | null;
     expiresAt?: Date | string | null;
     expired?: boolean;
+    pendingPages?: { id: string; name: string; username: string | null }[];
   } | null>(null);
+  const [fbSelecting, setFbSelecting] = useState(false);
+  const [fbSelectError, setFbSelectError] = useState("");
   const [pin, setPin] = useState("");
   const [savingPin, setSavingPin] = useState(false);
   const [pinMsg, setPinMsg] = useState("");
@@ -82,7 +88,11 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     const igError = params.get("ig_error");
     const fbSuccess = params.get("fb_success");
     const fbError = params.get("fb_error");
-    if (success) {
+    const fbSelect = params.get("fb_select");
+    if (fbSelect) {
+      setMsg("Elige la Página de Facebook que quieres conectar.");
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (success) {
       setMsg(success);
       // Limpiamos la URL para que no se vea el parámetro
       window.history.replaceState({}, "", window.location.pathname);
@@ -126,13 +136,32 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [id]);
 
   // ── Comprueba si el negocio tiene Facebook conectado ──
+  const loadFbStatus = () => {
+    if (!id) return;
+    getFacebookConnectionStatus(id)
+      .then(setFbStatus)
+      .catch(() => setFbStatus(null));
+  };
+
   useEffect(() => {
-    if (id) {
-      getFacebookConnectionStatus(id)
-        .then(setFbStatus)
-        .catch(() => setFbStatus(null));
-    }
+    loadFbStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const handleSelectFacebookPage = async (pageId: string) => {
+    setFbSelecting(true);
+    setFbSelectError("");
+    try {
+      const res = await connectFacebookPage(id, pageId);
+      setMsg(`Conectado a Facebook (${res.pageName})`);
+      loadFbStatus();
+    } catch (e) {
+      setFbSelectError(
+        e instanceof Error ? e.message : "No se pudo conectar la página",
+      );
+    }
+    setFbSelecting(false);
+  };
 
   useEffect(() => {
     if (urlFound) {
@@ -852,6 +881,37 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
               Los comentarios de tus publicaciones se mostrarán en la página
               del negocio y podrás responderlos con IA y publicar contenido.
             </p>
+          </div>
+        ) : fbStatus.pendingPages && fbStatus.pendingPages.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-neutral-400">
+              Tu cuenta administra varias Páginas. Elige con cuál quieres
+              conectar Revly.
+            </p>
+            <div className="flex flex-col gap-2">
+              {fbStatus.pendingPages.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handleSelectFacebookPage(p.id)}
+                  disabled={fbSelecting}
+                  className="text-left text-xs px-3 py-2 rounded-md border border-neutral-200 dark:border-neutral-700 hover:border-blue-500 transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  <span className="font-medium">{p.name}</span>
+                  {p.username && (
+                    <span className="text-neutral-400"> · @{p.username}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {fbSelectError && (
+              <p className="text-xs text-red-500">{fbSelectError}</p>
+            )}
+            <a
+              href={`/api/facebook/connect?businessId=${id}`}
+              className="text-xs text-neutral-400 hover:text-neutral-600 underline w-fit cursor-pointer"
+            >
+              Volver a autenticar
+            </a>
           </div>
         ) : (
           <Button
