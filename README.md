@@ -7,7 +7,7 @@ Ayuda a negocios locales a conseguir más reseñas en Google, gestionar clientes
 - **Framework:** Next.js 16 (App Router)
 - **Lenguaje:** TypeScript 6
 - **Base de datos:** PostgreSQL via Prisma 7 + Supabase
-- **Autenticación:** Supabase Auth (email/password)
+- **Autenticación:** Supabase Auth (email/password, con **verificación de email** al crear cuenta)
 - **Pagos:** Stripe
 - **UI:** React 19
 - **Emails:** Resend
