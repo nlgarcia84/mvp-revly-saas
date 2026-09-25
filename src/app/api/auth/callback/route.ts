@@ -13,14 +13,21 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/dashboard';
 
+  // Usamos el host de la propia petición para no cambiar de dominio
+  // (www vs sin www): si redirigimos a otro host, las cookies de sesión
+  // no viajan y el middleware no ve la sesión.
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https';
+  const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : origin;
+
   if (!code) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || origin}/sign-in?error=oauth_missing_code`);
+    return NextResponse.redirect(`${requestOrigin}/sign-in?error=oauth_missing_code`);
   }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL || origin}/sign-in?error=${encodeURIComponent(error.message)}`);
+    return NextResponse.redirect(`${requestOrigin}/sign-in?error=${encodeURIComponent(error.message)}`);
   }
 
   // Aseguramos que el usuario exista en nuestra tabla User
@@ -54,6 +61,5 @@ export async function GET(request: Request) {
     }
   }
 
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || origin;
-  return NextResponse.redirect(`${APP_URL}${next}`);
+  return NextResponse.redirect(`${requestOrigin}${next}`);
 }
