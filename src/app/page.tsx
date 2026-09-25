@@ -293,7 +293,6 @@ const HomePage = () => {
           >
             ND Soft Labs
           </a>
-          <span className="hidden sm:block text-neutral-300 dark:text-neutral-700"></span>
           <div
             className="flex items-center gap-2.5"
             aria-label="Métodos de pago"
