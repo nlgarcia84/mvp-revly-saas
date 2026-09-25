@@ -1,7 +1,7 @@
 'use client';
 
 import { signUp, type ActionResult } from '@/actions/auth';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/button';
 import AuthBackground from '@/components/auth-background';
@@ -9,6 +9,15 @@ import BackButton from '@/components/back-button';
 
 const SignUpPage = () => {
   const [state, action, pending] = useActionState(signUp, null as ActionResult);
+
+  const [password, setPassword] = useState('');
+  const rules = {
+    length: password.length >= 10,
+    lower: /[a-z]/.test(password),
+    upper: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+  };
+  const passwordValid = Object.values(rules).every(Boolean);
 
   // Si el registro fue exitoso, mostramos la pantalla de verificación
   if (state && 'success' in state && state.success) {
@@ -82,17 +91,42 @@ const SignUpPage = () => {
                   name="password"
                   type="password"
                   required
-                  minLength={6}
+                  minLength={10}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 10 caracteres"
                 />
+                <ul className="mt-2 flex flex-col gap-0.5">
+                  {(
+                    [
+                      ['length', 'Al menos 10 caracteres'],
+                      ['upper', 'Una mayúscula'],
+                      ['lower', 'Una minúscula'],
+                      ['number', 'Un número'],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <li
+                      key={key}
+                      className={`text-xs transition-colors ${
+                        rules[key] ? 'text-green-400' : 'text-neutral-500'
+                      }`}
+                    >
+                      {rules[key] ? '✓' : '•'} {label}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {state && 'error' in state && state.error && (
                 <p className="text-sm text-red-400">{state.error}</p>
               )}
 
-              <Button type="submit" variant="secondary" disabled={pending}>
+              <Button
+                type="submit"
+                variant="secondary"
+                disabled={pending || !passwordValid}
+              >
                 {pending ? 'Creando cuenta...' : 'Crear cuenta'}
               </Button>
             </form>
