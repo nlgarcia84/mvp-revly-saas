@@ -32,10 +32,15 @@ export const signUp = async (
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
+  const confirmPassword = formData.get("confirmPassword") as string;
 
   // ──────────────────────────────────────────────
   // SUPABASE: crea el usuario en Supabase Auth
   // ──────────────────────────────────────────────
+
+  if (password !== confirmPassword) {
+    return { error: "Las contraseñas no coinciden." };
+  }
 
   const supabase = await createClient();
 

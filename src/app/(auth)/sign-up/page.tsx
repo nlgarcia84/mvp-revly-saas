@@ -1,26 +1,28 @@
-'use client';
+"use client";
 
-import { signUp, type ActionResult } from '@/actions/auth';
-import { useActionState, useState } from 'react';
-import Link from 'next/link';
-import Button from '@/components/ui/button';
-import AuthBackground from '@/components/auth-background';
-import BackButton from '@/components/back-button';
+import { signUp, type ActionResult } from "@/actions/auth";
+import { useActionState, useState } from "react";
+import Link from "next/link";
+import Button from "@/components/ui/button";
+import AuthBackground from "@/components/auth-background";
+import BackButton from "@/components/back-button";
 
 const SignUpPage = () => {
   const [state, action, pending] = useActionState(signUp, null as ActionResult);
 
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+
   const rules = {
     length: password.length >= 10,
     lower: /[a-z]/.test(password),
     upper: /[A-Z]/.test(password),
     number: /[0-9]/.test(password),
   };
-  const passwordValid = Object.values(rules).every(Boolean);
-
+  const match = confirm.length > 0 && password === confirm;
+  const passwordValid = Object.values(rules).every(Boolean) && match;
   // Si el registro fue exitoso, mostramos la pantalla de verificación
-  if (state && 'success' in state && state.success) {
+  if (state && "success" in state && state.success) {
     return (
       <AuthBackground>
         <div className="w-full max-w-[360px] flex flex-col items-center gap-8">
@@ -29,10 +31,12 @@ const SignUpPage = () => {
           </div>
           <span className="text-lg font-semibold text-white">Revly</span>
           <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7 text-center">
-            <h1 className="text-lg font-semibold text-white mb-1">Revisa tu email</h1>
+            <h1 className="text-lg font-semibold text-white mb-1">
+              Revisa tu email
+            </h1>
             <p className="text-sm text-neutral-400 mb-6">
-              Te enviamos un enlace de confirmación. Revisa tu bandeja de entrada
-              (y la carpeta de spam) para activar tu cuenta.
+              Te enviamos un enlace de confirmación. Revisa tu bandeja de
+              entrada (y la carpeta de spam) para activar tu cuenta.
             </p>
             <Button as="link" variant="secondary" href="/sign-in">
               Ir a iniciar sesión
@@ -52,9 +56,15 @@ const SignUpPage = () => {
         <span className="text-lg font-semibold text-white">Revly</span>
 
         <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7 relative overflow-hidden">
-          <div className={`transition-all duration-300 ${pending ? 'opacity-0 scale-95 pointer-events-none' : ''}`}>
-            <h1 className="text-lg font-semibold text-white mb-1">Crear cuenta</h1>
-            <p className="text-sm text-neutral-400 mb-6">Empieza a gestionar tus reseñas</p>
+          <div
+            className={`transition-all duration-300 ${pending ? "opacity-0 scale-95 pointer-events-none" : ""}`}
+          >
+            <h1 className="text-lg font-semibold text-white mb-1">
+              Crear cuenta
+            </h1>
+            <p className="text-sm text-neutral-400 mb-6">
+              Empieza a gestionar tus reseñas
+            </p>
 
             <form action={action} className="flex flex-col gap-4">
               <div>
@@ -100,25 +110,45 @@ const SignUpPage = () => {
                 <ul className="mt-2 flex flex-col gap-0.5">
                   {(
                     [
-                      ['length', 'Al menos 10 caracteres'],
-                      ['upper', 'Una mayúscula'],
-                      ['lower', 'Una minúscula'],
-                      ['number', 'Un número'],
+                      ["length", "Al menos 10 caracteres"],
+                      ["upper", "Una mayúscula"],
+                      ["lower", "Una minúscula"],
+                      ["number", "Un número"],
                     ] as const
                   ).map(([key, label]) => (
                     <li
                       key={key}
                       className={`text-xs transition-colors ${
-                        rules[key] ? 'text-green-400' : 'text-neutral-500'
+                        rules[key] ? "text-green-400" : "text-neutral-500"
                       }`}
                     >
-                      {rules[key] ? '✓' : '•'} {label}
+                      {rules[key] ? "✓" : "•"} {label}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {state && 'error' in state && state.error && (
+              <div>
+                <label className="block text-xs font-medium mb-1.5 text-neutral-400">
+                  Confirmar contraseña
+                </label>
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="w-full px-3 py-2 border border-neutral-700 rounded-lg text-sm text-white bg-transparent outline-none transition-all duration-150 focus:border-white/30 focus:shadow-[0_0_0_1px_rgba(255,255,255,0.1)] placeholder:text-neutral-500"
+                  placeholder="Repite la contraseña"
+                />
+                {confirm.length > 0 && !match && (
+                  <p className="text-xs text-red-400 mt-1">
+                    Las contraseñas no coinciden
+                  </p>
+                )}
+              </div>
+
+              {state && "error" in state && state.error && (
                 <p className="text-sm text-red-400">{state.error}</p>
               )}
 
@@ -127,13 +157,16 @@ const SignUpPage = () => {
                 variant="secondary"
                 disabled={pending || !passwordValid}
               >
-                {pending ? 'Creando cuenta...' : 'Crear cuenta'}
+                {pending ? "Creando cuenta..." : "Crear cuenta"}
               </Button>
             </form>
 
             <p className="text-xs text-neutral-500 text-center mt-6">
-              ¿Ya tienes cuenta?{' '}
-              <Link href="/sign-in" className="text-white font-medium hover:underline">
+              ¿Ya tienes cuenta?{" "}
+              <Link
+                href="/sign-in"
+                className="text-white font-medium hover:underline"
+              >
                 Inicia sesión
               </Link>
             </p>
@@ -142,11 +175,28 @@ const SignUpPage = () => {
           {pending && (
             <div className="absolute inset-0 flex items-center justify-center animate-fade-slide-in">
               <div className="flex flex-col items-center gap-3">
-                <svg className="w-6 h-6 text-white animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg
+                  className="w-6 h-6 text-white animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
                 </svg>
-                <span className="text-sm text-neutral-400">Creando cuenta...</span>
+                <span className="text-sm text-neutral-400">
+                  Creando cuenta...
+                </span>
               </div>
             </div>
           )}
