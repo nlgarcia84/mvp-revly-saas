@@ -51,23 +51,40 @@ export const signUp = async (
   // para que useActionState lo muestre en el formulario.
   // NO usamos throw porque useActionState no lo captura.
   if (error) {
-    const mensajes: Record<string, string> = {
-      weak_password:
-        "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.",
-      email_exists: "Ya existe una cuenta con ese email.",
-      signup_disabled: "El registro está deshabilitado temporalmente.",
-      validation_failed:
-        "Revisa los datos: el email o la contraseña no son válidos.",
-    };
+    const msg = (error.message || "").toLowerCase();
+    const code = (error as { code?: string }).code;
 
-    // 1º por código (más fiable), 2º por mensaje, 3º el original
-    const traducido =
-      (error.code && mensajes[error.code]) ||
-      (error.message.includes("at least") && mensajes.weak_password) ||
-      (error.message.includes("already registered") && mensajes.email_exists) ||
-      (error.message.includes("Signups not allowed") &&
-        mensajes.signup_disabled) ||
-      error.message;
+    // Priorizamos detectar la contraseña por el mensaje, porque Supabase
+    // puede devolver el código genérico "validation_failed" para una
+    // contraseña demasiado corta (en vez de "weak_password").
+    let traducido = error.message;
+
+    if (msg.includes("password")) {
+      if (
+        msg.includes("at least") ||
+        msg.includes("characters") ||
+        msg.includes("length")
+      ) {
+        traducido =
+          "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.";
+      } else {
+        traducido =
+          "La contraseña es demasiado débil. Usa mayúsculas, minúsculas, números y símbolos.";
+      }
+    } else if (
+      code === "email_exists" ||
+      msg.includes("already registered") ||
+      msg.includes("already been registered")
+    ) {
+      traducido = "Ya existe una cuenta con ese email.";
+    } else if (
+      code === "signup_disabled" ||
+      msg.includes("signups not allowed")
+    ) {
+      traducido = "El registro está deshabilitado temporalmente.";
+    } else if (code === "validation_failed") {
+      traducido = "Revisa los datos: el email o la contraseña no son válidos.";
+    }
 
     return { error: traducido };
   }
