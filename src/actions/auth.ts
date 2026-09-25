@@ -1,18 +1,18 @@
-'use server';
+"use server";
 // ↑ Esta directiva indica que TODAS las funciones de este archivo
 //   son Server Actions. Se ejecutan en el servidor, no en el navegador.
 //   Pueden leer BD, hacer redirect, etc. sin exponer lógica al cliente.
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 //   createClient: función que crea un cliente de Supabase configurado
 //   para usar cookies HTTP (sesión persistente entre peticiones).
 //   Se usa en Server Components y Server Actions.
 
-import prisma from '@/lib/db';
+import prisma from "@/lib/db";
 //   prisma: instancia del ORM Prisma conectada a PostgreSQL.
 //   Con ella hacemos consultas a nuestras tablas (User, Business, Customer).
 
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 //   redirect: función de Next.js para redirigir al navegador a otra ruta.
 //   Solo funciona en Server Components / Server Actions.
 
@@ -29,9 +29,9 @@ export const signUp = async (
   // _prevState: estado anterior devuelto por useActionState (se ignora).
   // formData: datos del formulario (<input name="email"> → formData.get('email')).
 
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const name = formData.get('name') as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const name = formData.get("name") as string;
 
   // ──────────────────────────────────────────────
   // SUPABASE: crea el usuario en Supabase Auth
@@ -51,7 +51,25 @@ export const signUp = async (
   // para que useActionState lo muestre en el formulario.
   // NO usamos throw porque useActionState no lo captura.
   if (error) {
-    return { error: error.message };
+    const mensajes: Record<string, string> = {
+      weak_password:
+        "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.",
+      email_exists: "Ya existe una cuenta con ese email.",
+      signup_disabled: "El registro está deshabilitado temporalmente.",
+      validation_failed:
+        "Revisa los datos: el email o la contraseña no son válidos.",
+    };
+
+    // 1º por código (más fiable), 2º por mensaje, 3º el original
+    const traducido =
+      (error.code && mensajes[error.code]) ||
+      (error.message.includes("at least") && mensajes.weak_password) ||
+      (error.message.includes("already registered") && mensajes.email_exists) ||
+      (error.message.includes("Signups not allowed") &&
+        mensajes.signup_disabled) ||
+      error.message;
+
+    return { error: traducido };
   }
 
   // ──────────────────────────────────────────────
@@ -68,11 +86,13 @@ export const signUp = async (
 
     await prisma.user.create({
       data: {
-        id: data.user.id, email, name,
+        id: data.user.id,
+        email,
+        name,
         subscription: {
           create: {
-            plan: 'free',
-            status: 'active',
+            plan: "free",
+            status: "active",
             trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           },
         },
@@ -84,7 +104,7 @@ export const signUp = async (
   // redirigimos al dashboard directamente.
   // Si no, mostramos pantalla "Revisa tu email".
   if (data.session) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
 
   return { success: true };
@@ -102,8 +122,8 @@ export const signIn = async (
   _prevState: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> => {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   // ──────────────────────────────────────────────
   // SUPABASE: verifica credenciales y crea sesión
@@ -122,7 +142,7 @@ export const signIn = async (
     return { error: error.message };
   }
 
-  redirect('/dashboard');
+  redirect("/dashboard");
 };
 
 // ════════════════════════════════════════════════════════════════════
@@ -140,19 +160,23 @@ export const signIn = async (
 // ════════════════════════════════════════════════════════════════════
 export const getProfile = async () => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const userId = session?.user?.id;
   if (!userId) return null;
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return null;
-  return { name: user.name ?? '', email: user.email };
+  return { name: user.name ?? "", email: user.email };
 };
 
 export const updateProfileName = async (name: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const userId = session?.user?.id;
-  if (!userId) throw new Error('No autenticado');
+  if (!userId) throw new Error("No autenticado");
 
   await prisma.user.update({
     where: { id: userId },
@@ -177,5 +201,5 @@ export const signOut = async () => {
   await supabase.auth.signOut();
 
   // Redirige a la página de inicio de sesión
-  redirect('/sign-in');
+  redirect("/sign-in");
 };
