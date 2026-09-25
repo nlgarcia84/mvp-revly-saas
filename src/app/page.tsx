@@ -280,8 +280,16 @@ const HomePage = () => {
         </div>
         <div className="border-t border-neutral-200 dark:border-neutral-800 py-5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-4">
           <p className="text-xs text-neutral-400">
-            &copy; {new Date().getFullYear()} Revly. Todos los derechos
-            reservados.
+            &copy; {new Date().getFullYear()} Revly. Sitio web desarrollado por{" "}
+            <a
+              href="https://ndsoftlabs.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+            >
+              ND Soft Labs
+            </a>
+            .
           </p>
           <span className="hidden sm:block text-neutral-300 dark:text-neutral-700">
             ·
