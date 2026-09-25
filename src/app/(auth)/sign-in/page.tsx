@@ -60,7 +60,7 @@ const SignInPage = () => {
 
         <div className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-7 relative overflow-hidden">
           <div
-            className={`transition-all duration-300 ${pending ? "opacity-0 scale-95 pointer-events-none" : ""}`}
+            className={`transition-all duration-300 ${pending || googlePending ? "opacity-0 scale-95 pointer-events-none" : ""}`}
           >
             <h1 className="text-lg font-semibold text-white mb-1">
               Iniciar sesión
@@ -101,7 +101,7 @@ const SignInPage = () => {
               )}
 
               <Button type="submit" variant="secondary" disabled={pending}>
-                {pending || googlePending ? "Entrando..." : "Iniciar sesión"}
+                {pending ? "Entrando..." : "Iniciar sesión"}
               </Button>
             </form>
 
@@ -120,9 +120,7 @@ const SignInPage = () => {
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-neutral-700 text-sm text-white hover:border-white/30 transition-all duration-150 disabled:opacity-50 cursor-pointer"
             >
               <GoogleIcon />
-              {pending || googlePending
-                ? "Redirigiendo..."
-                : "Continuar con Google"}
+              {googlePending ? "Redirigiendo..." : "Continuar con Google"}
             </button>
 
             <p className="text-xs text-neutral-500 text-center mt-6">
@@ -136,7 +134,7 @@ const SignInPage = () => {
             </p>
           </div>
 
-          {pending && (
+          {(pending || googlePending) && (
             <div className="absolute inset-0 flex items-center justify-center animate-fade-slide-in">
               <div className="flex flex-col items-center gap-3">
                 <svg
