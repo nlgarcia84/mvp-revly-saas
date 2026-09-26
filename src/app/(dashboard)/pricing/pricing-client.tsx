@@ -18,7 +18,6 @@ const plans = [
       'Gestión de clientes con filtros',
       'Sistema de puntos y descuentos',
       'Canje en caja con QR + PIN',
-      'Facturas para sumar puntos',
       'Reseñas de Google (últimas 5)',
       'Invitaciones por email y WhatsApp',
       'Analítica básica',

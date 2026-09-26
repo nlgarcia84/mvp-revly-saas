@@ -1,6 +1,5 @@
 import { getPublicCustomer } from '@/actions/customers';
-import { claimInvoice } from '@/actions/invoices';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
 import Button from '@/components/ui/button';
 import QRCode from 'qrcode';
@@ -23,22 +22,15 @@ import QRCode from 'qrcode';
 // El empleado escanea ese QR con la cámara de su móvil
 // para verificar y canjear el descuento en caja.
 //
-// También incluye el flujo de canje de facturas:
-//   El cliente introduce el número de factura (dado de alta
-//   por el negocio) y suma 1 punto por cada factura válida.
-//
 // No requiere autenticación. Es una página pública para
 // que el cliente pueda consultar sus puntos desde casa.
 // ─────────────────────────────────────────────────────
 const CustomerProfilePage = async ({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string; customerId: string }>;
-  searchParams: Promise<{ invoice?: string; invoiceError?: string }>;
 }) => {
   const { slug, customerId } = await params;
-  const { invoice, invoiceError } = await searchParams;
   const customer = await getPublicCustomer(customerId, slug);
 
   if (!customer) {
@@ -58,7 +50,6 @@ const CustomerProfilePage = async ({
     qrSvg = await QRCode.toString(verifyUrl, { type: 'svg', margin: 1, width: 200 });
   }
 
-  const invoicePlaceholder = (customer as any).invoiceFormat || 'Nº de factura';
   const puntos = customer.points;
   const descuentosConseguidos = Math.floor(puntos / 5);
   const puntosSiguiente = 5 - (puntos % 5);
@@ -152,54 +143,6 @@ const CustomerProfilePage = async ({
             </p>
           </div>
         )}
-
-        {/* ── Tarjeta: Sumar puntos con factura ───────── */}
-        {/* El cliente escribe el número de factura (dado de alta
-            por el negocio en su dashboard) y gana 1 punto extra.
-            El placeholder se adapta al formato que el negocio
-            configuró en Settings (ej: "FACT-001"). */}
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-          <h2 className="text-sm font-semibold mb-1">Sumar puntos con una factura</h2>
-          <p className="text-xs text-neutral-400 mb-3">
-            Si has comprado en el negocio, introduce el número de tu factura para ganar 1 punto extra
-          </p>
-
-          {invoice && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-3">
-              ¡Has ganado 1 punto! 🎉
-            </p>
-          )}
-          {invoiceError && (
-            <p className="text-sm text-red-500 mb-3">{invoiceError}</p>
-          )}
-
-          <form
-            action={async (formData: FormData) => {
-              'use server';
-              const number = formData.get('invoice') as string;
-              if (!number) redirect(`/${slug}/customer/${customerId}?invoiceError=Número de factura requerido`);
-              try {
-                await claimInvoice(customerId, slug, number);
-                redirect(`/${slug}/customer/${customerId}?invoice=1`);
-              } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Error al canjear factura';
-                redirect(`/${slug}/customer/${customerId}?invoiceError=${encodeURIComponent(msg)}`);
-              }
-            }}
-            className="flex gap-2"
-          >
-            <input
-              name="invoice"
-              type="text"
-              required
-              placeholder={invoicePlaceholder}
-              className="flex-1 min-w-0 px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
-            />
-            <Button type="submit" variant="secondary">
-              Canjear
-            </Button>
-          </form>
-        </div>
 
         {/* ── Enlace para volver al inicio ──────────── */}
         <div className="text-center pb-8">

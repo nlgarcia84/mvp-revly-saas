@@ -76,7 +76,7 @@ const HomePage = () => {
               Consigue más reseñas de Google con IA
             </h1>
             <p className="text-sm sm:text-base md:text-lg lg:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed mb-8 max-w-2xl mx-auto md:mx-0 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
-              Automatiza solicitudes de reseña por QR, email y factura. Responde
+              Automatiza solicitudes de reseña por QR y email. Responde
               con inteligencia artificial y construye una reputación online
               imparable.
             </p>
@@ -125,7 +125,7 @@ const HomePage = () => {
                 <Sparkles className="w-6 h-6 text-black dark:text-white mb-4" />
                 <LandingCardTitle>Solicitudes automatizadas</LandingCardTitle>
                 <LandingCardDescription>
-                  QR, email o factura. Solicita reseñas en el momento justo sin
+                  QR y email. Solicita reseñas en el momento justo sin
                   esfuerzo manual.
                 </LandingCardDescription>
               </LandingCardHeader>

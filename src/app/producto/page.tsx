@@ -15,7 +15,7 @@ const productSections = [
     description:
       'Gestiona reseñas, responde con IA y convierte cada interacción en una oportunidad de crecimiento.',
     bullets: [
-      'Solicitudes automáticas por QR, email y factura.',
+      'Solicitudes automáticas por QR y email.',
       'Respuestas inteligentes a reseñas en segundos.',
       'Panel simple para supervisar el rendimiento y la reputación.',
     ],

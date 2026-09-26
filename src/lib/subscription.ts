@@ -14,7 +14,6 @@ const PLANS = {
     stripePriceId: null,
     features: [
       'qr-points',
-      'invoice-claims',
       'cashier-qr-pin',
       'google-places-reviews',
       'manual-customers',
@@ -30,7 +29,6 @@ const PLANS = {
     stripePriceId: 'price_1U1WfmR8J40peD82mTLBUosR',
     features: [
       'qr-points',
-      'invoice-claims',
       'cashier-qr-pin',
       'google-places-reviews',
       'manual-customers',
@@ -49,7 +47,6 @@ const PLANS = {
     stripePriceId: 'price_1U1WhkR8J40peD825bfelw3g',
     features: [
       'qr-points',
-      'invoice-claims',
       'cashier-qr-pin',
       'google-places-reviews',
       'manual-customers',
