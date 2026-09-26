@@ -31,6 +31,13 @@ export const claimTicketPoint = async (
     return { success: false as const, error: 'Cliente no encontrado' };
   }
 
+  if (customer.points >= 10) {
+    return {
+      success: false as const,
+      error: 'Ya tienes el máximo de 10 puntos. Canjea tu descuento.',
+    };
+  }
+
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -78,15 +85,19 @@ export const claimTicketPoint = async (
   ]);
 
   // Aviso de descuento conseguido (solo si llega a un hito de 5 puntos).
-  await notifyCustomerDiscount({
-    name: customer.name,
-    email: customer.email,
-    phone: customer.phone,
-    whatsappOptIn: customer.whatsappOptIn,
-    businessName: customer.business.name,
-    points: updatedPoints,
-    discountCode: customer.discountCode,
-  });
+  try {
+    await notifyCustomerDiscount({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      whatsappOptIn: customer.whatsappOptIn,
+      businessName: customer.business.name,
+      points: updatedPoints,
+      discountCode: customer.discountCode,
+    });
+  } catch (notifError) {
+    console.error('Error notificando descuento:', notifError);
+  }
 
   return { success: true as const, points: updatedPoints };
 };
@@ -101,10 +112,26 @@ export const addPointToCustomer = async (customerId: string) => {
 
   const customer = await prisma.customer.findFirst({
     where: { id: customerId, business: { userId: user.id } },
-    include: { business: { select: { name: true } } },
+    select: {
+      id: true, name: true, email: true, phone: true,
+      whatsappOptIn: true, points: true,
+      discountCode: true,
+      business: { select: { name: true } },
+    },
   });
   if (!customer) {
     return { success: false as const, error: 'Cliente no encontrado' };
+  }
+
+  if (customer.points == null) {
+    return { success: false as const, error: 'Puntos no disponibles' };
+  }
+
+  if (customer.points >= 10) {
+    return {
+      success: false as const,
+      error: 'Ya tienes el máximo de 10 puntos. Canjea tu descuento.',
+    };
   }
 
   const updatedPoints = customer.points + 1;
@@ -114,15 +141,19 @@ export const addPointToCustomer = async (customerId: string) => {
     data: { points: { increment: 1 } },
   });
 
-  await notifyCustomerDiscount({
-    name: customer.name,
-    email: customer.email,
-    phone: customer.phone,
-    whatsappOptIn: customer.whatsappOptIn,
-    businessName: customer.business.name,
-    points: updatedPoints,
-    discountCode: customer.discountCode,
-  });
+  try {
+    await notifyCustomerDiscount({
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      whatsappOptIn: customer.whatsappOptIn,
+      businessName: customer.business.name,
+      points: updatedPoints,
+      discountCode: customer.discountCode,
+    });
+  } catch (notifError) {
+    console.error('Error notificando descuento:', notifError);
+  }
 
   return { success: true as const, points: updatedPoints };
 };
@@ -161,8 +192,8 @@ export const setCustomerPoints = async (customerId: string, points: number) => {
   if (!user) return { success: false as const, error: 'No autenticado' };
 
   const value = Math.floor(points);
-  if (!Number.isFinite(value) || value < 0) {
-    return { success: false as const, error: 'Valor de puntos no válido' };
+  if (!Number.isFinite(value) || value < 0 || value > 10) {
+    return { success: false as const, error: 'Valor de puntos no válido (0-10)' };
   }
 
   const customer = await prisma.customer.findFirst({

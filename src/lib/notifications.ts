@@ -25,6 +25,7 @@ function emailLayout(title: string, body: string): string {
 
 // Avisa al cliente de que se ha registrado (solo email; WhatsApp no, para no
 // ser intrusivos en el onboarding).
+// Lanza un error si el email no pudo enviarse.
 export async function notifyCustomerRegistered({
   name,
   email,
@@ -40,26 +41,31 @@ export async function notifyCustomerRegistered({
 }) {
   const displayName = name || 'cliente';
 
-  await sendEmail({
+  const sent = await sendEmail({
     to: email,
     subject: `¡Bienvenido/a a ${businessName}!`,
     html: emailLayout(
       `¡Hola, ${displayName}!`,
       `<p>Te has registrado en el programa de puntos de <strong>${businessName}</strong>.</p>
-       <p>Ya tienes <strong>${points} punto${points !== 1 ? 's' : ''}</strong>. Cada 5 puntos consigues un 10% de descuento.</p>
-       ${
-         discountCode
-           ? `<p>Tu código de descuento es:</p>
-              <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>
-              <p>Muéstralo o dítalo en caja cuando quieras canjearlo.</p>`
-           : ''
-       }`,
+        <p>Ya tienes <strong>${points} punto${points !== 1 ? 's' : ''}</strong>. Cada 5 puntos consigues un 10% de descuento.</p>
+        ${
+          discountCode
+            ? `<p>Tu código de descuento es:</p>
+               <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>
+               <p>Muéstralo o dítalo en caja cuando quieras canjearlo.</p>`
+            : ''
+        }`,
     ),
   });
+
+  if (!sent) {
+    throw new Error('No se pudo enviar el email de bienvenida.');
+  }
 }
 
 // Avisa al cliente de que ha conseguido un descuento (hito: 5, 10, 15… puntos).
 // Solo se envía en esos hitos, no en cada punto. Email siempre; WhatsApp si opt-in.
+// Lanza un error si ninguna notificación pudo enviarse.
 export async function notifyCustomerDiscount({
   name,
   email,
@@ -89,14 +95,14 @@ export async function notifyCustomerDiscount({
       html: emailLayout(
         `¡Enhorabuena, ${displayName}!`,
         `<p>Has conseguido un <strong>10% de descuento</strong> en <strong>${businessName}</strong>.</p>
-         <p>Ya tienes <strong>${points} puntos</strong>.</p>
-         ${
-           discountCode
-             ? `<p>Tu código de descuento es:</p>
-                <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>`
-             : ''
-         }
-         <p>Muéstralo o dítalo en caja para canjearlo.</p>`,
+          <p>Ya tienes <strong>${points} puntos</strong>.</p>
+          ${
+            discountCode
+              ? `<p>Tu código de descuento es:</p>
+                 <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>`
+              : ''
+          }
+          <p>Muéstralo o dítalo en caja para canjearlo.</p>`,
       ),
     }),
   ];
@@ -111,7 +117,14 @@ export async function notifyCustomerDiscount({
     );
   }
 
-  await Promise.all(tasks);
+  const results = await Promise.all(tasks);
+
+  const allSent = results.every(Boolean);
+  if (!allSent) {
+    throw new Error(
+      'No se pudo enviar la notificación de descuento. Revisar configuración de email/WhatsApp.',
+    );
+  }
 }
 
 // Programa el email de invitación a reseñar para el día siguiente (solo email).

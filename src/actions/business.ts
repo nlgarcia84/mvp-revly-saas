@@ -132,14 +132,19 @@ export const addPublicCustomer = async (data: {
     },
   });
 
-  // Aviso de bienvenida por email + WhatsApp (si están configurados).
-  await notifyCustomerRegistered({
-    name: customer.name,
-    email: customer.email,
-    businessName: business.name,
-    points: customer.points,
-    discountCode: customer.discountCode,
-  });
+  // Aviso de bienvenida por email (si está configurado).
+  // No rompe el registro si el email falla.
+  try {
+    await notifyCustomerRegistered({
+      name: customer.name,
+      email: customer.email,
+      businessName: business.name,
+      points: customer.points,
+      discountCode: customer.discountCode,
+    });
+  } catch (notifError) {
+    console.error('Error notificando registro:', notifError);
+  }
 
   // Programa la petición de reseña para el día siguiente.
   await scheduleReviewRequest({
