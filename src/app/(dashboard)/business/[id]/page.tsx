@@ -11,6 +11,7 @@ import {
   deleteSelectedCustomers,
   getCustomers,
 } from "@/actions/customers";
+import { addPointToCustomer } from "@/actions/points";
 import { redeemDiscountCodeInDashboard } from "@/actions/redeem";
 import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
@@ -157,6 +158,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [csvResult, setCsvResult] = useState("");
   const [features, setFeatures] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [addingPointId, setAddingPointId] = useState<string | null>(null);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState("");
@@ -179,6 +181,21 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   useEffect(() => {
     load();
   }, [id, load]);
+
+  const handleAddPoint = async (customerId: string) => {
+    setAddingPointId(customerId);
+    const result = await addPointToCustomer(customerId);
+    if (result.success) {
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === customerId ? { ...c, points: result.points } : c,
+        ),
+      );
+    } else {
+      alert(result.error);
+    }
+    setAddingPointId(null);
+  };
 
   const handleRedeem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -753,6 +770,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         className="flex items-center gap-1.5 sm:gap-3"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        <Button
+                          variant="secondary"
+                          className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                          onClick={() => handleAddPoint(c.id)}
+                          disabled={addingPointId === c.id}
+                          title="Sumar 1 punto manualmente"
+                        >
+                          {addingPointId === c.id ? "..." : "+1 punto"}
+                        </Button>
                         {c.status !== "completed" && (
                           <Button
                             variant="primary"

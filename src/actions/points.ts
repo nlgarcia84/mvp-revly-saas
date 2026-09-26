@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/db';
+import { createClient } from '@/lib/supabase/server';
 import { notifyCustomerPoints } from '@/lib/notifications';
 
 // Suma 1 punto canjeando el código del ticket del kiosko.
@@ -77,6 +78,42 @@ export const claimTicketPoint = async (
   ]);
 
   // Aviso del nuevo punto por email + WhatsApp (si están configurados).
+  await notifyCustomerPoints({
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    whatsappOptIn: customer.whatsappOptIn,
+    businessName: customer.business.name,
+    points: updatedPoints,
+    discountCode: customer.discountCode,
+  });
+
+  return { success: true as const, points: updatedPoints };
+};
+
+// Suma 1 punto manualmente desde el dashboard (el empleado lo confirma en caja).
+export const addPointToCustomer = async (customerId: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false as const, error: 'No autenticado' };
+
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, business: { userId: user.id } },
+    include: { business: { select: { name: true } } },
+  });
+  if (!customer) {
+    return { success: false as const, error: 'Cliente no encontrado' };
+  }
+
+  const updatedPoints = customer.points + 1;
+
+  await prisma.customer.update({
+    where: { id: customerId },
+    data: { points: { increment: 1 } },
+  });
+
   await notifyCustomerPoints({
     name: customer.name,
     email: customer.email,
