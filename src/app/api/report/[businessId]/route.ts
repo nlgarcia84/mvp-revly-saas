@@ -9,8 +9,8 @@ export async function GET(
 
   // Verifica autenticación y que el negocio pertenezca al usuario
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) {
     return new Response('No autenticado', { status: 401 });
   }

@@ -121,8 +121,8 @@ export const updateVerificationPin = async (
   pin: string,
 ) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({

@@ -4,8 +4,8 @@ import PricingClient from './pricing-client';
 
 export default async function PricingPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   const planData = await getPlan(userId);
 
   return <PricingClient planData={planData} />;

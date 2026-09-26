@@ -183,9 +183,9 @@ export const signIn = async (
 export const getProfile = async () => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  const userId = authUser?.id;
   if (!userId) return null;
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return null;
@@ -195,9 +195,9 @@ export const getProfile = async () => {
 export const updateProfileName = async (name: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id;
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id;
   if (!userId) throw new Error("No autenticado");
 
   await prisma.user.update({

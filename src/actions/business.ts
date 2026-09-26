@@ -50,8 +50,8 @@ async function generateSlug(name: string): Promise<string> {
 // ──────────────────────────────────────────────
 async function getUserId(): Promise<string> {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  return user?.id ?? '';
 }
 
 // ──────────────────────────────────────────────

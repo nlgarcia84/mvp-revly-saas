@@ -96,9 +96,9 @@ async function getValidFacebookToken(
 export const getBusinessFacebookData = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const conn = await getValidFacebookToken(businessId, userId);
@@ -153,9 +153,9 @@ export const getBusinessFacebookData = async (businessId: string) => {
 export const getFacebookConnectionStatus = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -196,9 +196,9 @@ export const connectFacebookPage = async (
 ) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -258,9 +258,9 @@ export const replyToFacebookComment = async (
 ) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const conn = await getValidFacebookToken(businessId, userId);
@@ -294,9 +294,9 @@ export const publishToFacebookPage = async (
 ) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const conn = await getValidFacebookToken(businessId, userId);

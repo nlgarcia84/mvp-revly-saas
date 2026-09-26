@@ -6,8 +6,8 @@ import prisma from "@/lib/db";
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id ?? "";
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id ?? "";
     if (!userId) return NextResponse.redirect(new URL("/sign-in", request.url));
 
     const { searchParams } = new URL(request.url);

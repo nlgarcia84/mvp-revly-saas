@@ -18,13 +18,13 @@ const iconColor: Record<string, string> = {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  const userId = authUser?.id ?? '';
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { subscription: true },
   });
-  const name = user?.name || session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '';
+  const name = user?.name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || '';
   const planData = await getPlan(userId);
   const plan = planData.plan;
   const trialDaysLeft = planData.trialDaysLeft;

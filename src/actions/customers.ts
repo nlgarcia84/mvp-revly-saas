@@ -1,7 +1,7 @@
-'use server';
+"use server";
 
-import prisma from '@/lib/db';
-import { createClient } from '@/lib/supabase/server';
+import prisma from "@/lib/db";
+import { createClient } from "@/lib/supabase/server";
 
 // ──────────────────────────────────────────────
 // addCustomer
@@ -17,14 +17,16 @@ export const addCustomer = async (data: {
   phone: string;
 }) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const business = await prisma.business.findFirst({
     where: { id: data.businessId, userId },
   });
-  if (!business) throw new Error('Negocio no encontrado');
+  if (!business) throw new Error("Negocio no encontrado");
 
   const customer = await prisma.customer.create({
     data: {
@@ -47,13 +49,15 @@ export const addCustomer = async (data: {
 // ──────────────────────────────────────────────
 export const getCustomers = async (businessId: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
   if (!userId) return [];
 
   return prisma.customer.findMany({
     where: { businessId, business: { userId } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 };
 
@@ -64,11 +68,16 @@ export const getCustomers = async (businessId: string) => {
 // invited → completed). Se usa desde la tabla
 // de gestión de clientes al enviar invitaciones.
 // ──────────────────────────────────────────────
-export const updateCustomerStatus = async (customerId: string, status: string) => {
+export const updateCustomerStatus = async (
+  customerId: string,
+  status: string,
+) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   return prisma.customer.update({
     where: { id: customerId },
@@ -90,14 +99,16 @@ export const addCustomerBatch = async (
   customers: { name?: string; email: string; phone: string }[],
 ) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
   });
-  if (!business) throw new Error('Negocio no encontrado');
+  if (!business) throw new Error("Negocio no encontrado");
 
   let created = 0;
   let errors = 0;
@@ -113,7 +124,7 @@ export const addCustomerBatch = async (
           email: c.email,
           phone: c.phone,
           businessId,
-          source: 'manual',
+          source: "manual",
         },
         update: {
           name: c.name || null,
@@ -122,7 +133,7 @@ export const addCustomerBatch = async (
       });
       created++;
     } catch (e) {
-      console.error('Error procesando cliente:', e);
+      console.error("Error procesando cliente:", e);
       errors++;
     }
   }
@@ -138,14 +149,16 @@ export const addCustomerBatch = async (
 // ──────────────────────────────────────────────
 export const deleteCustomer = async (customerId: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const customer = await prisma.customer.findFirst({
     where: { id: customerId, business: { userId } },
   });
-  if (!customer) throw new Error('Cliente no encontrado');
+  if (!customer) throw new Error("Cliente no encontrado");
 
   await prisma.customer.delete({ where: { id: customerId } });
   return { success: true };
@@ -160,14 +173,16 @@ export const deleteCustomer = async (customerId: string) => {
 // ──────────────────────────────────────────────
 export const clearCustomers = async (businessId: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
   });
-  if (!business) throw new Error('Negocio no encontrado');
+  if (!business) throw new Error("Negocio no encontrado");
 
   await prisma.customer.deleteMany({ where: { businessId } });
   return { success: true };
@@ -183,17 +198,19 @@ export const clearCustomers = async (businessId: string) => {
 // ──────────────────────────────────────────────
 export const clearCompletedCustomers = async (businessId: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
   });
-  if (!business) throw new Error('Negocio no encontrado');
+  if (!business) throw new Error("Negocio no encontrado");
 
   const { count } = await prisma.customer.deleteMany({
-    where: { businessId, status: 'completed' },
+    where: { businessId, status: "completed" },
   });
   return { count };
 };
@@ -255,10 +272,7 @@ export const findPublicCustomerByEmail = async (
 // que el negocio configuró, para mostrarlo como placeholder
 // en el campo de canje de factura del cliente.
 // ──────────────────────────────────────────────
-export const getPublicCustomer = async (
-  customerId: string,
-  slug: string,
-) => {
+export const getPublicCustomer = async (customerId: string, slug: string) => {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
     include: {
@@ -290,9 +304,11 @@ export const getPublicCustomer = async (
 // ──────────────────────────────────────────────
 export const deleteSelectedCustomers = async (ids: string[]) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? "";
+  if (!userId) throw new Error("No autenticado");
 
   const customers = await prisma.customer.findMany({
     where: { id: { in: ids }, business: { userId } },

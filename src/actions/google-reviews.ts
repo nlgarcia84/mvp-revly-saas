@@ -57,9 +57,9 @@ async function getValidAccessToken(businessId: string): Promise<string | null> {
 export const getBusinessGoogleReviews = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -136,9 +136,9 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
 export const getBusinessProfileStatus = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -174,9 +174,9 @@ export const replyToGoogleReview = async (
 ): Promise<{ ok: boolean; error?: string }> => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   if (!reviewName || !comment.trim()) {
@@ -212,9 +212,9 @@ export const replyToGoogleReview = async (
 export const getAllGoogleReviews = async () => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const businesses = await prisma.business.findMany({

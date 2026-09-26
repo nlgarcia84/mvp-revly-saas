@@ -21,8 +21,8 @@ export const sendInvitation = async (customerId: string) => {
   // Verifica que el usuario autenticado sea el
   // dueño del negocio al que pertenece el cliente
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   // Obtiene el cliente junto con los datos del
@@ -168,8 +168,8 @@ export const sendBatchInvitations = async (customerIds: string[]) => {
 
 export const getWhatsAppLink = async (customerId: string) => {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const customer = await prisma.customer.findFirst({

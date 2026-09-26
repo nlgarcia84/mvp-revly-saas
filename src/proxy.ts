@@ -38,20 +38,20 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/sign-in') ||
     request.nextUrl.pathname.startsWith('/sign-up');
 
-  let session = null;
+  let user = null;
 
   if (isProtected || isAuth) {
     const {
-      data: { session: s },
-    } = await supabase.auth.getSession();
-    session = s;
+      data: { user: u },
+    } = await supabase.auth.getUser();
+    user = u;
   }
 
-  if (isProtected && !session) {
+  if (isProtected && !user) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
-  if (isAuth && session) {
+  if (isAuth && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

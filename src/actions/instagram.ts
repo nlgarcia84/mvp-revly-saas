@@ -105,9 +105,9 @@ async function getValidInstagramToken(
 export const getBusinessInstagramData = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const conn = await getValidInstagramToken(businessId, userId);
@@ -177,9 +177,9 @@ export const getBusinessInstagramData = async (businessId: string) => {
 export const getInstagramConnectionStatus = async (businessId: string) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const business = await prisma.business.findFirst({
@@ -214,9 +214,9 @@ export const replyToInstagramComment = async (
 ) => {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const userId = session?.user?.id ?? '';
+    data: { user },
+  } = await supabase.auth.getUser();
+  const userId = user?.id ?? '';
   if (!userId) throw new Error('No autenticado');
 
   const conn = await getValidInstagramToken(businessId, userId);

@@ -25,14 +25,12 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(`${requestOrigin}/sign-in?error=${encodeURIComponent(error.message)}`);
   }
 
   // Aseguramos que el usuario exista en nuestra tabla User
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
   if (user?.email) {
     const existing = await prisma.user.findUnique({ where: { email: user.email } });
     if (existing && existing.id !== user.id) {
