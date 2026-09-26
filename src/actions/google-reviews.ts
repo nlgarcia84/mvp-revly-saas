@@ -131,7 +131,8 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
     );
     return null;
   }
-  return { ...details, placeId };
+  const sortedReviews = [...details.reviews].sort((a, b) => b.time - a.time);
+  return { ...details, placeId, reviews: sortedReviews };
 };
 
 // Estado de la conexión con Business Profile, para mostrar en Settings.

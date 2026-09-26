@@ -251,12 +251,13 @@ export async function getBusinessProfileData(
     accountId,
     locationId,
   );
+  const sortedReviews = [...reviews].sort((a, b) => b.time - a.time);
 
   return {
     name: locationData.title ?? "",
     rating: averageRating,
     userRatingsTotal: totalReviewCount > 0 ? totalReviewCount : reviews.length,
-    reviews,
+    reviews: sortedReviews,
   };
 }
 
