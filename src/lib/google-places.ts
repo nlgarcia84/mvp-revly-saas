@@ -93,13 +93,57 @@ function extractLatLng(url: string): { lat: number; lng: number } | null {
 // Compara nombres ignorando mayúsculas y acentos.
 function nameMatches(resultName: string, queryName: string): boolean {
   const normalize = (value: string) =>
-    value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
   const normalizedResult = normalize(resultName);
   const normalizedQuery = normalize(queryName);
-  return (
+
+  // Mantener exactamente el comportamiento anterior cuando sea posible.
+  if (
     normalizedResult.includes(normalizedQuery) ||
     normalizedQuery.includes(normalizedResult)
+  ) {
+    return true;
+  }
+
+  // Si el nombre completo no coincide, comparar palabras relevantes.
+  const resultWords = new Set(normalizedResult.split(' '));
+  const queryWords = normalizedQuery.split(' ');
+
+  const ignoredWords = new Set([
+    'the',
+    'el',
+    'la',
+    'los',
+    'las',
+    'de',
+    'del',
+    'y',
+    'and',
+  ]);
+
+  const meaningfulQueryWords = queryWords.filter(
+    (word) => word.length >= 3 && !ignoredWords.has(word),
   );
+
+  if (meaningfulQueryWords.length === 0) {
+    return false;
+  }
+
+  const matchingWords = meaningfulQueryWords.filter((word) =>
+    resultWords.has(word),
+  );
+
+  const matchRatio =
+    matchingWords.length / meaningfulQueryWords.length;
+
+  return matchRatio >= 0.6;
 }
 
 // Busca el Place ID por el nombre del negocio con Text Search. Prueba primero
