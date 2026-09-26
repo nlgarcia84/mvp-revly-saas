@@ -1,6 +1,8 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 
+// Genera un informe HTML (plan de acción) a partir de las reseñas negativas
+// y las estadísticas de clientes de un negocio.
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ businessId: string }> },
@@ -46,7 +48,7 @@ export async function GET(
     ? await prisma.customer.aggregate({
         where: { businessId, rating: { not: null } },
         _avg: { rating: true },
-      }).then(r => r._avg.rating?.toFixed(1) ?? 'N/A')
+      }).then((result) => result._avg.rating?.toFixed(1) ?? 'N/A')
     : 'N/A';
 
   const negativePercentage = totalWithRating > 0
@@ -60,18 +62,18 @@ export async function GET(
     'reserva', 'cita', 'devolución', 'problema', 'error', 'queja'];
   for (const review of negativeReviews) {
     const text = (review.feedback ?? '').toLowerCase();
-    for (const kw of keywords) {
-      if (text.includes(kw)) {
-        keywordCounts.set(kw, (keywordCounts.get(kw) ?? 0) + 1);
+    for (const keyword of keywords) {
+      if (text.includes(keyword)) {
+        keywordCounts.set(keyword, (keywordCounts.get(keyword) ?? 0) + 1);
       }
     }
   }
   const topKeywords = [...keywordCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((left, right) => right[1] - left[1])
     .slice(0, 8);
 
   // Genera recomendaciones basadas en los temas detectados
-  const recomendaciones = [
+  const recommendations = [
     ...(keywordCounts.has('espera') || keywordCounts.has('lento')
       ? ['Revisar tiempos de espera y optimizar procesos operativos para reducir demoras.']
       : []),
@@ -99,10 +101,10 @@ export async function GET(
   ];
 
   // Si no hay reseñas negativas, recomendación general
-  if (recomendaciones.length === 0 && totalNegative > 0) {
-    recomendaciones.push('Contactar individualmente a los clientes insatisfechos para conocer su experiencia y resolver sus quejas.');
+  if (recommendations.length === 0 && totalNegative > 0) {
+    recommendations.push('Contactar individualmente a los clientes insatisfechos para conocer su experiencia y resolver sus quejas.');
   } else if (totalNegative === 0) {
-    recomendaciones.push('Mantener el nivel de calidad actual. Seguir monitorizando reseñas para detectar cualquier cambio.');
+    recommendations.push('Mantener el nivel de calidad actual. Seguir monitorizando reseñas para detectar cualquier cambio.');
   }
 
   const reportDate = new Date().toLocaleDateString('es-ES', {
@@ -182,15 +184,15 @@ export async function GET(
   ${topKeywords.length > 0
     ? `<p>Temas más mencionados en reseñas negativas:</p>
        <div class="keywords">
-         ${topKeywords.map(([kw, count]) => `<span class="keyword">${kw} (${count})</span>`).join('')}
+         ${topKeywords.map(([keyword, count]) => `<span class="keyword">${keyword} (${count})</span>`).join('')}
        </div>`
     : '<p>No se detectaron temas recurrentes en las reseñas negativas.</p>'
   }
 
   <h2>Plan de acción recomendado</h2>
-  ${recomendaciones.length > 0
+  ${recommendations.length > 0
     ? `<ol class="recommendations">
-         ${recomendaciones.map(r => `<li>${r}</li>`).join('')}
+         ${recommendations.map((recommendation) => `<li>${recommendation}</li>`).join('')}
        </ol>`
     : '<p>No hay reseñas negativas que requieran un plan de acción en este momento.</p>'
   }
@@ -206,11 +208,11 @@ export async function GET(
       </tr>
     </thead>
     <tbody>
-      ${negativeReviews.map(r => `
+      ${negativeReviews.map((review) => `
         <tr>
-          <td>${r.name || 'Anónimo'}</td>
-          <td>${'★'.repeat(r.rating ?? 0)}${'☆'.repeat(5 - (r.rating ?? 0))}</td>
-          <td>${r.feedback ? r.feedback.substring(0, 120) + (r.feedback.length > 120 ? '...' : '') : '—'}</td>
+          <td>${review.name || 'Anónimo'}</td>
+          <td>${'★'.repeat(review.rating ?? 0)}${'☆'.repeat(5 - (review.rating ?? 0))}</td>
+          <td>${review.feedback ? review.feedback.substring(0, 120) + (review.feedback.length > 120 ? '...' : '') : '—'}</td>
         </tr>
       `).join('')}
     </tbody>

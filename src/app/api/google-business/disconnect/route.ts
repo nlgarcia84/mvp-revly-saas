@@ -2,12 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
-// ─── Desconecta Google Business Profile ──────────────
-// Botón "Desconectar" en Settings. Borra los tokens y
-// las IDs de la base de datos. A partir de ese momento,
-// las reseñas se obtendrán otra vez desde Places API
-// (solo 5 reseñas).
-// ─────────────────────────────────────────────────────
+// Desconecta Google Business Profile: limpia tokens e IDs. Las reseñas
+// vuelven a obtenerse desde Places API (solo 5).
 export async function GET(request: Request) {
   try {
     const supabase = await createClient();
@@ -21,7 +17,6 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/business', request.url));
     }
 
-    // Limpiamos los campos de Google Business Profile
     await prisma.business.update({
       where: { id: businessId, userId },
       data: {
@@ -33,14 +28,12 @@ export async function GET(request: Request) {
       },
     });
 
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     return NextResponse.redirect(
-      `${APP_URL}/business/${businessId}/settings?bp_success=Desconectado de Google Business Profile`,
+      `${appUrl}/business/${businessId}/settings?bp_success=Desconectado de Google Business Profile`,
     );
-  } catch (e) {
-    console.error('[GoogleBusiness/Disconnect] Error:', e);
-    return NextResponse.redirect(
-      new URL('/business', request.url),
-    );
+  } catch (error) {
+    console.error('[GoogleBusiness/Disconnect] Error:', error);
+    return NextResponse.redirect(new URL('/business', request.url));
   }
 }

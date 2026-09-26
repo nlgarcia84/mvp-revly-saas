@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 const MAX_FILES = 5;
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = [
   'image/jpeg',
   'image/png',
@@ -12,12 +12,13 @@ const ALLOWED_TYPES = [
 
 type FileEntry = { filename: string; content: string; type: string };
 
+// Recibe una incidencia con adjuntos y la envía por email (Resend).
 export async function POST(request: Request) {
   const formData = await request.formData();
   const name = String(formData.get('name') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
-  const filesRaw = String(formData.get('files') ?? '[]');
+  const filesJson = String(formData.get('files') ?? '[]');
 
   if (!name || !email || !description) {
     return NextResponse.json(
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
 
   let files: FileEntry[] = [];
   try {
-    files = JSON.parse(filesRaw);
+    files = JSON.parse(filesJson);
     if (!Array.isArray(files)) files = [];
   } catch {
     files = [];
@@ -41,18 +42,18 @@ export async function POST(request: Request) {
     );
   }
 
-  for (const f of files) {
-    if (!ALLOWED_TYPES.includes(f.type)) {
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { success: false, error: `Tipo no permitido: ${f.type}` },
+        { success: false, error: `Tipo no permitido: ${file.type}` },
         { status: 400 },
       );
     }
-    // base64 ~ 4/3 del tamaño original, comprobamos aproximado
-    const estimatedSize = (f.content.length * 3) / 4;
-    if (estimatedSize > MAX_SIZE) {
+    // base64 ocupa ~4/3 del tamaño original; comprobamos aproximado.
+    const estimatedSize = (file.content.length * 3) / 4;
+    if (estimatedSize > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { success: false, error: `Archivo demasiado grande: ${f.filename}` },
+        { success: false, error: `Archivo demasiado grande: ${file.filename}` },
         { status: 400 },
       );
     }
@@ -68,16 +69,16 @@ export async function POST(request: Request) {
 
   try {
     const ticketId = `RVL-${Date.now().toString().slice(-6)}`;
-    const escapedDescription = description.replace(/\n/g, '<br />');
+    const descriptionHtml = description.replace(/\n/g, '<br />');
 
-    const attachments = files.map((f) => ({
-      filename: f.filename,
-      content: f.content,
+    const attachments = files.map((file) => ({
+      filename: file.filename,
+      content: file.content,
     }));
 
     const fileListHtml =
       files.length > 0
-        ? `<p><strong>Archivos adjuntos:</strong> ${files.map((f) => f.filename).join(', ')}</p>`
+        ? `<p><strong>Archivos adjuntos:</strong> ${files.map((file) => file.filename).join(', ')}</p>`
         : '';
 
     const response = await fetch('https://api.resend.com/emails', {
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
             <p><strong>Nombre:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Descripción:</strong></p>
-            <p>${escapedDescription}</p>
+            <p>${descriptionHtml}</p>
             ${fileListHtml}
           </div>
         `,
@@ -107,15 +108,15 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error al enviar incidencia:', errorText);
+      const errorBody = await response.text();
+      console.error('Error al enviar incidencia:', errorBody);
       return NextResponse.json(
         { success: false, error: 'No se pudo enviar la incidencia' },
         { status: 500 },
       );
     }
 
-    // Auto-reply al usuario
+    // Acuse de recibo al usuario.
     const autoReply = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -133,7 +134,7 @@ export async function POST(request: Request) {
             <p>Hemos recibido tu incidencia y nuestro equipo la revisará lo antes posible.</p>
             <p><strong>Tu referencia:</strong> ${ticketId}</p>
             <p><strong>Tu descripción:</strong></p>
-            <p>${escapedDescription}</p>
+            <p>${descriptionHtml}</p>
             ${fileListHtml}
             <p>Gracias por confiar en Revly.</p>
           </div>

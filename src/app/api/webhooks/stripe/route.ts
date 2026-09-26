@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import stripe from '@/lib/stripe';
 
+const PRICE_TO_PLAN: Record<string, string> = {
+  price_1U1WfmR8J40peD82mTLBUosR: 'avanzado',
+  price_1U1WhkR8J40peD825bfelw3g: 'pro',
+};
+
+// Webhook de Stripe: sincroniza el estado de la suscripción en nuestra BD.
 export async function POST(request: Request) {
-  const body = await request.text();
+  const rawBody = await request.text();
   const signature = request.headers.get('stripe-signature') || '';
-
-  const { default: Stripe } = await import('stripe');
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
   let event: any;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
@@ -25,35 +29,39 @@ export async function POST(request: Request) {
 
         const subscriptionId = session.subscription as string;
         const customerId = session.customer as string;
-        // El plan se pasa en metadata al crear la sesión de checkout.
-        // Si no hay metadata.plan, se deduce del line_items.
+
+        // El plan llega en metadata; si no, se deduce del precio de la suscripción.
         let plan = session.metadata?.plan as string;
         if (!plan && subscriptionId) {
-          const sub: any = await stripe.subscriptions.retrieve(subscriptionId);
-          const priceId = sub.items?.data?.[0]?.price?.id;
-          if (priceId === 'price_1U1WfmR8J40peD82mTLBUosR') plan = 'avanzado';
-          else if (priceId === 'price_1U1WhkR8J40peD825bfelw3g') plan = 'pro';
-          else plan = 'avanzado';
+          const subscription: any =
+            await stripe.subscriptions.retrieve(subscriptionId);
+          const priceId = subscription.items?.data?.[0]?.price?.id;
+          plan = PRICE_TO_PLAN[priceId] ?? 'avanzado';
         }
 
         if (subscriptionId) {
-          const sub: any = await stripe.subscriptions.retrieve(subscriptionId);
+          const subscription: any =
+            await stripe.subscriptions.retrieve(subscriptionId);
           await prisma.subscription.upsert({
             where: { userId },
             create: {
               userId,
               plan: plan || 'avanzado',
-              status: sub.status === 'active' ? 'active' : 'inactive',
+              status: subscription.status === 'active' ? 'active' : 'inactive',
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodEnd: new Date(
+                subscription.current_period_end * 1000,
+              ),
             },
             update: {
               plan: plan || 'avanzado',
-              status: sub.status === 'active' ? 'active' : 'inactive',
+              status: subscription.status === 'active' ? 'active' : 'inactive',
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
-              currentPeriodEnd: new Date(sub.current_period_end * 1000),
+              currentPeriodEnd: new Date(
+                subscription.current_period_end * 1000,
+              ),
             },
           });
         }
@@ -62,31 +70,33 @@ export async function POST(request: Request) {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const subEvent = event.data.object;
-        const customerId = subEvent.customer as string;
+        const subscriptionEvent = event.data.object;
+        const customerId = subscriptionEvent.customer as string;
 
-        const sub = await prisma.subscription.findFirst({
+        const existingSubscription = await prisma.subscription.findFirst({
           where: { stripeCustomerId: customerId },
         });
-        if (!sub) break;
+        if (!existingSubscription) break;
 
-        const isActive = subEvent.status === 'active' || subEvent.status === 'trialing';
-        // Si sigue activo, mantiene el plan actual. Si se cancela, vuelve a basico.
+        const isActive =
+          subscriptionEvent.status === 'active' ||
+          subscriptionEvent.status === 'trialing';
+        // Si sigue activo, mantiene el plan actual; si se cancela, vuelve a básico.
         await prisma.subscription.update({
-          where: { id: sub.id },
+          where: { id: existingSubscription.id },
           data: {
             status: isActive ? 'active' : 'inactive',
-            plan: isActive ? sub.plan : 'basico',
-            currentPeriodEnd: subEvent.current_period_end
-              ? new Date(subEvent.current_period_end * 1000)
+            plan: isActive ? existingSubscription.plan : 'basico',
+            currentPeriodEnd: subscriptionEvent.current_period_end
+              ? new Date(subscriptionEvent.current_period_end * 1000)
               : null,
           },
         });
         break;
       }
     }
-  } catch (e) {
-    console.error('Stripe webhook error:', e);
+  } catch (error) {
+    console.error('Stripe webhook error:', error);
   }
 
   return NextResponse.json({ received: true });

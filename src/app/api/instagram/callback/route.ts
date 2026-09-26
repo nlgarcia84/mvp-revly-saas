@@ -8,30 +8,24 @@ import {
 } from "@/lib/instagram-graph";
 import { NextResponse } from "next/server";
 
-// ─── Instagram nos llama aquí tras autorizar (o negar) ─
-// el acceso en la pantalla de consentimiento.
-//
-//   1. Recibimos un "code" que cambiamos por un token corto
-//      (POST a api.instagram.com/oauth/access_token)
-//   2. Lo cambiamos por un long-lived token (60 días)
-//   3. Obtenemos el username de la cuenta profesional
-//   4. Guardamos todo en la base de datos
-//   5. Redirigimos de vuelta a Settings
-// ─────────────────────────────────────────────────────
+// Instagram nos llama aquí tras autorizar (o denegar) el acceso.
+//   1. Cambiamos el "code" por un token corto.
+//   2. Lo cambiamos por uno long-lived (60 días).
+//   3. Obtenemos el username de la cuenta profesional.
+//   4. Guardamos todo y volvemos a Settings.
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
-    const error = searchParams.get("error");
-    const businessId = searchParams.get("state"); // lo enviamos desde connect
+    const authError = searchParams.get("error");
+    const businessId = searchParams.get("state");
 
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const settingsUrl = businessId
-      ? `${APP_URL}/business/${businessId}/settings`
-      : `${APP_URL}/business`;
+      ? `${appUrl}/business/${businessId}/settings`
+      : `${appUrl}/business`;
 
-    // Si el usuario denegó el permiso, volvemos a Settings
-    if (error) {
+    if (authError) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=Acceso denegado a Instagram`,
       );
@@ -43,59 +37,65 @@ export async function GET(request: Request) {
     }
     if (!businessId) {
       return NextResponse.redirect(
-        `${APP_URL}/business?ig_error=ID de negocio no encontrado`,
+        `${appUrl}/business?ig_error=ID de negocio no encontrado`,
       );
     }
 
-    const INSTAGRAM_CLIENT_ID = getInstagramClientId();
-    const INSTAGRAM_CLIENT_SECRET = getInstagramClientSecret();
-    const REDIRECT_URI = `${APP_URL}/api/instagram/callback`;
+    const clientId = getInstagramClientId();
+    const clientSecret = getInstagramClientSecret();
+    const redirectUri = `${appUrl}/api/instagram/callback`;
 
-    if (!INSTAGRAM_CLIENT_ID || !INSTAGRAM_CLIENT_SECRET) {
+    if (!clientId || !clientSecret) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (faltan el App ID y App Secret de Instagram)")}`,
       );
     }
 
-    // 1. Cambiamos el código por un token corto (validez ~1 hora)
+    // 1. Código → token corto (~1 hora).
     const tokenParams = new URLSearchParams({
-      client_id: INSTAGRAM_CLIENT_ID,
-      client_secret: INSTAGRAM_CLIENT_SECRET,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: "authorization_code",
-      redirect_uri: REDIRECT_URI,
+      redirect_uri: redirectUri,
       code,
     });
-    const tokenRes = await fetch("https://api.instagram.com/oauth/access_token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: tokenParams.toString(),
-    });
+    const tokenResponse = await fetch(
+      "https://api.instagram.com/oauth/access_token",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: tokenParams.toString(),
+      },
+    );
 
-    if (!tokenRes.ok) {
-      const body = await tokenRes.text();
+    if (!tokenResponse.ok) {
+      const body = await tokenResponse.text();
       console.error("[Instagram/Callback] Error cambiando código:", body);
       return NextResponse.redirect(
-        `${settingsUrl}?ig_error=${encodeURIComponent(friendlyMetaError(tokenRes.status, body))}`,
+        `${settingsUrl}?ig_error=${encodeURIComponent(friendlyMetaError(tokenResponse.status, body))}`,
       );
     }
 
-    const tokenData = (await tokenRes.json()) as {
+    const tokenPayload = (await tokenResponse.json()) as {
       access_token?: string;
       user_id?: string;
     };
-    if (!tokenData.access_token || !tokenData.user_id) {
+    if (!tokenPayload.access_token || !tokenPayload.user_id) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=Instagram no devolvió un token de acceso`,
       );
     }
 
-    // 2. Cambiamos el token corto por uno long-lived (60 días)
+    // 2. Token corto → long-lived (60 días).
     const { accessToken, expiresAt } = await exchangeForLongLivedToken(
-      tokenData.access_token,
+      tokenPayload.access_token,
     );
 
-    // 3. Obtenemos el username de la cuenta conectada
-    const profile = await getInstagramUserProfile(accessToken, tokenData.user_id);
+    // 3. Username de la cuenta conectada.
+    const profile = await getInstagramUserProfile(
+      accessToken,
+      tokenPayload.user_id,
+    );
     if (!profile.username) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=${encodeURIComponent(
@@ -104,7 +104,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // 4. Guardamos token, ID de cuenta e Instagram y username
+    // 4. Guardamos token, ID de cuenta y username.
     await prisma.business.update({
       where: { id: businessId },
       data: {
@@ -115,17 +115,17 @@ export async function GET(request: Request) {
       },
     });
 
-    // 5. Redirigimos a Settings con mensaje de éxito
     return NextResponse.redirect(
       `${settingsUrl}?ig_success=${encodeURIComponent(`Conectado correctamente a Instagram (@${profile.username})`)}`,
     );
-  } catch (e) {
-    console.error("[Instagram/Callback] Error:", e);
+  } catch (error) {
+    console.error("[Instagram/Callback] Error:", error);
     const businessId = new URL(request.url).searchParams.get("state");
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const msg = e instanceof Error ? e.message : "Error desconocido";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const errorMessage =
+      error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.redirect(
-      `${APP_URL}/business/${businessId ?? ""}/settings?ig_error=${encodeURIComponent(msg.slice(0, 400))}`,
+      `${appUrl}/business/${businessId ?? ""}/settings?ig_error=${encodeURIComponent(errorMessage.slice(0, 400))}`,
     );
   }
 }

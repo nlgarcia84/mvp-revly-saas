@@ -84,8 +84,6 @@ const feedbackPage = (businessName: string, customerId: string, googleLink: stri
 </body>
 </html>`;
 
-
-
 const starsPage = (customerId: string, existingRating: number | null, googleLink: string, businessName: string) => `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -180,11 +178,11 @@ export async function GET(
 ) {
   const { customerId } = await params;
   const { searchParams } = new URL(request.url);
-  const auto = searchParams.get('auto');
+  const isAutoFlow = searchParams.get('auto') === '1';
   const ratingParam = searchParams.get('rating');
   const redirectUrl = searchParams.get('redirect');
 
-  if (auto === '1') {
+  if (isAutoFlow) {
     const rating = Math.min(Math.max(parseInt(ratingParam || '5'), 1), 5);
     try {
       await prisma.customer.update({
@@ -236,9 +234,9 @@ export async function POST(
   { params }: { params: Promise<{ customerId: string }> },
 ) {
   const { customerId } = await params;
-  const body = await request.json();
-  const rating = body.rating;
-  const feedback = body.feedback;
+  const payload = await request.json();
+  const rating = payload.rating;
+  const feedback = payload.feedback;
 
   if (rating !== undefined && (rating < 1 || rating > 5)) {
     return NextResponse.json({ error: 'Valoración inválida' }, { status: 400 });
