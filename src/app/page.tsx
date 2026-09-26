@@ -51,7 +51,7 @@ const HomePage = () => {
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 relative overflow-hidden bg-neutral-50 dark:bg-neutral-950">
+      <main className="px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 relative overflow-hidden bg-stone-50 dark:bg-neutral-950">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <video
             autoPlay
@@ -75,7 +75,7 @@ const HomePage = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.06] mb-4 text-neutral-950 dark:text-neutral-100 [text-shadow:0_1px_2px_rgba(255,255,255,0.65)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
               Consigue más reseñas de Google con IA
             </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-neutral-600 dark:text-neutral-300 leading-relaxed mb-8 max-w-2xl mx-auto md:mx-0 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-stone-600 dark:text-neutral-300 leading-relaxed mb-8 max-w-2xl mx-auto md:mx-0 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
               Automatiza solicitudes de reseña por QR y email. Responde
               con inteligencia artificial y construye una reputación online
               imparable.
@@ -106,13 +106,13 @@ const HomePage = () => {
         </div>
       </main>
 
-      <section className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8">
+      <section className="border-t border-stone-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20">
           <div className="max-w-2xl mb-8 sm:mb-10">
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-100">
               Todo lo que necesitas para dominar tu reputación online
             </h2>
-            <p className="mt-3 text-sm sm:text-base leading-7 text-neutral-500 dark:text-neutral-400">
+            <p className="mt-3 text-sm sm:text-base leading-7 text-stone-500 dark:text-neutral-400">
               Desde el primer código QR hasta el análisis de reseñas con IA. Una
               plataforma que convierte clientes satisfechos en reseñas de 5
               estrellas.
@@ -130,7 +130,7 @@ const HomePage = () => {
                 </LandingCardDescription>
               </LandingCardHeader>
               <LandingCardContent>
-                <p className="text-sm leading-7 text-neutral-600 dark:text-neutral-400">
+                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
                   Cada interacción con tu cliente es una oportunidad para
                   conseguir una nueva reseña en Google. Automatiza el proceso y
                   multiplica tus valoraciones sin apenas esfuerzo.
@@ -148,7 +148,7 @@ const HomePage = () => {
                 </LandingCardDescription>
               </LandingCardHeader>
               <LandingCardContent>
-                <p className="text-sm leading-7 text-neutral-600 dark:text-neutral-400">
+                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
                   Mantén una comunicación activa con todos tus clientes sin
                   invertir horas. La IA redacta respuestas coherentes,
                   profesionales y personalizadas para cada reseña.
@@ -166,7 +166,7 @@ const HomePage = () => {
                 </LandingCardDescription>
               </LandingCardHeader>
               <LandingCardContent>
-                <p className="text-sm leading-7 text-neutral-600 dark:text-neutral-400">
+                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
                   Seguimiento de reseñas, tendencias de puntuación y alertas
                   inteligentes para actuar antes de que un problema escale.
                   Convierte la reputación en tu mejor canal de adquisición.
@@ -177,7 +177,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <footer className="border-t border-neutral-200 p-4 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 transition-colors">
+      <footer className="border-t border-stone-200 dark:border-neutral-800 bg-stone-100/50 dark:bg-neutral-900 transition-colors">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-12">
             <div>
