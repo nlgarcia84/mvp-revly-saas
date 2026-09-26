@@ -10,8 +10,8 @@ const PRICE_TO_PLAN: Record<string, string> = {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? '';
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id ?? '';
     if (!userId) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
     const { priceId } = await request.json();

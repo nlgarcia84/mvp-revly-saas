@@ -1,130 +1,105 @@
 "use server";
-// ↑ Esta directiva indica que TODAS las funciones de este archivo
-//   son Server Actions. Se ejecutan en el servidor, no en el navegador.
-//   Pueden leer BD, hacer redirect, etc. sin exponer lógica al cliente.
 
 import { createClient } from "@/lib/supabase/server";
-//   createClient: función que crea un cliente de Supabase configurado
-//   para usar cookies HTTP (sesión persistente entre peticiones).
-//   Se usa en Server Components y Server Actions.
-
 import prisma from "@/lib/db";
-//   prisma: instancia del ORM Prisma conectada a PostgreSQL.
-//   Con ella hacemos consultas a nuestras tablas (User, Business, Customer).
-
 import { redirect } from "next/navigation";
-//   redirect: función de Next.js para redirigir al navegador a otra ruta.
-//   Solo funciona en Server Components / Server Actions.
 
 export type ActionResult = { error: string } | { success: boolean } | null;
 
-// ════════════════════════════════════════════════════════════════════
-//  signUp
-// ════════════════════════════════════════════════════════════════════
+// Duración de la prueba gratuita al crear la cuenta (14 días).
+const TRIAL_DURATION_MS = 14 * 24 * 60 * 60 * 1000;
 
+// Traduce los errores de Supabase Auth al español para el formulario.
+function translateAuthError(error: { message: string; code?: string }): string {
+  const message = (error.message || "").toLowerCase();
+  const code = error.code;
+
+  // La contraseña se detecta por el mensaje: Supabase puede devolver
+  // "validation_failed" para una contraseña corta en vez de "weak_password".
+  if (message.includes("password")) {
+    if (
+      message.includes("at least") ||
+      message.includes("characters") ||
+      message.includes("length")
+    ) {
+      return "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.";
+    }
+    return "La contraseña es demasiado débil. Usa mayúsculas, minúsculas, números y símbolos.";
+  }
+
+  if (
+    code === "email_exists" ||
+    message.includes("already registered") ||
+    message.includes("already been registered")
+  ) {
+    return "Ya existe una cuenta con ese email.";
+  }
+
+  if (code === "signup_disabled" || message.includes("signups not allowed")) {
+    return "El registro está deshabilitado temporalmente.";
+  }
+
+  if (code === "validation_failed") {
+    return "Revisa los datos: el email o la contraseña no son válidos.";
+  }
+
+  return error.message;
+}
+
+// Crea la cuenta en Supabase Auth y guarda el perfil en nuestra tabla User.
+// Si Supabase exige confirmar el email no habrá sesión, y el formulario
+// mostrará la pantalla "Revisa tu email".
 export const signUp = async (
   _prevState: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> => {
-  // _prevState: estado anterior devuelto por useActionState (se ignora).
-  // formData: datos del formulario (<input name="email"> → formData.get('email')).
-
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const name = formData.get("name") as string;
+  const fullName = formData.get("name") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
-
-  // ──────────────────────────────────────────────
-  // SUPABASE: crea el usuario en Supabase Auth
-  // ──────────────────────────────────────────────
 
   if (password !== confirmPassword) {
     return { error: "Las contraseñas no coinciden." };
   }
 
   const supabase = await createClient();
-
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: { full_name: name },
-    },
+    options: { data: { full_name: fullName } },
   });
 
-  // Si Supabase devuelve error, lo devolvemos como objeto
-  // para que useActionState lo muestre en el formulario.
-  // NO usamos throw porque useActionState no lo captura.
+  // Devolvemos el error como objeto (no throw) para que useActionState lo muestre.
   if (error) {
-    const msg = (error.message || "").toLowerCase();
-    const code = (error as { code?: string }).code;
-
-    // Priorizamos detectar la contraseña por el mensaje, porque Supabase
-    // puede devolver el código genérico "validation_failed" para una
-    // contraseña demasiado corta (en vez de "weak_password").
-    let traducido = error.message;
-
-    if (msg.includes("password")) {
-      if (
-        msg.includes("at least") ||
-        msg.includes("characters") ||
-        msg.includes("length")
-      ) {
-        traducido =
-          "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.";
-      } else {
-        traducido =
-          "La contraseña es demasiado débil. Usa mayúsculas, minúsculas, números y símbolos.";
-      }
-    } else if (
-      code === "email_exists" ||
-      msg.includes("already registered") ||
-      msg.includes("already been registered")
-    ) {
-      traducido = "Ya existe una cuenta con ese email.";
-    } else if (
-      code === "signup_disabled" ||
-      msg.includes("signups not allowed")
-    ) {
-      traducido = "El registro está deshabilitado temporalmente.";
-    } else if (code === "validation_failed") {
-      traducido = "Revisa los datos: el email o la contraseña no son válidos.";
-    }
-
-    return { error: traducido };
+    return { error: translateAuthError(error) };
   }
 
-  // ──────────────────────────────────────────────
-  // PRISMA: guarda el usuario en nuestra tabla User
-  // ──────────────────────────────────────────────
-
   if (data.user) {
-    const exists = await prisma.user.findUnique({ where: { email } });
-
-    if (exists) {
-      // Usuario de la época de Clerk → lo reemplazamos
-      await prisma.user.delete({ where: { id: exists.id } });
+    // Si ya existía un usuario con ese email (p. ej. de la época de Clerk),
+    // lo reemplazamos para evitar duplicados.
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      await prisma.user.delete({ where: { id: existingUser.id } });
     }
 
     await prisma.user.create({
       data: {
         id: data.user.id,
         email,
-        name,
+        name: fullName,
         subscription: {
           create: {
             plan: "free",
             status: "active",
-            trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+            trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
           },
         },
       },
     });
   }
 
-  // Si Supabase devolvió sesión (confirmación desactivada),
-  // redirigimos al dashboard directamente.
-  // Si no, mostramos pantalla "Revisa tu email".
+  // Con la confirmación de email desactivada Supabase devuelve sesión;
+  // en ese caso entramos directamente al dashboard.
   if (data.session) {
     redirect("/dashboard");
   }
@@ -132,14 +107,8 @@ export const signUp = async (
   return { success: true };
 };
 
-// ════════════════════════════════════════════════════════════════════
-//  signIn
-// ════════════════════════════════════════════════════════════════════
-//  Verifica email + contraseña contra Supabase Auth.
-//  Si son correctos, crea una sesión (cookie) y redirige al dashboard.
-//  No usa Prisma — solo valida credenciales.
-// ════════════════════════════════════════════════════════════════════
-
+// Valida email y contraseña contra Supabase Auth y, si son correctos,
+// crea la sesión y entra al dashboard.
 export const signIn = async (
   _prevState: ActionResult,
   formData: FormData,
@@ -147,19 +116,9 @@ export const signIn = async (
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  // ──────────────────────────────────────────────
-  // SUPABASE: verifica credenciales y crea sesión
-  // ──────────────────────────────────────────────
-
   const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  // Si las credenciales son incorrectas, devolvemos el error
-  // para que useActionState lo muestre en el formulario.
   if (error) {
     return { error: error.message };
   }
@@ -167,61 +126,39 @@ export const signIn = async (
   redirect("/dashboard");
 };
 
-// ════════════════════════════════════════════════════════════════════
-//  signOut
-// ════════════════════════════════════════════════════════════════════
-//  Destruye la sesión actual en Supabase Auth y redirige a /sign-in.
-//  No usa Prisma — solo limpia la cookie de sesión.
-// ════════════════════════════════════════════════════════════════════
-
-// ════════════════════════════════════════════════════════════════════
-//  updateProfileName
-// ════════════════════════════════════════════════════════════════════
-//  Actualiza el nombre del usuario autenticado tanto en nuestra
-//  tabla User (Prisma) como en los metadatos de Supabase Auth.
-// ════════════════════════════════════════════════════════════════════
+// Devuelve el perfil del usuario autenticado (nombre y email) o null.
 export const getProfile = async () => {
   const supabase = await createClient();
   const {
     data: { user: authUser },
   } = await supabase.auth.getUser();
-  const userId = authUser?.id;
-  if (!userId) return null;
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return null;
-  return { name: user.name ?? "", email: user.email };
+  if (!authUser) return null;
+
+  const dbUser = await prisma.user.findUnique({ where: { id: authUser.id } });
+  if (!dbUser) return null;
+
+  return { name: dbUser.name ?? "", email: dbUser.email };
 };
 
+// Actualiza el nombre en nuestra tabla User y en los metadatos de Supabase.
 export const updateProfileName = async (name: string) => {
   const supabase = await createClient();
   const {
-    data: { user },
+    data: { user: authUser },
   } = await supabase.auth.getUser();
-  const userId = user?.id;
-  if (!userId) throw new Error("No autenticado");
+  if (!authUser) throw new Error("No autenticado");
 
   await prisma.user.update({
-    where: { id: userId },
+    where: { id: authUser.id },
     data: { name },
   });
 
-  await supabase.auth.updateUser({
-    data: { full_name: name, name },
-  });
+  await supabase.auth.updateUser({ data: { full_name: name, name } });
 };
 
+// Cierra la sesión actual y vuelve a la pantalla de login.
 export const signOut = async () => {
-  // ──────────────────────────────────────────────
-  // SUPABASE: destruye la sesión actual
-  // ──────────────────────────────────────────────
-
   const supabase = await createClient();
-
-  // signOut() invalida el access_token y refresh_token actuales
-  // en Supabase Auth, y elimina las cookies HTTP de sesión.
-  // Después de esto, el usuario no está autenticado.
   await supabase.auth.signOut();
-
-  // Redirige a la página de inicio de sesión
   redirect("/sign-in");
 };

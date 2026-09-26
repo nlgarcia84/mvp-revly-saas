@@ -2,43 +2,50 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 
-// ─── Callback OAuth (Facebook/Google) ─────────────────
-// Supabase nos redirige aquí después de que el usuario se
-// identifique en el proveedor. Intercambiamos el código
-// por una sesión y creamos el usuario en nuestra tabla User
-// si es la primera vez que entra.
-// ─────────────────────────────────────────────────────
+// Callback OAuth: Supabase nos devuelve aquí tras el login con un proveedor
+// (Google, Facebook...). Canjeamos el código por una sesión y aseguramos que
+// el usuario exista en nuestra tabla User.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/dashboard';
+  const nextPath = searchParams.get('next') ?? '/dashboard';
 
-  // Usamos el host de la propia petición para no cambiar de dominio
-  // (www vs sin www): si redirigimos a otro host, las cookies de sesión
-  // no viajan y el middleware no ve la sesión.
+  // Redirigimos al mismo host de la petición (www vs sin www) para que las
+  // cookies de sesión viajen y el proxy no pierda la sesión.
   const forwardedHost = request.headers.get('x-forwarded-host');
   const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https';
-  const requestOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : origin;
+  const requestOrigin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : origin;
 
   if (!code) {
     return NextResponse.redirect(`${requestOrigin}/sign-in?error=oauth_missing_code`);
   }
 
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code);
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
-    return NextResponse.redirect(`${requestOrigin}/sign-in?error=${encodeURIComponent(error.message)}`);
+    return NextResponse.redirect(
+      `${requestOrigin}/sign-in?error=${encodeURIComponent(error.message)}`,
+    );
   }
 
-  // Aseguramos que el usuario exista en nuestra tabla User
+  // Creamos el perfil la primera vez que entra este usuario.
   if (user?.email) {
-    const existing = await prisma.user.findUnique({ where: { email: user.email } });
-    if (existing && existing.id !== user.id) {
-      // Usuario de la época de Clerk (id distinto) → lo reemplazamos
-      await prisma.user.delete({ where: { id: existing.id } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
+    });
+
+    // Usuario antiguo con otro id (época de Clerk): lo reemplazamos.
+    if (existingUser && existingUser.id !== user.id) {
+      await prisma.user.delete({ where: { id: existingUser.id } });
     }
-    const current = existing && existing.id === user.id ? existing : null;
-    if (!current) {
+
+    const userAlreadyExists = existingUser?.id === user.id;
+    if (!userAlreadyExists) {
       await prisma.user.create({
         data: {
           id: user.id,
@@ -59,5 +66,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.redirect(`${requestOrigin}${next}`);
+  return NextResponse.redirect(`${requestOrigin}${nextPath}`);
 }

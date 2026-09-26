@@ -3,31 +3,18 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 
-// ──────────────────────────────────────────────
-// sendInvitation
-// ──────────────────────────────────────────────
-// Server Action que envía un email al cliente
-// mediante Resend con:
-//   - Botón principal → enlace a Google Reviews
-//   - Botón secundario → /api/review-confirm/{id}
-//     que marca la reseña como completada
-//     automáticamente cuando el cliente confirma.
-// Después del envío, actualiza el estado a
-// "invited" en la base de datos.
-// Requiere RESEND_API_KEY en .env.local.
-// ──────────────────────────────────────────────
-
-export const sendInvitation = async (customerId: string) => {
-  // Verifica que el usuario autenticado sea el
-  // dueño del negocio al que pertenece el cliente
+// Devuelve el id del usuario autenticado o lanza si no hay sesión.
+async function requireUserId(): Promise<string> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  if (!user) throw new Error('No autenticado');
+  return user.id;
+}
 
-  // Obtiene el cliente junto con los datos del
-  // negocio para personalizar el email (nombre,
-  // enlace de Google)
+// Envía un email de invitación a dejar reseña y marca al cliente como invitado.
+export const sendInvitation = async (customerId: string) => {
+  const userId = await requireUserId();
+
   const customer = await prisma.customer.findFirst({
     where: { id: customerId, business: { userId } },
     include: { business: true },
@@ -39,25 +26,21 @@ export const sendInvitation = async (customerId: string) => {
   const businessName = business.name;
   const customerName = name ?? '';
 
-  // Si el negocio no tiene enlace de Google
-  // configurado, no podemos enviar la invitación
   if (!googleLink) {
     throw new Error('El negocio no tiene enlace de Google Reviews configurado');
   }
 
-  // URL base para construir los enlaces
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  // Enlace que el cliente pulsa para ir a Google:
-  // - Guarda automaticamente 5 estrellas
-  // - Marca como completado
-  // - Redirige a Google Reviews
+  // Enlace que guarda 5 estrellas, marca como completado y va a Google Reviews.
   const reviewUrl = `${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=5&redirect=${encodeURIComponent(googleLink)}`;
 
-  // Genera 5 estrellas cliqueables, cada una con
-  // la valoración correspondiente (1-5 estrellas)
-  const starsHtml = [1, 2, 3, 4, 5].map((n) =>
-    `<a href="${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=${n}&redirect=${encodeURIComponent(googleLink)}" target="_blank" style="display:inline-block;font-size:40px;text-decoration:none;color:#f59e0b;padding:0 4px;transition:opacity .15s;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">★</a>`
-  ).join('');
+  // Cinco estrellas clicables, cada una con su valoración.
+  const starsHtml = [1, 2, 3, 4, 5]
+    .map(
+      (stars) =>
+        `<a href="${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=${stars}&redirect=${encodeURIComponent(googleLink)}" target="_blank" style="display:inline-block;font-size:40px;text-decoration:none;color:#f59e0b;padding:0 4px;transition:opacity .15s;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">★</a>`,
+    )
+    .join('');
 
   let bodyHtml = business.emailTemplate || `
     <h1 style="margin:0 0 8px;font-size:24px;color:#0a0a0a;">{{nombre}}</h1>
@@ -67,7 +50,7 @@ export const sendInvitation = async (customerId: string) => {
     </p>
   `;
 
-  // Reemplaza las variables del template
+  // Reemplazamos las variables del template.
   bodyHtml = bodyHtml
     .replace(/\{\{nombre\}\}/g, customerName ? `Hola, ${customerName}` : 'Gracias por tu visita')
     .replace(/\{\{negocio\}\}/g, businessName)
@@ -102,14 +85,13 @@ export const sendInvitation = async (customerId: string) => {
   </body>
 </html>`;
 
-  // ─── Envío del email con Resend ───────────
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) throw new Error('Falta RESEND_API_KEY en .env.local');
 
-  const res = await fetch('https://api.resend.com/emails', {
+  const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -120,16 +102,12 @@ export const sendInvitation = async (customerId: string) => {
     }),
   });
 
-  // Si Resend devuelve error, lo lanzamos para
-  // que el catch en el frontend lo capture
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Error al enviar email: ${err}`);
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Error al enviar email: ${errorBody}`);
   }
 
-  // ─── Actualiza estado, contador y fecha ───
-  // Solo después de confirmar que el email se
-  // envió correctamente
+  // Solo actualizamos el estado si el email se envió correctamente.
   await prisma.customer.update({
     where: { id: customerId },
     data: {
@@ -142,21 +120,14 @@ export const sendInvitation = async (customerId: string) => {
   return { success: true };
 };
 
-// ──────────────────────────────────────────────
-// sendBatchInvitations
-// ──────────────────────────────────────────────
-// Envía invitaciones en lote a varios clientes.
-// Itera sobre la lista y envía una por una.
-// Devuelve cuántas se enviaron correctamente y
-// cuántas fallaron.
-// ──────────────────────────────────────────────
+// Envía invitaciones en lote y devuelve cuántas se enviaron y cuántas fallaron.
 export const sendBatchInvitations = async (customerIds: string[]) => {
   let sent = 0;
   let failed = 0;
 
-  for (const id of customerIds) {
+  for (const customerId of customerIds) {
     try {
-      await sendInvitation(id);
+      await sendInvitation(customerId);
       sent++;
     } catch {
       failed++;
@@ -166,11 +137,9 @@ export const sendBatchInvitations = async (customerIds: string[]) => {
   return { sent, failed };
 };
 
+// Genera un enlace de WhatsApp con el mensaje de invitación a reseñar.
 export const getWhatsAppLink = async (customerId: string) => {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   const customer = await prisma.customer.findFirst({
     where: { id: customerId, business: { userId } },
@@ -191,14 +160,13 @@ export const getWhatsAppLink = async (customerId: string) => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const reviewUrl = `${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=5&redirect=${encodeURIComponent(googleLink)}`;
 
-  // Limpia el teléfono: elimina espacios, guiones, paréntesis y el prefijo +
-  const cleanPhone = phone.replace(/[\s\-\(\)\+]/g, '');
-  // Si empieza por 00, lo reemplaza por el código de país (34 para España)
+  // Normalizamos el teléfono: sin espacios, guiones, paréntesis ni prefijo +.
+  const cleanPhone = phone.replace(/[\s\-()\+]/g, '');
   const waPhone = cleanPhone.startsWith('00')
     ? cleanPhone.replace(/^00/, '')
     : cleanPhone.startsWith('34') || cleanPhone.startsWith('+34')
-    ? cleanPhone.replace(/^\+/, '')
-    : cleanPhone;
+      ? cleanPhone.replace(/^\+/, '')
+      : cleanPhone;
 
   const message = `Hola ${customerName ? `${customerName}, ` : ''}¿cómo valorarías tu experiencia en ${businessName}?\n\n${reviewUrl}`;
 

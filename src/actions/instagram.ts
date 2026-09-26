@@ -11,14 +11,11 @@ import {
   type InstagramMedia,
 } from '@/lib/instagram-graph';
 
-// La caché evita llamar a la Graph API de Instagram en cada
-// apertura del dashboard (rate-limit ~200 llamadas/hora y
-// riesgo de que Meta marque la app por uso automatizado).
+// La caché evita llamar a la Graph API en cada apertura del dashboard
+// (rate-limit ~200 llamadas/hora y riesgo de bloqueo por Meta).
 const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutos
 
-// Renovamos el token long-lived cuando le quedan menos de
-// 7 días. Meta exige que hayan pasado al menos 24 h desde
-// su emisión; con 60 días de vida útil se cumple de sobra.
+// Renovamos el token long-lived cuando le quedan menos de 7 días.
 const REFRESH_WINDOW_MS = 7 * 86400 * 1000;
 
 type InstagramData = {
@@ -35,19 +32,17 @@ type InstagramData = {
   totalComments: number;
 };
 
-// ─── Obtiene el access token si la conexión es válida ──
-// A diferencia de Google, Meta no permite renovar el token
-// con un refresh token: dura 60 días y luego el usuario debe
-// volver a conectar. Si está caducado devolvemos null.
-// ─────────────────────────────────────────────────────
-async function getValidInstagramToken(
-  businessId: string,
-  userId: string,
-): Promise<{
-  accessToken: string;
-  businessAccountId: string;
-  username?: string;
-} | null> {
+// Devuelve el id del usuario autenticado o lanza si no hay sesión.
+async function requireUserId(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
+  return user.id;
+}
+
+// Devuelve el token de Instagram si la conexión sigue válida. Meta no permite
+// refresh token: el token dura 60 días y luego hay que reconectar.
+async function getValidInstagramToken(businessId: string, userId: string) {
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
     select: {
@@ -61,7 +56,6 @@ async function getValidInstagramToken(
   if (!business?.instagramAccessToken || !business.instagramBusinessAccountId) {
     return null;
   }
-
   if (isInstagramTokenExpired(business.instagramTokenExpiry)) {
     return null;
   }
@@ -69,15 +63,13 @@ async function getValidInstagramToken(
   let accessToken = business.instagramAccessToken;
   let expiry = business.instagramTokenExpiry;
 
-  // Si al token le quedan menos de 7 días, intentamos
-  // renovarlo para no obligar al usuario a reconectar. Si
-  // la renovación falla seguimos usando el token actual
-  // (aún válido) y avisamos por consola.
+  // Si le quedan menos de 7 días, intentamos renovarlo. Si falla, seguimos
+  // usando el token actual (aún válido) y avisamos por consola.
   if (expiry && expiry.getTime() - Date.now() < REFRESH_WINDOW_MS) {
     try {
-      const refreshed = await refreshLongLivedToken(accessToken);
-      accessToken = refreshed.accessToken;
-      expiry = refreshed.expiresAt;
+      const refreshedToken = await refreshLongLivedToken(accessToken);
+      accessToken = refreshedToken.accessToken;
+      expiry = refreshedToken.expiresAt;
       await prisma.business.update({
         where: { id: businessId },
         data: {
@@ -85,8 +77,8 @@ async function getValidInstagramToken(
           instagramTokenExpiry: expiry,
         },
       });
-    } catch (e) {
-      console.error('[Instagram] No se pudo renovar el token:', e);
+    } catch (error) {
+      console.error('[Instagram] No se pudo renovar el token:', error);
     }
   }
 
@@ -97,27 +89,17 @@ async function getValidInstagramToken(
   };
 }
 
-// ─── Obtiene publicaciones + comentarios de Instagram ─
-// Devuelve las publicaciones recientes con sus comentarios
-// para mostrarlos en el dashboard. Si no está conectado o
-// el token caducó, devuelve null (la sección lo avisa).
-// ─────────────────────────────────────────────────────
+// Devuelve publicaciones y comentarios recientes. Null si no hay conexión.
 export const getBusinessInstagramData = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
-  const conn = await getValidInstagramToken(businessId, userId);
-  if (!conn) return null;
+  const connection = await getValidInstagramToken(businessId, userId);
+  if (!connection) return null;
 
   const now = Date.now();
   const cutoff = new Date(now - 90 * 86400 * 1000);
 
-  // 1. ¿Tenemos caché reciente? La devolvemos sin llamar a
-  //    la Graph API (evita el rate-limit y bloqueos de Meta).
+  // 1) Caché reciente: la devolvemos sin llamar a la Graph API.
   const cached = await prisma.business.findUnique({
     where: { id: businessId },
     select: { instagramCacheAt: true, instagramCache: true },
@@ -131,56 +113,48 @@ export const getBusinessInstagramData = async (businessId: string) => {
   }
 
   const media = await getInstagramCommentsData(
-    conn.accessToken,
-    conn.businessAccountId,
+    connection.accessToken,
+    connection.businessAccountId,
     8,
   );
 
-  // Normalizamos: descartamos publicaciones muy antiguas y
-  // dejamos una estructura sencilla para el frontend.
+  // Descartamos publicaciones muy antiguas y normalizamos la estructura.
   const posts = media
-    .filter((m) => new Date(m.timestamp) > cutoff)
-    .map((m) => ({
-      id: m.id,
-      caption: m.caption ?? '',
-      timestamp: m.timestamp,
-      mediaType: m.media_type,
-      permalink: m.permalink,
-      thumbnailUrl: m.thumbnail_url ?? m.media_url ?? '',
-      comments: m.comments ?? [],
+    .filter((item) => new Date(item.timestamp) > cutoff)
+    .map((item) => ({
+      id: item.id,
+      caption: item.caption ?? '',
+      timestamp: item.timestamp,
+      mediaType: item.media_type,
+      permalink: item.permalink,
+      thumbnailUrl: item.thumbnail_url ?? item.media_url ?? '',
+      comments: item.comments ?? [],
     }));
 
-  const normalized: InstagramData = {
-    username: conn.username ?? '',
+  const instagramData: InstagramData = {
+    username: connection.username ?? '',
     posts,
     totalComments: posts.reduce(
-      (acc: number, p: { comments: InstagramComment[] }) =>
-        acc + p.comments.length,
+      (total, post) => total + post.comments.length,
       0,
     ),
   };
 
-  // 2. Guardamos en caché para no volver a llamar a la API
-  //    en las próximas aperturas.
+  // 2) Guardamos en caché para las próximas aperturas.
   await prisma.business.update({
     where: { id: businessId },
-    data: { instagramCacheAt: new Date(), instagramCache: normalized as object },
+    data: {
+      instagramCacheAt: new Date(),
+      instagramCache: instagramData as object,
+    },
   });
 
-  return normalized;
+  return instagramData;
 };
 
-// ─── Estado de la conexión con Instagram ─────────────
-// Para mostrar en Settings si está conectado, con qué
-// usuario y cuándo caduca el token.
-// ─────────────────────────────────────────────────────
+// Estado de la conexión con Instagram, para Settings.
 export const getInstagramConnectionStatus = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
@@ -203,30 +177,31 @@ export const getInstagramConnectionStatus = async (businessId: string) => {
   };
 };
 
-// ─── Responde un comentario publicando en Instagram ──
-// Se usa desde el modal: la IA genera el texto y el botón
-// "Publicar respuesta" hace la llamada POST /replies.
-// ─────────────────────────────────────────────────────
+// Responde a un comentario publicando en Instagram.
 export const replyToInstagramComment = async (
   businessId: string,
   commentId: string,
   message: string,
 ) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
-  const conn = await getValidInstagramToken(businessId, userId);
-  if (!conn) throw new Error('Instagram no conectado o token caducado. Reconecta en Configuración.');
+  const connection = await getValidInstagramToken(businessId, userId);
+  if (!connection) {
+    throw new Error(
+      'Instagram no conectado o token caducado. Reconecta en Configuración.',
+    );
+  }
 
-  const result = await postCommentReply(conn.accessToken, commentId, message);
-  if (!result.ok) throw new Error(result.error ?? 'No se pudo publicar la respuesta');
+  const result = await postCommentReply(
+    connection.accessToken,
+    commentId,
+    message,
+  );
+  if (!result.ok) {
+    throw new Error(result.error ?? 'No se pudo publicar la respuesta');
+  }
 
-  // Invalidamos la caché para que el dashboard muestre la
-  // respuesta recién publicada al recargar.
+  // Invalidamos la caché para mostrar la respuesta al recargar.
   await prisma.business.update({
     where: { id: businessId },
     data: { instagramCacheAt: null, instagramCache: null },
@@ -235,7 +210,7 @@ export const replyToInstagramComment = async (
   return { ok: true, replyId: result.replyId };
 };
 
-// ─── Tipo de salida para el frontend ─────────────────
+// Tipo de salida para el frontend.
 export type InstagramPost = {
   id: string;
   caption: string;

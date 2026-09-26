@@ -2,39 +2,46 @@
 
 import prisma from '@/lib/db';
 
+// Canjea una factura desde el perfil del cliente: comprueba que pertenezca
+// al negocio, la registra y suma un punto.
 export const claimInvoice = async (
   customerId: string,
   slug: string,
   invoiceNumber: string,
 ) => {
-  const trimmed = invoiceNumber.trim();
-  if (!trimmed) throw new Error('Número de factura requerido');
-  if (trimmed.length < 3) throw new Error('El número de factura es demasiado corto');
+  const normalizedNumber = invoiceNumber.trim();
+  if (!normalizedNumber) throw new Error('Número de factura requerido');
+  if (normalizedNumber.length < 3) {
+    throw new Error('El número de factura es demasiado corto');
+  }
 
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
     include: { business: { select: { slug: true, id: true } } },
   });
 
-  if (!customer) throw new Error('Cliente no encontrado');
-  if (customer.business.slug !== slug) throw new Error('Cliente no encontrado');
+  if (!customer || customer.business.slug !== slug) {
+    throw new Error('Cliente no encontrado');
+  }
 
-  // Busca si ya existe una factura con ese número para este negocio
-  const existing = await prisma.invoice.findUnique({
+  // Cada número de factura solo puede registrarse una vez por negocio.
+  const alreadyClaimed = await prisma.invoice.findUnique({
     where: {
-      number_businessId: { number: trimmed, businessId: customer.business.id },
+      number_businessId: {
+        number: normalizedNumber,
+        businessId: customer.business.id,
+      },
     },
   });
-
-  if (existing) {
+  if (alreadyClaimed) {
     throw new Error('Este número de factura ya ha sido registrado');
   }
 
-  // Crea la factura y suma el punto en una transacción atómica
+  // Registramos la factura y sumamos el punto en una sola transacción.
   await prisma.$transaction([
     prisma.invoice.create({
       data: {
-        number: trimmed,
+        number: normalizedNumber,
         businessId: customer.business.id,
         customerId,
         usedAt: new Date(),
@@ -49,6 +56,7 @@ export const claimInvoice = async (
   return { success: true };
 };
 
+// Devuelve las últimas facturas canjeadas por un cliente.
 export const getCustomerInvoices = async (customerId: string, slug: string) => {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
@@ -62,8 +70,8 @@ export const getCustomerInvoices = async (customerId: string, slug: string) => {
     take: 50,
   });
 
-  return invoices.map((inv) => ({
-    number: inv.number,
-    usedAt: inv.usedAt?.toISOString() ?? null,
+  return invoices.map((invoice) => ({
+    number: invoice.number,
+    usedAt: invoice.usedAt?.toISOString() ?? null,
   }));
 };

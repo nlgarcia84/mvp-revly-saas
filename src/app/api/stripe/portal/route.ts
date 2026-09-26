@@ -5,8 +5,8 @@ import prisma from '@/lib/db';
 export async function GET() {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? '';
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    const userId = authUser?.id ?? '';
     if (!userId) return NextResponse.redirect('/sign-in');
 
     const user = await prisma.user.findUnique({

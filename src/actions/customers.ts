@@ -3,32 +3,36 @@
 import prisma from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 
-// ──────────────────────────────────────────────
-// addCustomer
-// ──────────────────────────────────────────────
-// Crea un cliente manualmente desde el dashboard
-// (no desde la página pública). Verifica que el
-// negocio pertenezca al usuario autenticado.
-// ──────────────────────────────────────────────
+// Devuelve el id del usuario autenticado o lanza si no hay sesión.
+async function requireUserId(): Promise<string> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("No autenticado");
+  return user.id;
+}
+
+// Comprueba que el negocio exista y pertenezca al usuario indicado.
+async function requireOwnedBusiness(businessId: string, userId: string) {
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+  });
+  if (!business) throw new Error("Negocio no encontrado");
+  return business;
+}
+
+// Crea un cliente manualmente desde el dashboard.
 export const addCustomer = async (data: {
   businessId: string;
   name: string;
   email: string;
   phone: string;
 }) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
+  const userId = await requireUserId();
+  await requireOwnedBusiness(data.businessId, userId);
 
-  const business = await prisma.business.findFirst({
-    where: { id: data.businessId, userId },
-  });
-  if (!business) throw new Error("Negocio no encontrado");
-
-  const customer = await prisma.customer.create({
+  return prisma.customer.create({
     data: {
       name: data.name || null,
       email: data.email,
@@ -36,48 +40,28 @@ export const addCustomer = async (data: {
       businessId: data.businessId,
     },
   });
-
-  return customer;
 };
 
-// ──────────────────────────────────────────────
-// getCustomers
-// ──────────────────────────────────────────────
-// Devuelve todos los clientes de un negocio
-// ordenados del más reciente al más antiguo.
-// Verifica que el negocio pertenezca al usuario.
-// ──────────────────────────────────────────────
+// Devuelve los clientes de un negocio, del más reciente al más antiguo.
 export const getCustomers = async (businessId: string) => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) return [];
+  if (!user) return [];
 
   return prisma.customer.findMany({
-    where: { businessId, business: { userId } },
+    where: { businessId, business: { userId: user.id } },
     orderBy: { createdAt: "desc" },
   });
 };
 
-// ──────────────────────────────────────────────
-// updateCustomerStatus
-// ──────────────────────────────────────────────
-// Cambia el estado de un cliente (pending →
-// invited → completed). Se usa desde la tabla
-// de gestión de clientes al enviar invitaciones.
-// ──────────────────────────────────────────────
+// Cambia el estado de un cliente (pending → invited → completed).
 export const updateCustomerStatus = async (
   customerId: string,
   status: string,
 ) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
+  await requireUserId();
 
   return prisma.customer.update({
     where: { id: customerId },
@@ -85,75 +69,44 @@ export const updateCustomerStatus = async (
   });
 };
 
-// ──────────────────────────────────────────────
-// addCustomerBatch
-// ──────────────────────────────────────────────
-// Crea o actualiza múltiples clientes a la vez
-// (desde CSV o importación manual). Si el email
-// ya existe para el negocio, actualiza nombre y
-// teléfono (upsert). Devuelve cuántos se
-// procesaron y cuántos fallaron.
-// ──────────────────────────────────────────────
+// Crea o actualiza varios clientes a la vez (importación CSV o manual).
+// Si el email ya existe en el negocio, actualiza nombre y teléfono.
 export const addCustomerBatch = async (
   businessId: string,
   customers: { name?: string; email: string; phone: string }[],
 ) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
-
-  const business = await prisma.business.findFirst({
-    where: { id: businessId, userId },
-  });
-  if (!business) throw new Error("Negocio no encontrado");
+  const userId = await requireUserId();
+  await requireOwnedBusiness(businessId, userId);
 
   let created = 0;
-  let errors = 0;
+  let failed = 0;
 
-  for (const c of customers) {
+  for (const { name, email, phone } of customers) {
     try {
       await prisma.customer.upsert({
-        where: {
-          email_businessId: { email: c.email, businessId },
-        },
+        where: { email_businessId: { email, businessId } },
         create: {
-          name: c.name || null,
-          email: c.email,
-          phone: c.phone,
+          name: name || null,
+          email,
+          phone,
           businessId,
           source: "manual",
         },
-        update: {
-          name: c.name || null,
-          phone: c.phone,
-        },
+        update: { name: name || null, phone },
       });
       created++;
-    } catch (e) {
-      console.error("Error procesando cliente:", e);
-      errors++;
+    } catch (error) {
+      console.error("Error procesando cliente:", error);
+      failed++;
     }
   }
 
-  return { created, errors };
+  return { created, errors: failed };
 };
 
-// ──────────────────────────────────────────────
-// deleteCustomer
-// ──────────────────────────────────────────────
-// Elimina un cliente individual. Solo el dueño
-// del negocio puede eliminar sus clientes.
-// ──────────────────────────────────────────────
+// Elimina un cliente. Solo el dueño del negocio puede.
 export const deleteCustomer = async (customerId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
+  const userId = await requireUserId();
 
   const customer = await prisma.customer.findFirst({
     where: { id: customerId, business: { userId } },
@@ -164,50 +117,19 @@ export const deleteCustomer = async (customerId: string) => {
   return { success: true };
 };
 
-// ──────────────────────────────────────────────
-// clearCustomers
-// ──────────────────────────────────────────────
-// Elimina TODOS los clientes de un negocio.
-// Útil para pruebas o reinicio de datos.
-// Solo el dueño del negocio puede hacerlo.
-// ──────────────────────────────────────────────
+// Elimina todos los clientes de un negocio.
 export const clearCustomers = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
-
-  const business = await prisma.business.findFirst({
-    where: { id: businessId, userId },
-  });
-  if (!business) throw new Error("Negocio no encontrado");
+  const userId = await requireUserId();
+  await requireOwnedBusiness(businessId, userId);
 
   await prisma.customer.deleteMany({ where: { businessId } });
   return { success: true };
 };
 
-// ──────────────────────────────────────────────
-// clearCompletedCustomers
-// ──────────────────────────────────────────────
-// Elimina solo los clientes con estado
-// "completed". Se usa para limpiar clientes
-// que ya dejaron reseña. Devuelve cuántos
-// se eliminaron.
-// ──────────────────────────────────────────────
+// Elimina solo los clientes que ya completaron (dejaron reseña).
 export const clearCompletedCustomers = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
-
-  const business = await prisma.business.findFirst({
-    where: { id: businessId, userId },
-  });
-  if (!business) throw new Error("Negocio no encontrado");
+  const userId = await requireUserId();
+  await requireOwnedBusiness(businessId, userId);
 
   const { count } = await prisma.customer.deleteMany({
     where: { businessId, status: "completed" },
@@ -215,20 +137,8 @@ export const clearCompletedCustomers = async (businessId: string) => {
   return { count };
 };
 
-// ──────────────────────────────────────────────
-// findPublicCustomerByEmail
-// ──────────────────────────────────────────────
-// Busca un cliente por email en un negocio (slug).
-// Devuelve el cliente si existe o null si no.
-// Es una Server Action pública — no requiere auth.
-// Sirve para el flujo: "¿Ya tienes cuenta?
-// Introduce tu email" en la página pública.
-// Cuando el QR del negocio escanea y el cliente
-// introduce su email, esta función lo busca y
-// redirige directamente a su perfil de puntos
-// si ya existe (evita que tenga que registrarse
-// cada vez que visita el negocio).
-// ──────────────────────────────────────────────
+// Pública: busca un cliente por email dentro de un negocio.
+// Se usa en la página pública para saber si el cliente ya existe.
 export const findPublicCustomerByEmail = async (
   slug: string,
   email: string,
@@ -240,14 +150,9 @@ export const findPublicCustomerByEmail = async (
   if (!business) return null;
 
   const customer = await prisma.customer.findUnique({
-    where: {
-      email_businessId: { email, businessId: business.id },
-    },
-    include: {
-      business: { select: { name: true, slug: true } },
-    },
+    where: { email_businessId: { email, businessId: business.id } },
+    include: { business: { select: { name: true, slug: true } } },
   });
-
   if (!customer) return null;
 
   return {
@@ -259,19 +164,8 @@ export const findPublicCustomerByEmail = async (
   };
 };
 
-// ──────────────────────────────────────────────
-// getPublicCustomer
-// ──────────────────────────────────────────────
-// Devuelve los datos que necesita la página de perfil
-// del cliente (puntos, código de descuento, negocio).
-// No requiere autenticación porque es una página pública.
-// Busca el cliente por ID y verifica que el slug del
-// negocio coincida (para evitar mostrar datos de otro).
-//
-// También devuelve invoiceFormat — el formato de factura
-// que el negocio configuró, para mostrarlo como placeholder
-// en el campo de canje de factura del cliente.
-// ──────────────────────────────────────────────
+// Pública: datos del perfil de un cliente (puntos, código y negocio).
+// Verifica que el slug coincida para no mostrar datos de otro negocio.
 export const getPublicCustomer = async (customerId: string, slug: string) => {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
@@ -279,9 +173,7 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
       business: { select: { name: true, slug: true, invoiceFormat: true } },
     },
   });
-
-  if (!customer) return null;
-  if (customer.business.slug !== slug) return null;
+  if (!customer || customer.business.slug !== slug) return null;
 
   return {
     id: customer.id,
@@ -293,29 +185,16 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
   };
 };
 
-// ──────────────────────────────────────────────
-// deleteSelectedCustomers
-// ──────────────────────────────────────────────
-// Elimina múltiples clientes seleccionados de la tabla.
-// Primero verifica que TODOS pertenezcan al usuario
-// (en una sola query findMany filtrada por userId del
-// negocio). Solo borra los IDs válidos para evitar
-// que alguien intente borrar clientes de otros negocios.
-// ──────────────────────────────────────────────
+// Elimina varios clientes seleccionados, solo los que sean del usuario.
 export const deleteSelectedCustomers = async (ids: string[]) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? "";
-  if (!userId) throw new Error("No autenticado");
+  const userId = await requireUserId();
 
-  const customers = await prisma.customer.findMany({
+  const ownedCustomers = await prisma.customer.findMany({
     where: { id: { in: ids }, business: { userId } },
     select: { id: true },
   });
-  const validIds = customers.map((c) => c.id);
+  const ownedIds = ownedCustomers.map((customer) => customer.id);
 
-  await prisma.customer.deleteMany({ where: { id: { in: validIds } } });
-  return { deleted: validIds.length };
+  await prisma.customer.deleteMany({ where: { id: { in: ownedIds } } });
+  return { deleted: ownedIds.length };
 };

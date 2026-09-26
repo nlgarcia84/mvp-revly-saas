@@ -2,13 +2,29 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { extractPlaceId, fetchPlaceDetails, resolveShortUrl, resolveWithTextSearch, type GoogleReview } from '@/lib/google-places';
-import { refreshAccessToken, getBusinessProfileData, replyToBusinessReview } from '@/lib/google-business-profile';
+import {
+  extractPlaceId,
+  fetchPlaceDetails,
+  resolveShortUrl,
+  resolveWithTextSearch,
+  type GoogleReview,
+} from '@/lib/google-places';
+import {
+  refreshAccessToken,
+  getBusinessProfileData,
+  replyToBusinessReview,
+} from '@/lib/google-business-profile';
 
-// ─── Obtiene un access token válido ───────────────────
-// Si el token actual ha caducado, usa el refresh token
-// para renovarlo y guarda el nuevo en la BD.
-// ─────────────────────────────────────────────────────
+// Devuelve el id del usuario autenticado o lanza si no hay sesión.
+async function requireUserId(): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('No autenticado');
+  return user.id;
+}
+
+// Devuelve un access token válido de Google Business Profile, renovándolo
+// con el refresh token si ha caducado. Null si no hay conexión.
 async function getValidAccessToken(businessId: string): Promise<string | null> {
   const business = await prisma.business.findUnique({
     where: { id: businessId },
@@ -25,7 +41,7 @@ async function getValidAccessToken(businessId: string): Promise<string | null> {
     return null;
   }
 
-  // Si el token aún no ha caducado, lo devolvemos tal cual
+  // Si aún no ha caducado, lo devolvemos tal cual.
   if (
     business.googleBusinessTokenExpiry &&
     business.googleBusinessTokenExpiry > new Date()
@@ -33,34 +49,27 @@ async function getValidAccessToken(businessId: string): Promise<string | null> {
     return business.googleBusinessAccessToken;
   }
 
-  // Ha caducado, lo renovamos con el refresh token
-  const nuevo = await refreshAccessToken(business.googleBusinessRefreshToken);
-  if (!nuevo) return null;
+  // Caducado: lo renovamos y guardamos el nuevo.
+  const refreshedToken = await refreshAccessToken(
+    business.googleBusinessRefreshToken,
+  );
+  if (!refreshedToken) return null;
 
-  // Guardamos el nuevo token en la BD
   await prisma.business.update({
     where: { id: businessId },
     data: {
-      googleBusinessAccessToken: nuevo.accessToken,
-      googleBusinessTokenExpiry: nuevo.expiresAt,
+      googleBusinessAccessToken: refreshedToken.accessToken,
+      googleBusinessTokenExpiry: refreshedToken.expiresAt,
     },
   });
 
-  return nuevo.accessToken;
+  return refreshedToken.accessToken;
 }
 
-// ─── Obtiene reseñas de Google ────────────────────────
-// Primero intenta con Business Profile API (todas las
-// reseñas). Si no está conectado o falla, usa Places API
-// (solo 5 reseñas). Así el usuario siempre ve algo.
-// ─────────────────────────────────────────────────────
+// Obtiene las reseñas de un negocio. Intenta primero Business Profile API
+// (todas las reseñas); si no está conectado o falla, usa Places API (5).
 export const getBusinessGoogleReviews = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
@@ -68,78 +77,66 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
   if (!business) throw new Error('Negocio no encontrado');
   if (!business.googleLink) return null;
 
-  // ── 1. Intentar con Business Profile API ────────────
-  // Si el usuario ha conectado su cuenta y tiene tokens
-  // válidos, usamos la API profesional que devuelve
-  // todas las reseñas (sin límite de 5).
-  // ────────────────────────────────────────────────────
+  // 1) Business Profile API (si hay conexión y tokens válidos).
   const accessToken = await getValidAccessToken(businessId);
-  if (accessToken && business.googleBusinessAccountId && business.googleBusinessLocationId) {
+  if (
+    accessToken &&
+    business.googleBusinessAccountId &&
+    business.googleBusinessLocationId
+  ) {
     try {
-      const bpData = await getBusinessProfileData(
+      const businessProfile = await getBusinessProfileData(
         accessToken,
         business.googleBusinessAccountId,
         business.googleBusinessLocationId,
       );
-      if (bpData) {
-        // Extraemos el Place ID del enlace de Google para ponerlo en la respuesta
+      if (businessProfile) {
         const resolvedUrl = await resolveShortUrl(business.googleLink);
         const placeId = extractPlaceId(resolvedUrl) ?? '';
-
         return {
           placeId,
-          name: bpData.name,
-          rating: bpData.rating,
-          userRatingsTotal: bpData.userRatingsTotal,
-          reviews: bpData.reviews,
+          name: businessProfile.name,
+          rating: businessProfile.rating,
+          userRatingsTotal: businessProfile.userRatingsTotal,
+          reviews: businessProfile.reviews,
         };
       }
-    } catch (e) {
-      // La API de Business Profile puede fallar (503/403, quota,
-      // región no soportada, etc.). Si es así seguimos adelante y
-      // usamos el fallback de Places API para que el usuario
-      // siempre vea al menos las 5 últimas reseñas.
-      console.error('[GoogleReviews] Business Profile API falló, usando fallback:', e);
+    } catch (error) {
+      // Si la API falla (quota, región, etc.), seguimos con el fallback.
+      console.error(
+        '[GoogleReviews] Business Profile API falló, usando fallback:',
+        error,
+      );
     }
   }
 
-  // ── 2. Fallback: Google Places API (solo 5 reseñas) ─
-  // Si no está conectado a Business Profile o si la API
-  // falló, usamos Places API que es más simple pero solo
-  // devuelve las últimas 5 reseñas.
-  // ────────────────────────────────────────────────────
+  // 2) Fallback: Places API (solo las 5 últimas reseñas).
   const resolvedUrl = await resolveShortUrl(business.googleLink);
   let placeId = extractPlaceId(resolvedUrl);
-  // Si no hay Place ID en la URL (p.ej. enlaces "share.google" que
-  // redirigen a google.com/search), buscamos el sitio por el nombre
-  // del negocio con Text Search.
+  // Enlaces tipo "share.google" no traen Place ID: buscamos por nombre.
   if (!placeId) {
     placeId = (await resolveWithTextSearch(business.name, resolvedUrl)) ?? '';
   }
   if (!placeId) {
-    console.error(`[GoogleReviews] No se pudo extraer Place ID del enlace: ${business.googleLink} (resuelto: ${resolvedUrl})`);
+    console.error(
+      `[GoogleReviews] No se pudo extraer Place ID del enlace: ${business.googleLink} (resuelto: ${resolvedUrl})`,
+    );
     return null;
   }
 
   const details = await fetchPlaceDetails(placeId, business.name, resolvedUrl);
   if (!details) {
-    console.error(`[GoogleReviews] fetchPlaceDetails devolvió null | placeId: ${placeId} | negocio: ${business.name} | enlace: ${resolvedUrl}`);
+    console.error(
+      `[GoogleReviews] fetchPlaceDetails devolvió null | placeId: ${placeId} | negocio: ${business.name} | enlace: ${resolvedUrl}`,
+    );
     return null;
   }
   return { ...details, placeId };
 };
 
-// ─── Estado de la conexión con Business Profile ──────
-// Para mostrar en Settings si está conectado o no.
-// Devuelve la información de la cuenta conectada.
-// ─────────────────────────────────────────────────────
+// Estado de la conexión con Business Profile, para mostrar en Settings.
 export const getBusinessProfileStatus = async (businessId: string) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
@@ -161,23 +158,14 @@ export const getBusinessProfileStatus = async (businessId: string) => {
   };
 };
 
-// ─── Publica una respuesta en Google ─────────────────
-// Requiere que el negocio esté conectado por OAuth y que
-// Google haya aprobado la cuota de la Business Profile API.
-// `reviewName` viene de las reseñas de Business Profile
-// (las de Places API no se pueden responder por API).
-// ─────────────────────────────────────────────────────
+// Publica una respuesta en Google. Requiere Business Profile conectado y
+// cuota aprobada. `reviewName` solo existe en reseñas de Business Profile.
 export const replyToGoogleReview = async (
   businessId: string,
   reviewName: string,
   comment: string,
 ): Promise<{ ok: boolean; error?: string }> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   if (!reviewName || !comment.trim()) {
     return { ok: false, error: 'Faltan datos para publicar la respuesta.' };
@@ -209,43 +197,47 @@ export const replyToGoogleReview = async (
   return replyToBusinessReview(accessToken, reviewName, comment.trim());
 };
 
+// Devuelve las reseñas de todos los negocios del usuario.
 export const getAllGoogleReviews = async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const userId = user?.id ?? '';
-  if (!userId) throw new Error('No autenticado');
+  const userId = await requireUserId();
 
   const businesses = await prisma.business.findMany({
     where: { userId, googleLink: { not: null } },
     select: { id: true, name: true, googleLink: true },
   });
-
   if (businesses.length === 0) return [];
 
   const results = await Promise.allSettled(
-    businesses.map(async (b) => {
-      const data = await getBusinessGoogleReviews(b.id);
+    businesses.map(async (business) => {
+      const data = await getBusinessGoogleReviews(business.id);
       if (!data) return null;
-      return { businessId: b.id, businessName: b.name, ...data };
+      return { businessId: business.id, businessName: business.name, ...data };
     }),
   );
 
-  const fulfilled = results
+  const reviews = results
     .filter(
-      (r): r is PromiseFulfilledResult<{ businessId: string; businessName: string; name: string; rating: number; userRatingsTotal: number; placeId: string; reviews: GoogleReview[] }> =>
-        r.status === 'fulfilled' && r.value !== null,
+      (
+        result,
+      ): result is PromiseFulfilledResult<{
+        businessId: string;
+        businessName: string;
+        name: string;
+        rating: number;
+        userRatingsTotal: number;
+        placeId: string;
+        reviews: GoogleReview[];
+      }> => result.status === 'fulfilled' && result.value !== null,
     )
-    .map((r) => r.value);
+    .map((result) => result.value);
 
   const errors = results.filter(
-    (r): r is PromiseRejectedResult => r.status === 'rejected',
+    (result): result is PromiseRejectedResult => result.status === 'rejected',
   );
 
-  if (fulfilled.length === 0 && errors.length > 0) {
+  if (reviews.length === 0 && errors.length > 0) {
     throw errors[0].reason;
   }
 
-  return fulfilled;
+  return reviews;
 };
