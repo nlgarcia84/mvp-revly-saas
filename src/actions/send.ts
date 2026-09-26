@@ -54,7 +54,8 @@ export const sendInvitation = async (customerId: string) => {
   bodyHtml = bodyHtml
     .replace(/\{\{nombre\}\}/g, customerName ? `Hola, ${customerName}` : 'Gracias por tu visita')
     .replace(/\{\{negocio\}\}/g, businessName)
-    .replace(/\{\{link\}\}/g, reviewUrl);
+    .replace(/\{\{link\}\}/g, reviewUrl)
+    .replace(/\{\{confirmar\}\}/g, reviewUrl);
 
   const html = `
 <!DOCTYPE html>
