@@ -11,7 +11,11 @@ import {
   deleteSelectedCustomers,
   getCustomers,
 } from "@/actions/customers";
-import { addPointToCustomer } from "@/actions/points";
+import {
+  addPointToCustomer,
+  setCustomerPoints,
+  subtractPointFromCustomer,
+} from "@/actions/points";
 import { redeemDiscountCodeInDashboard } from "@/actions/redeem";
 import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
@@ -159,6 +163,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [features, setFeatures] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
   const [addingPointId, setAddingPointId] = useState<string | null>(null);
+  const [editPoints, setEditPoints] = useState<Customer | null>(null);
+  const [pointsInput, setPointsInput] = useState("");
+  const [savingPoints, setSavingPoints] = useState(false);
   const [redeemCode, setRedeemCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState("");
@@ -195,6 +202,41 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       alert(result.error);
     }
     setAddingPointId(null);
+  };
+
+  const handleSubtractPoint = async (customerId: string) => {
+    setAddingPointId(customerId);
+    const result = await subtractPointFromCustomer(customerId);
+    if (result.success) {
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === customerId ? { ...c, points: result.points } : c,
+        ),
+      );
+    } else {
+      alert(result.error);
+    }
+    setAddingPointId(null);
+  };
+
+  const handleSetPoints = async () => {
+    if (!editPoints) return;
+    setSavingPoints(true);
+    const result = await setCustomerPoints(
+      editPoints.id,
+      parseInt(pointsInput, 10),
+    );
+    if (result.success) {
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === editPoints.id ? { ...c, points: result.points } : c,
+        ),
+      );
+      setEditPoints(null);
+    } else {
+      alert(result.error);
+    }
+    setSavingPoints(false);
   };
 
   const handleRedeem = async (e: React.FormEvent) => {
@@ -684,6 +726,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                   <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
                     Estado
                   </th>
+                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                    Puntos
+                  </th>
                   <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
                     Valoración
                   </th>
@@ -739,6 +784,19 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         {statusLabel[c.status] ?? c.status}
                       </span>
                     </td>
+                    <td className="py-3.5 pr-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditPoints(c);
+                          setPointsInput(String(c.points));
+                        }}
+                        className="font-medium underline decoration-dotted hover:text-neutral-950 dark:hover:text-neutral-100"
+                        title="Corregir puntos"
+                      >
+                        {c.points}
+                      </button>
+                    </td>
                     <td className="py-3.5 pr-4 text-neutral-500 hidden lg:table-cell">
                       {c.rating ? (
                         <span
@@ -770,6 +828,15 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         className="flex items-center gap-1.5 sm:gap-3"
                         onClick={(e) => e.stopPropagation()}
                       >
+                        <Button
+                          variant="secondary"
+                          className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                          onClick={() => handleSubtractPoint(c.id)}
+                          disabled={addingPointId === c.id || c.points === 0}
+                          title="Restar 1 punto"
+                        >
+                          -1
+                        </Button>
                         <Button
                           variant="secondary"
                           className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
@@ -956,6 +1023,52 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     }}
                   >
                     Cerrar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Modal: Corregir puntos */}
+        {editPoints && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 z-40"
+              onClick={() => setEditPoints(null)}
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 className="text-lg font-semibold mb-1">Corregir puntos</h2>
+                <p className="text-xs text-neutral-400 mb-4">
+                  {editPoints.name ?? "Cliente"} · total actual:{" "}
+                  {editPoints.points}
+                </p>
+                <input
+                  type="number"
+                  min={0}
+                  value={pointsInput}
+                  onChange={(e) => setPointsInput(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                />
+                <div className="flex gap-2 justify-end mt-4">
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={() => setEditPoints(null)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="primary"
+                    type="button"
+                    onClick={handleSetPoints}
+                    disabled={savingPoints}
+                  >
+                    {savingPoints ? "Guardando..." : "Guardar"}
                   </Button>
                 </div>
               </div>

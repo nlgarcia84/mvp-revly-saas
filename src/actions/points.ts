@@ -126,3 +126,57 @@ export const addPointToCustomer = async (customerId: string) => {
 
   return { success: true as const, points: updatedPoints };
 };
+
+// Resta 1 punto manualmente (corrección). No notifica al cliente.
+export const subtractPointFromCustomer = async (customerId: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false as const, error: 'No autenticado' };
+
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, business: { userId: user.id } },
+    select: { id: true, points: true },
+  });
+  if (!customer) {
+    return { success: false as const, error: 'Cliente no encontrado' };
+  }
+
+  const updatedPoints = Math.max(0, customer.points - 1);
+  await prisma.customer.update({
+    where: { id: customerId },
+    data: { points: updatedPoints },
+  });
+
+  return { success: true as const, points: updatedPoints };
+};
+
+// Fija el total de puntos (corrección). No notifica al cliente.
+export const setCustomerPoints = async (customerId: string, points: number) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false as const, error: 'No autenticado' };
+
+  const value = Math.floor(points);
+  if (!Number.isFinite(value) || value < 0) {
+    return { success: false as const, error: 'Valor de puntos no válido' };
+  }
+
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, business: { userId: user.id } },
+    select: { id: true },
+  });
+  if (!customer) {
+    return { success: false as const, error: 'Cliente no encontrado' };
+  }
+
+  await prisma.customer.update({
+    where: { id: customerId },
+    data: { points: value },
+  });
+
+  return { success: true as const, points: value };
+};
