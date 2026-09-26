@@ -152,7 +152,7 @@ export async function getBusinessReviews(
   let totalReviewCount = 0;
 
   do {
-    let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50`;
+    let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50&readMask=reviewer,starRating,comment,createTime,name&sortOrder=NEWEST`;
     if (pageToken) url += `&pageToken=${pageToken}`;
 
     const response = await fetch(url, {

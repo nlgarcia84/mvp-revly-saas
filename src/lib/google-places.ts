@@ -6,6 +6,7 @@ export type GoogleReview = {
   profilePhotoUrl: string;
   relativeTimeDescription: string;
   hasReply?: boolean;
+  reviewName?: string;
 };
 
 export type PlaceDetails = {
@@ -231,6 +232,7 @@ export async function fetchPlaceDetails(
       time: review.time ?? 0,
       profilePhotoUrl: review.profile_photo_url ?? '',
       relativeTimeDescription: review.relative_time_description ?? '',
+      reviewName: review.name ?? undefined,
     })),
   };
 }
