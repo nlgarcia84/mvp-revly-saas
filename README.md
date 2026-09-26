@@ -208,8 +208,7 @@ META_WEBHOOK_VERIFY_TOKEN=    # Token que definimos en Meta para verificar /api/
 # WhatsApp (Cloud API de Meta) — notificaciones al cliente (opcional)
 WHATSAPP_PHONE_NUMBER_ID=     # ID del número de WhatsApp Business (Cloud API)
 WHATSAPP_ACCESS_TOKEN=        # Token de acceso de la app de Meta con WhatsApp
-WHATSAPP_TEMPLATE_WELCOME=    # (opcional) nombre de la plantilla de bienvenida
-WHATSAPP_TEMPLATE_POINTS=     # (opcional) nombre de la plantilla de puntos
+WHATSAPP_TEMPLATE_DISCOUNT=   # (opcional) nombre de la plantilla de descuento
 ```
 
 ## Meta (Facebook + Instagram)
@@ -226,17 +225,18 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
 
 ## Notificaciones al cliente
 
-Tres avisos, con distinto canal y momento:
-
 | Evento | Cuándo | Email | WhatsApp |
 |---|---|---|---|
-| **Registro** | Inmediato | ✅ | ✅ |
-| **Suma de punto** (ticket) | Inmediato | ✅ | ✅ |
+| **Registro** | Inmediato | ✅ | ❌ |
+| **Suma de punto** (ticket) | Inmediato | ✅ | ⚠️ solo al conseguir descuento |
 | **Petición de reseña** | **+1 día** (programado) | ✅ | ❌ |
 
+- **WhatsApp con opt-in:** solo se envía si el cliente marcó "Quiero recibir avisos
+  por WhatsApp" en el registro (`Customer.whatsappOptIn`) **y** además ha conseguido
+  un descuento (puntos múltiplo de 5). Así el onboarding y los puntos no resultan
+  intrusivos.
 - **Código:** `src/lib/notifications.ts` (`notifyCustomerRegistered`,
-  `notifyCustomerPoints`, `scheduleReviewRequest`). Cada evento envía por sus
-  canales; si uno no está configurado, el otro sigue funcionando.
+  `notifyCustomerPoints`, `scheduleReviewRequest`).
 - **Email:** `src/lib/email.ts` (Resend), remitente `Revly <hola@revly.es>`
   (configurable con `EMAIL_FROM`). La reseña se **programa** con `scheduled_at` de Resend.
 - **Plantilla de reseña:** `src/lib/review-email.ts` (editable desde Settings con
@@ -244,13 +244,11 @@ Tres avisos, con distinto canal y momento:
 - **WhatsApp:** `src/lib/whatsapp.ts` (Cloud API).
 - **Dónde se dispara:** `addPublicCustomer` (bienvenida + programación de reseña) y
   `claimTicketPoint` (puntos).
-- **Plantillas a crear en Meta** (WhatsApp Manager → Plantillas), categoría *Utility*,
+- **Plantilla a crear en Meta** (WhatsApp Manager → Plantillas), categoría *Utility*,
   idioma `es`, con 3 variables `{{1}} {{2}} {{3}}` en el cuerpo:
-  - `revly_registro` → "¡Hola {{1}}! Te has registrado en {{2}}. Ya tienes {{3}} punto(s). Cada 5 puntos, 10% de descuento."
-  - `revly_puntos` → "¡Hola {{1}}! Has sumado un punto en {{2}}. Ahora tienes {{3}} punto(s)."
+  - `revly_descuento` → "¡Hola {{1}}! Ya tienes un 10% de descuento en {{2}} ({{3}} puntos). Muéstralo en caja."
 - **Variables de entorno:** `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`
-  (y opcionalmente `WHATSAPP_TEMPLATE_WELCOME` / `WHATSAPP_TEMPLATE_POINTS` si usas
-  otros nombres).
+  (y opcionalmente `WHATSAPP_TEMPLATE_DISCOUNT` si usas otro nombre).
 
 > Nota: los mensajes iniciados por el negocio requieren **plantilla aprobada** por Meta.
 > Con la API no se pueden enviar textos libres salvo dentro de la ventana de 24 h

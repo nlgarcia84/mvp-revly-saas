@@ -6,10 +6,9 @@
 const GRAPH_VERSION = 'v21.0';
 
 // Nombres de las plantillas (configurables por entorno).
-export const WHATSAPP_TEMPLATE_WELCOME =
-  process.env.WHATSAPP_TEMPLATE_WELCOME || 'revly_registro';
-export const WHATSAPP_TEMPLATE_POINTS =
-  process.env.WHATSAPP_TEMPLATE_POINTS || 'revly_puntos';
+// `revly_descuento` se usa en el hito de conseguir un descuento.
+export const WHATSAPP_TEMPLATE_DISCOUNT =
+  process.env.WHATSAPP_TEMPLATE_DISCOUNT || 'revly_descuento';
 
 // Deja el teléfono en formato internacional, solo dígitos.
 function normalizePhone(phone: string | null | undefined): string | null {

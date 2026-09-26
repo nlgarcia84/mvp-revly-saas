@@ -91,6 +91,7 @@ export const addPublicCustomer = async (data: {
   email: string;
   phone: string;
   consent: boolean;
+  whatsappOptIn?: boolean;
 }) => {
   if (!data.consent) {
     throw new Error('Debes aceptar la política de privacidad');
@@ -110,7 +111,11 @@ export const addPublicCustomer = async (data: {
   if (existingCustomer) {
     return prisma.customer.update({
       where: { id: existingCustomer.id },
-      data: { name: data.name || null, phone: data.phone || '' },
+      data: {
+        name: data.name || null,
+        phone: data.phone || '',
+        whatsappOptIn: data.whatsappOptIn ?? false,
+      },
     });
   }
 
@@ -119,6 +124,7 @@ export const addPublicCustomer = async (data: {
       name: data.name || null,
       email: data.email,
       phone: data.phone,
+      whatsappOptIn: data.whatsappOptIn ?? false,
       source: 'qr',
       businessId: business.id,
       points: 1,
@@ -130,7 +136,6 @@ export const addPublicCustomer = async (data: {
   await notifyCustomerRegistered({
     name: customer.name,
     email: customer.email,
-    phone: customer.phone,
     businessName: business.name,
     points: customer.points,
   });

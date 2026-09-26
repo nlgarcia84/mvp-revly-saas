@@ -143,13 +143,14 @@ const PublicBusinessPage = async ({
           action={async (formData: FormData) => {
             'use server';
             try {
-              const customer = await addPublicCustomer({
-                slug,
-                name: formData.get('name') as string,
-                email: formData.get('email') as string,
-                phone: (formData.get('phone') as string) || '',
-                consent: formData.get('consent') === 'on',
-              });
+                const customer = await addPublicCustomer({
+                  slug,
+                  name: formData.get('name') as string,
+                  email: formData.get('email') as string,
+                  phone: (formData.get('phone') as string) || '',
+                  consent: formData.get('consent') === 'on',
+                  whatsappOptIn: formData.get('whatsappOptIn') === 'on',
+                });
               redirect(
                 `/${slug}?success=1&customerId=${customer.id}&points=${customer.points}`,
               );
@@ -213,6 +214,17 @@ const PublicBusinessPage = async ({
                 política de privacidad
               </a>{' '}
               y cedo mis datos para recibir comunicaciones comerciales de {business.name}
+            </span>
+          </label>
+
+          <label className="flex items-start gap-2 cursor-pointer">
+            <input
+              name="whatsappOptIn"
+              type="checkbox"
+              className="mt-0.5 w-4 h-4 border border-neutral-300 dark:border-neutral-600 rounded-sm accent-neutral-950 dark:accent-neutral-100"
+            />
+            <span className="text-xs text-neutral-400 leading-relaxed">
+              Quiero recibir avisos por WhatsApp (puntos y descuentos)
             </span>
           </label>
 

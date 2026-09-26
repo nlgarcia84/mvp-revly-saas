@@ -81,6 +81,7 @@ export const claimTicketPoint = async (
     name: customer.name,
     email: customer.email,
     phone: customer.phone,
+    whatsappOptIn: customer.whatsappOptIn,
     businessName: customer.business.name,
     points: updatedPoints,
   });

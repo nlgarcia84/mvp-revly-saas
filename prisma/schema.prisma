@@ -140,6 +140,7 @@ model Customer {
   name          String?
   email         String
   phone         String
+  whatsappOptIn Boolean   @default(false) // el cliente acepta recibir avisos por WhatsApp
   businessId    String
   source        String    @default("qr")
   status        String    @default("pending")
