@@ -1026,15 +1026,39 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       )}
 
       {/* Secciones inferiores */}
+
+      {/* Conexiones sociales */}
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
           <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Conexiones y Reseñas
+            Conexiones Sociales
+          </h2>
+        </div>
+        <div className="p-6">
+          <SocialConnectionsSection businessId={id} onConnected={load} />
+        </div>
+      </section>
+
+      {/* Reseñas Google */}
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Reseñas Google
+          </h2>
+        </div>
+        <div className="p-6">
+          <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ""} features={features} />
+        </div>
+      </section>
+
+      {/* Bandeja y reportes */}
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Bandeja y Reportes
           </h2>
         </div>
         <div className="p-6 flex flex-col gap-8">
-          <SocialConnectionsSection businessId={id} onConnected={load} />
-          <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ""} features={features} />
           <SocialInbox businessId={id} features={features} />
 
           {features.includes("pdf-reports") && (
