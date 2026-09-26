@@ -2,7 +2,7 @@
 
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
-import { notifyCustomerPoints } from '@/lib/notifications';
+import { notifyCustomerDiscount } from '@/lib/notifications';
 
 // Suma 1 punto canjeando el código del ticket del kiosko.
 // Antifraude: 1 punto por cliente y día, y un ticket solo vale una vez al día.
@@ -77,8 +77,8 @@ export const claimTicketPoint = async (
     }),
   ]);
 
-  // Aviso del nuevo punto por email + WhatsApp (si están configurados).
-  await notifyCustomerPoints({
+  // Aviso de descuento conseguido (solo si llega a un hito de 5 puntos).
+  await notifyCustomerDiscount({
     name: customer.name,
     email: customer.email,
     phone: customer.phone,
@@ -114,7 +114,7 @@ export const addPointToCustomer = async (customerId: string) => {
     data: { points: { increment: 1 } },
   });
 
-  await notifyCustomerPoints({
+  await notifyCustomerDiscount({
     name: customer.name,
     email: customer.email,
     phone: customer.phone,

@@ -228,15 +228,15 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
 | Evento | Cuándo | Email | WhatsApp |
 |---|---|---|---|
 | **Registro** | Inmediato | ✅ | ❌ |
-| **Suma de punto** (ticket) | Inmediato | ✅ | ⚠️ solo al conseguir descuento |
+| **Descuento conseguido** (5, 10, 15… pts) | Inmediato | ✅ | ⚠️ solo con opt-in |
 | **Petición de reseña** | **+1 día** (programado) | ✅ | ❌ |
 
+- **Solo en hitos:** el aviso de puntos se envía **únicamente al conseguir un
+  descuento** (puntos múltiplo de 5), no en cada punto. Así no se satura al cliente.
 - **WhatsApp con opt-in:** solo se envía si el cliente marcó "Quiero recibir avisos
-  por WhatsApp" en el registro (`Customer.whatsappOptIn`) **y** además ha conseguido
-  un descuento (puntos múltiplo de 5). Así el onboarding y los puntos no resultan
-  intrusivos.
+  por WhatsApp" en el registro (`Customer.whatsappOptIn`).
 - **Código:** `src/lib/notifications.ts` (`notifyCustomerRegistered`,
-  `notifyCustomerPoints`, `scheduleReviewRequest`).
+  `notifyCustomerDiscount`, `scheduleReviewRequest`).
 - **Email:** `src/lib/email.ts` (Resend), remitente `Revly <hola@revly.es>`
   (configurable con `EMAIL_FROM`). La reseña se **programa** con `scheduled_at` de Resend.
 - **Plantilla de reseña:** `src/lib/review-email.ts` (editable desde Settings con

@@ -58,9 +58,9 @@ export async function notifyCustomerRegistered({
   });
 }
 
-// Avisa al cliente de que ha sumado un punto. Email siempre; WhatsApp solo si
-// dio su opt-in y además ha conseguido un descuento (hito, no cada punto).
-export async function notifyCustomerPoints({
+// Avisa al cliente de que ha conseguido un descuento (hito: 5, 10, 15… puntos).
+// Solo se envía en esos hitos, no en cada punto. Email siempre; WhatsApp si opt-in.
+export async function notifyCustomerDiscount({
   name,
   email,
   phone,
@@ -77,32 +77,31 @@ export async function notifyCustomerPoints({
   points: number;
   discountCode: string | null;
 }) {
+  // Solo avisamos en los hitos (múltiplos de 5).
+  if (points <= 0 || points % 5 !== 0) return;
+
   const displayName = name || 'cliente';
-  const reachedDiscount = points > 0 && points % 5 === 0;
 
   const tasks: Promise<boolean>[] = [
     sendEmail({
       to: email,
-      subject: `Has sumado un punto en ${businessName}`,
+      subject: `¡Tienes un 10% de descuento en ${businessName}!`,
       html: emailLayout(
-        `¡Gracias, ${displayName}!`,
-        `<p>Has sumado un punto en <strong>${businessName}</strong>.</p>
-         <p>Ahora tienes <strong>${points} punto${points !== 1 ? 's' : ''}</strong>.</p>
-         ${
-           reachedDiscount
-             ? `<p>¡Ya tienes un <strong>10% de descuento</strong> disponible! Muéstralo en caja.</p>`
-             : ''
-         }
+        `¡Enhorabuena, ${displayName}!`,
+        `<p>Has conseguido un <strong>10% de descuento</strong> en <strong>${businessName}</strong>.</p>
+         <p>Ya tienes <strong>${points} puntos</strong>.</p>
          ${
            discountCode
-             ? `<p>Tu código de descuento actual: <strong style="font-family:monospace;">${discountCode}</strong></p>`
+             ? `<p>Tu código de descuento es:</p>
+                <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>`
              : ''
-         }`,
+         }
+         <p>Muéstralo o dítalo en caja para canjearlo.</p>`,
       ),
     }),
   ];
 
-  if (whatsappOptIn && reachedDiscount) {
+  if (whatsappOptIn) {
     tasks.push(
       sendWhatsAppTemplate({
         to: phone,
