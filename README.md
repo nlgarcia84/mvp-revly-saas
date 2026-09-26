@@ -190,6 +190,7 @@ GOOGLE_CLIENT_SECRET=         # Para Business Profile API (OAuth)
 
 # Emails
 RESEND_API_KEY=
+EMAIL_FROM=                   # (opcional) remitente, ej: "Revly <hola@revly.es>"
 
 # App
 NEXT_PUBLIC_APP_URL=          # http://localhost:3000 en desarrollo
@@ -223,14 +224,17 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
-## WhatsApp (notificaciones al cliente)
+## Notificaciones al cliente (email + WhatsApp)
 
-Avisa al cliente por WhatsApp al **registrarse** y cada vez que **suma un punto**
-con el ticket del kiosko. Usa la **Cloud API** de Meta con **plantillas** aprobadas
-(obligatorio para mensajes iniciados por el negocio).
+Avisa al cliente por **email y WhatsApp** al **registrarse** y cada vez que
+**suma un punto** con el ticket del kiosko.
 
-- **Código:** `src/lib/whatsapp.ts` (`sendWhatsAppTemplate`). Si faltan las variables
-  de entorno o el cliente no tiene teléfono, **no se envía nada** y la app sigue igual.
+- **Código:** `src/lib/notifications.ts` (`notifyCustomerRegistered`,
+  `notifyCustomerPoints`). Cada evento envía por los dos canales; si uno no está
+  configurado, el otro sigue funcionando.
+- **Email:** `src/lib/email.ts` (Resend), remitente `Revly <hola@revly.es>`
+  (configurable con `EMAIL_FROM`).
+- **WhatsApp:** `src/lib/whatsapp.ts` (Cloud API).
 - **Dónde se dispara:** `addPublicCustomer` (bienvenida) y `claimTicketPoint` (puntos).
 - **Plantillas a crear en Meta** (WhatsApp Manager → Plantillas), categoría *Utility*,
   idioma `es`, con 3 variables `{{1}} {{2}} {{3}}` en el cuerpo:

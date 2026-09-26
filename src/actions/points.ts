@@ -1,22 +1,25 @@
 'use server';
 
 import prisma from '@/lib/db';
-import {
-  sendWhatsAppTemplate,
-  WHATSAPP_TEMPLATE_POINTS,
-} from '@/lib/whatsapp';
+import { notifyCustomerPoints } from '@/lib/notifications';
 
 // Suma 1 punto canjeando el código del ticket del kiosko.
 // Antifraude: 1 punto por cliente y día, y un ticket solo vale una vez al día.
+// Devuelve { success: false, error } para errores esperados (no lanza).
 export const claimTicketPoint = async (
   customerId: string,
   slug: string,
   ticketCode: string,
 ) => {
   const normalizedCode = ticketCode.trim();
-  if (!normalizedCode) throw new Error('Introduce el número de tu ticket');
+  if (!normalizedCode) {
+    return { success: false as const, error: 'Introduce el número de tu ticket' };
+  }
   if (normalizedCode.length < 2) {
-    throw new Error('El número de ticket es demasiado corto');
+    return {
+      success: false as const,
+      error: 'El número de ticket es demasiado corto',
+    };
   }
 
   const customer = await prisma.customer.findUnique({
@@ -24,7 +27,7 @@ export const claimTicketPoint = async (
     include: { business: { select: { id: true, slug: true, name: true } } },
   });
   if (!customer || customer.business.slug !== slug) {
-    throw new Error('Cliente no encontrado');
+    return { success: false as const, error: 'Cliente no encontrado' };
   }
 
   const startOfDay = new Date();
@@ -39,7 +42,10 @@ export const claimTicketPoint = async (
     },
   });
   if (alreadyClaimedToday) {
-    throw new Error('Ya has sumado tu punto de hoy. Vuelve mañana.');
+    return {
+      success: false as const,
+      error: 'Ya has sumado tu punto de hoy. Vuelve mañana.',
+    };
   }
 
   // 2) El mismo ticket no puede usarse dos veces el mismo día.
@@ -51,7 +57,7 @@ export const claimTicketPoint = async (
     },
   });
   if (ticketAlreadyUsed) {
-    throw new Error('Ese ticket ya se ha usado hoy.');
+    return { success: false as const, error: 'Ese ticket ya se ha usado hoy.' };
   }
 
   const updatedPoints = customer.points + 1;
@@ -70,16 +76,14 @@ export const claimTicketPoint = async (
     }),
   ]);
 
-  // Aviso por WhatsApp del nuevo punto (si está configurado).
-  await sendWhatsAppTemplate({
-    to: customer.phone,
-    templateName: WHATSAPP_TEMPLATE_POINTS,
-    bodyParams: [
-      customer.name ?? 'cliente',
-      customer.business.name,
-      String(updatedPoints),
-    ],
+  // Aviso del nuevo punto por email + WhatsApp (si están configurados).
+  await notifyCustomerPoints({
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    businessName: customer.business.name,
+    points: updatedPoints,
   });
 
-  return { success: true, points: updatedPoints };
+  return { success: true as const, points: updatedPoints };
 };

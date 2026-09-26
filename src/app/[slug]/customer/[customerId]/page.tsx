@@ -145,13 +145,11 @@ const CustomerProfilePage = async ({
               if (!code) {
                 redirect(`/${slug}/customer/${customerId}?ticketError=Introduce el número de tu ticket`);
               }
-              try {
-                await claimTicketPoint(customerId, slug, code);
-                redirect(`/${slug}/customer/${customerId}?ticket=1`);
-              } catch (e) {
-                const msg = e instanceof Error ? e.message : 'Error al sumar el punto';
-                redirect(`/${slug}/customer/${customerId}?ticketError=${encodeURIComponent(msg)}`);
+              const result = await claimTicketPoint(customerId, slug, code);
+              if (!result.success) {
+                redirect(`/${slug}/customer/${customerId}?ticketError=${encodeURIComponent(result.error)}`);
               }
+              redirect(`/${slug}/customer/${customerId}?ticket=1`);
             }}
             className="flex gap-2"
           >

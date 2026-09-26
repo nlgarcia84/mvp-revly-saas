@@ -185,13 +185,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     setRedeeming(true);
     setRedeemError("");
     setRedeemResult(null);
-    try {
-      const result = await redeemDiscountCodeInDashboard(id, redeemCode);
+    const result = await redeemDiscountCodeInDashboard(id, redeemCode);
+    if (!result.success) {
+      setRedeemError(result.error);
+    } else {
       setRedeemResult(result);
       setRedeemCode("");
       await load();
-    } catch (err) {
-      setRedeemError(err instanceof Error ? err.message : "Error al canjear");
     }
     setRedeeming(false);
   };
@@ -429,21 +429,25 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
 
       {/* Canje de descuento */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-        <h2 className="text-sm font-semibold mb-1">Canjear descuento</h2>
+        <h2 className="text-sm font-semibold mb-1">
+          Canjear descuento en caja
+        </h2>
         <p className="text-xs text-neutral-400 mb-4">
-          Introduce el código que te da el cliente en caja. Se descontarán 5
-          puntos y se generará un código nuevo.
+          Pide al cliente su código de descuento (formato <strong>REVLY-XXXX</strong>),
+          escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y
+          se le generará un código nuevo automáticamente.
         </p>
         <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2">
           <input
             value={redeemCode}
             onChange={(e) => setRedeemCode(e.target.value)}
-            placeholder="REVLY-XXXX"
+            placeholder="Escribe el código del cliente (REVLY-XXXX)"
             required
+            aria-label="Código de descuento del cliente"
             className="flex-1 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
           />
           <Button type="submit" variant="primary" disabled={redeeming}>
-            {redeeming ? "Canjeando..." : "Canjear"}
+            {redeeming ? "Canjeando..." : "Canjear descuento"}
           </Button>
         </form>
         {redeemError && (
@@ -452,15 +456,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         {redeemResult && (
           <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-lg p-4">
             <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-              ✅ Descuento aplicado a {redeemResult.customerName}
+              ✅ Descuento canjeado a {redeemResult.customerName}
             </p>
-            <p className="text-xs text-neutral-500 mt-1">
-              Aplica el 10% en el TPV. Le quedan {redeemResult.remainingPoints}{" "}
-              puntos.
+            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-2">
+              1. Aplica ahora el <strong>10% de descuento</strong> en el TPV.
             </p>
-            <p className="text-xs text-neutral-500 mt-1">
-              Nuevo código del cliente:{" "}
-              <strong className="font-mono">{redeemResult.newCode}</strong>
+            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
+              2. Al cliente le quedan <strong>{redeemResult.remainingPoints}</strong> punto(s).
+            </p>
+            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
+              3. Su nuevo código es{" "}
+              <strong className="font-mono">{redeemResult.newCode}</strong>. Díselo
+              o muéstraselo para su próxima compra.
             </p>
           </div>
         )}

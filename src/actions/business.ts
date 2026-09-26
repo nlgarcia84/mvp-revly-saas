@@ -6,10 +6,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { resolveShortUrl } from '@/lib/google-places';
 import { getPlan, canCreateBusiness } from '@/lib/subscription';
 import { generateDiscountCode } from '@/lib/discount-code';
-import {
-  sendWhatsAppTemplate,
-  WHATSAPP_TEMPLATE_WELCOME,
-} from '@/lib/whatsapp';
+import { notifyCustomerRegistered } from '@/lib/notifications';
 
 // Convierte un texto en un slug URL-friendly: minúsculas, sin acentos y
 // espacios convertidos en guiones. "Cafetería El Centro" → "cafeteria-el-centro".
@@ -126,15 +123,13 @@ export const addPublicCustomer = async (data: {
     },
   });
 
-  // Aviso de bienvenida por WhatsApp (si está configurado).
-  await sendWhatsAppTemplate({
-    to: customer.phone,
-    templateName: WHATSAPP_TEMPLATE_WELCOME,
-    bodyParams: [
-      customer.name ?? 'cliente',
-      business.name,
-      String(customer.points),
-    ],
+  // Aviso de bienvenida por email + WhatsApp (si están configurados).
+  await notifyCustomerRegistered({
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    businessName: business.name,
+    points: customer.points,
   });
 
   return customer;

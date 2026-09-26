@@ -10,6 +10,8 @@ const POINTS_PER_REDEMPTION = 5;
 // Canjea el descuento de un cliente desde el dashboard (dueño autenticado).
 // El empresario teclea el código que le da el cliente en caja. Al canjear,
 // se descuentan 5 puntos y se genera un código nuevo (el anterior queda inválido).
+// Devuelve { success: false, error } para errores esperados (no lanza), porque
+// en producción Next oculta el mensaje de los errores lanzados.
 export const redeemDiscountCodeInDashboard = async (
   businessId: string,
   code: string,
@@ -18,24 +20,36 @@ export const redeemDiscountCodeInDashboard = async (
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error('No autenticado');
+  if (!user) return { success: false as const, error: 'No autenticado' };
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId: user.id },
     select: { id: true },
   });
-  if (!business) throw new Error('Negocio no encontrado');
+  if (!business) {
+    return { success: false as const, error: 'Negocio no encontrado' };
+  }
 
   const normalizedCode = code.trim().toUpperCase();
-  if (!normalizedCode) throw new Error('Introduce el código del cliente');
+  if (!normalizedCode) {
+    return { success: false as const, error: 'Introduce el código del cliente' };
+  }
 
   const customer = await prisma.customer.findFirst({
     where: { discountCode: normalizedCode, businessId: business.id },
     select: { id: true, name: true, points: true },
   });
-  if (!customer) throw new Error('Código no válido para este negocio');
+  if (!customer) {
+    return {
+      success: false as const,
+      error: 'Código no válido para este negocio',
+    };
+  }
   if (customer.points < POINTS_PER_REDEMPTION) {
-    throw new Error('El cliente no tiene puntos suficientes (necesita 5)');
+    return {
+      success: false as const,
+      error: `El cliente solo tiene ${customer.points} punto(s). Necesita ${POINTS_PER_REDEMPTION}.`,
+    };
   }
 
   const newDiscountCode = generateDiscountCode();
@@ -49,7 +63,7 @@ export const redeemDiscountCodeInDashboard = async (
   });
 
   return {
-    success: true,
+    success: true as const,
     customerName: customer.name ?? 'Cliente',
     newCode: newDiscountCode,
     remainingPoints: customer.points - POINTS_PER_REDEMPTION,
