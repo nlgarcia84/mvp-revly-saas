@@ -1,6 +1,10 @@
 'use server';
 
 import prisma from '@/lib/db';
+import {
+  sendWhatsAppTemplate,
+  WHATSAPP_TEMPLATE_POINTS,
+} from '@/lib/whatsapp';
 
 // Suma 1 punto canjeando el código del ticket del kiosko.
 // Antifraude: 1 punto por cliente y día, y un ticket solo vale una vez al día.
@@ -17,7 +21,7 @@ export const claimTicketPoint = async (
 
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
-    include: { business: { select: { id: true, slug: true } } },
+    include: { business: { select: { id: true, slug: true, name: true } } },
   });
   if (!customer || customer.business.slug !== slug) {
     throw new Error('Cliente no encontrado');
@@ -50,6 +54,8 @@ export const claimTicketPoint = async (
     throw new Error('Ese ticket ya se ha usado hoy.');
   }
 
+  const updatedPoints = customer.points + 1;
+
   await prisma.$transaction([
     prisma.pointClaim.create({
       data: {
@@ -64,5 +70,16 @@ export const claimTicketPoint = async (
     }),
   ]);
 
-  return { success: true };
+  // Aviso por WhatsApp del nuevo punto (si está configurado).
+  await sendWhatsAppTemplate({
+    to: customer.phone,
+    templateName: WHATSAPP_TEMPLATE_POINTS,
+    bodyParams: [
+      customer.name ?? 'cliente',
+      customer.business.name,
+      String(updatedPoints),
+    ],
+  });
+
+  return { success: true, points: updatedPoints };
 };

@@ -203,6 +203,12 @@ META_CLIENT_SECRET=           # App Secret de Facebook
 META_INSTAGRAM_CLIENT_ID=     # Instagram App ID (Instagram API with Instagram Login)
 META_INSTAGRAM_CLIENT_SECRET= # Instagram App Secret (Instagram API with Instagram Login)
 META_WEBHOOK_VERIFY_TOKEN=    # Token que definimos en Meta para verificar /api/webhooks/meta
+
+# WhatsApp (Cloud API de Meta) — notificaciones al cliente (opcional)
+WHATSAPP_PHONE_NUMBER_ID=     # ID del número de WhatsApp Business (Cloud API)
+WHATSAPP_ACCESS_TOKEN=        # Token de acceso de la app de Meta con WhatsApp
+WHATSAPP_TEMPLATE_WELCOME=    # (opcional) nombre de la plantilla de bienvenida
+WHATSAPP_TEMPLATE_POINTS=     # (opcional) nombre de la plantilla de puntos
 ```
 
 ## Meta (Facebook + Instagram)
@@ -216,6 +222,27 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
   - `https://www.revly.es/api/instagram/callback`
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
+
+## WhatsApp (notificaciones al cliente)
+
+Avisa al cliente por WhatsApp al **registrarse** y cada vez que **suma un punto**
+con el ticket del kiosko. Usa la **Cloud API** de Meta con **plantillas** aprobadas
+(obligatorio para mensajes iniciados por el negocio).
+
+- **Código:** `src/lib/whatsapp.ts` (`sendWhatsAppTemplate`). Si faltan las variables
+  de entorno o el cliente no tiene teléfono, **no se envía nada** y la app sigue igual.
+- **Dónde se dispara:** `addPublicCustomer` (bienvenida) y `claimTicketPoint` (puntos).
+- **Plantillas a crear en Meta** (WhatsApp Manager → Plantillas), categoría *Utility*,
+  idioma `es`, con 3 variables `{{1}} {{2}} {{3}}` en el cuerpo:
+  - `revly_registro` → "¡Hola {{1}}! Te has registrado en {{2}}. Ya tienes {{3}} punto(s). Cada 5 puntos, 10% de descuento."
+  - `revly_puntos` → "¡Hola {{1}}! Has sumado un punto en {{2}}. Ahora tienes {{3}} punto(s)."
+- **Variables de entorno:** `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`
+  (y opcionalmente `WHATSAPP_TEMPLATE_WELCOME` / `WHATSAPP_TEMPLATE_POINTS` si usas
+  otros nombres).
+
+> Nota: los mensajes iniciados por el negocio requieren **plantilla aprobada** por Meta.
+> Con la API no se pueden enviar textos libres salvo dentro de la ventana de 24 h
+> (cuando el cliente escribe primero).
 
 ## Pagos con Stripe — pruebas en local
 

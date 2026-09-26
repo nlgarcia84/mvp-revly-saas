@@ -6,6 +6,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { resolveShortUrl } from '@/lib/google-places';
 import { getPlan, canCreateBusiness } from '@/lib/subscription';
 import { generateDiscountCode } from '@/lib/discount-code';
+import {
+  sendWhatsAppTemplate,
+  WHATSAPP_TEMPLATE_WELCOME,
+} from '@/lib/whatsapp';
 
 // Convierte un texto en un slug URL-friendly: minúsculas, sin acentos y
 // espacios convertidos en guiones. "Cafetería El Centro" → "cafeteria-el-centro".
@@ -97,11 +101,21 @@ export const addPublicCustomer = async (data: {
   });
   if (!business) throw new Error('Negocio no encontrado');
 
-  return prisma.customer.upsert({
+  // Si el cliente ya existe, solo actualizamos sus datos (sin volver a dar puntos).
+  const existingCustomer = await prisma.customer.findUnique({
     where: {
       email_businessId: { email: data.email, businessId: business.id },
     },
-    create: {
+  });
+  if (existingCustomer) {
+    return prisma.customer.update({
+      where: { id: existingCustomer.id },
+      data: { name: data.name || null, phone: data.phone || '' },
+    });
+  }
+
+  const customer = await prisma.customer.create({
+    data: {
       name: data.name || null,
       email: data.email,
       phone: data.phone,
@@ -110,11 +124,20 @@ export const addPublicCustomer = async (data: {
       points: 1,
       discountCode: generateDiscountCode(),
     },
-    update: {
-      name: data.name || null,
-      phone: data.phone || '',
-    },
   });
+
+  // Aviso de bienvenida por WhatsApp (si está configurado).
+  await sendWhatsAppTemplate({
+    to: customer.phone,
+    templateName: WHATSAPP_TEMPLATE_WELCOME,
+    bodyParams: [
+      customer.name ?? 'cliente',
+      business.name,
+      String(customer.points),
+    ],
+  });
+
+  return customer;
 };
 
 // Actualiza los datos de un negocio (solo el dueño).
