@@ -610,8 +610,14 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Canje de descuento */}
-      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-        <h2 className="text-sm font-semibold mb-1">Canjear descuento en caja</h2>
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Canjear descuento
+          </h2>
+        </div>
+        <div className="p-6">
+        <h3 className="text-sm font-semibold mb-1">Canjear descuento en caja</h3>
         <p className="text-xs text-neutral-400 mb-4">
           Pide al cliente su código (formato <strong>REVLY-XXXX</strong>),
           escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y se generará un código nuevo.
@@ -648,14 +654,17 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </p>
           </div>
         )}
+        </div>
       </section>
 
       {/* Stats */}
-      <section>
-        <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-1">
-          Estadísticas
-        </h2>
-        <div className="grid grid-cols-3 gap-4">
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Estadísticas
+          </h2>
+        </div>
+        <div className="grid grid-cols-3 gap-4 p-6">
           <Card neumorphic className="p-5 text-center">
             <p className="text-2xl font-bold">{total}</p>
             <p className="text-[10px] text-neutral-400 mt-0.5">Registrados</p>
@@ -672,7 +681,13 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </section>
 
       {/* Clientes */}
-      <section className="flex flex-col gap-4">
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Clientes
+          </h2>
+        </div>
+        <div className="p-6 pt-4 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
@@ -894,6 +909,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </table>
           </div>
         )}
+        </div>
       </section>
 
       {detail && (
@@ -1010,33 +1026,47 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       )}
 
       {/* Secciones inferiores */}
-      <SocialConnectionsSection businessId={id} onConnected={load} />
-      <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ""} features={features} />
-      <SocialInbox businessId={id} features={features} />
-
-      {features.includes("pdf-reports") && (
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-          <h2 className="text-sm font-semibold mb-1">Reporte de plan de acción</h2>
-          <p className="text-xs text-neutral-400 mb-3">
-            Genera un informe basado en las reseñas negativas.
-          </p>
-          <a
-            href={`/api/report/${id}`}
-            target="_blank"
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity cursor-pointer"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Descargar reporte
-          </a>
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Conexiones y Reseñas
+          </h2>
         </div>
-      )}
+        <div className="p-6 flex flex-col gap-8">
+          <SocialConnectionsSection businessId={id} onConnected={load} />
+          <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ""} features={features} />
+          <SocialInbox businessId={id} features={features} />
+
+          {features.includes("pdf-reports") && (
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
+              <h2 className="text-sm font-semibold mb-1">Reporte de plan de acción</h2>
+              <p className="text-xs text-neutral-400 mb-3">
+                Genera un informe basado en las reseñas negativas.
+              </p>
+              <a
+                href={`/api/report/${id}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Descargar reporte
+              </a>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Eliminar negocio */}
-      <div className="border border-red-200 dark:border-red-900/50 rounded-xl p-6 flex flex-col items-center gap-3">
+      <section className="border border-red-200 dark:border-red-900/50 rounded-xl p-6 flex flex-col items-center gap-3 bg-red-50/30 dark:bg-red-950/5">
+        <div className="bg-red-100 dark:bg-red-900/30 px-4 py-1.5 rounded-full">
+          <h2 className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider">
+            Peligro
+          </h2>
+        </div>
         <p className="text-xs text-neutral-400 text-center">
           Eliminará permanentemente este negocio y todos sus clientes. Esta acción no se puede deshacer.
         </p>
@@ -1048,7 +1078,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         >
           {deleting ? "Eliminando..." : "Eliminar negocio"}
         </button>
-      </div>
+      </section>
     </div>
   );
 };
