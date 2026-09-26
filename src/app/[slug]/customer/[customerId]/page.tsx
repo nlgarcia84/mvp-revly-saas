@@ -1,9 +1,7 @@
 import { getPublicCustomer } from '@/actions/customers';
 import { claimTicketPoint } from '@/actions/points';
 import { notFound, redirect } from 'next/navigation';
-import { headers } from 'next/headers';
 import Button from '@/components/ui/button';
-import QRCode from 'qrcode';
 
 // ─────────────────────────────────────────────────────
 // CustomerProfilePage (Server Component)
@@ -13,15 +11,12 @@ import QRCode from 'qrcode';
 // Aquí el cliente puede ver:
 //   - Sus puntos acumulados
 //   - Su progreso hacia el próximo descuento (cada 5 puntos)
-//   - Su código de descuento con QR y código alfanumérico
+//   - Su código de descuento alfanumérico (lo enseña en caja)
 //   - Cuántos descuentos ha conseguido hasta ahora
 //   - Sumar puntos con el código del ticket del kiosko
 //
-// El QR que se muestra codifica la URL de verificación:
-//   revly.es/{slug}/verificar/{discountCode}
-//
-// El empleado escanea ese QR con la cámara de su móvil
-// para verificar y canjear el descuento en caja.
+// El cliente muestra o dicta su código en caja y el empresario
+// lo canjea desde el dashboard.
 //
 // No requiere autenticación. Es una página pública para
 // que el cliente pueda consultar sus puntos desde casa.
@@ -39,19 +34,6 @@ const CustomerProfilePage = async ({
 
   if (!customer) {
     notFound();
-  }
-
-  // Calculamos la URL base para generar el QR absoluto
-  // (necesario para que la cámara del empleado pueda abrirlo)
-  const host = (await headers()).get('host') || 'revly.es';
-  const protocol = host.includes('localhost') ? 'http' : 'https';
-  const baseUrl = `${protocol}://${host}`;
-
-  // Generamos el QR en SVG (server-side) que codifica la URL de verificación
-  let qrSvg = '';
-  if (customer.discountCode) {
-    const verifyUrl = `${baseUrl}/${slug}/verificar/${customer.discountCode}`;
-    qrSvg = await QRCode.toString(verifyUrl, { type: 'svg', margin: 1, width: 200 });
   }
 
   const ticketPlaceholder = (customer as any).ticketFormat || 'Nº de ticket';
@@ -123,27 +105,17 @@ const CustomerProfilePage = async ({
           )}
         </div>
 
-        {/* ── Tarjeta: código de descuento + QR ──────── */}
-        {/* Muestra un QR que el empleado escanea con la cámara.
-            El QR codifica la URL de verificación con el código.
-            También muestra el código alfanumérico como respaldo
-            por si el empleado prefiere escribirlo manualmente. */}
+        {/* ── Tarjeta: código de descuento ───────────── */}
+        {/* El cliente muestra o dicta este código en caja.
+            El empresario lo canjea desde el dashboard. */}
         {customer.discountCode && (
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6 text-center">
             <h2 className="text-sm font-semibold mb-1">Tu código de descuento</h2>
             <p className="text-xs text-neutral-400 mb-4">
-              Muestra este QR en caja para que el empleado lo escanee
+              Muestra o dicta este código en caja
             </p>
 
-            {qrSvg && (
-              <div
-                className="mx-auto mb-4 w-[180px] h-[180px] flex items-center justify-center bg-white rounded-lg p-2"
-                dangerouslySetInnerHTML={{ __html: qrSvg }}
-              />
-            )}
-
-            <p className="text-xs text-neutral-400 mb-1">O introduce manualmente:</p>
-            <p className="text-lg font-bold tracking-widest text-neutral-950 dark:text-neutral-100 font-mono">
+            <p className="text-2xl font-bold tracking-widest text-neutral-950 dark:text-neutral-100 font-mono">
               {customer.discountCode}
             </p>
           </div>

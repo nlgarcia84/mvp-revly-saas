@@ -63,7 +63,6 @@ model Business {
   image         String?
   slug          String?   @unique
   emailTemplate String?
-  verificationPin String?  // PIN de 4 dígitos para canje en caja
   ticketFormat  String?    // Ejemplo: "A-001" — placeholder del ticket del kiosko
   userId        String
   createdAt     DateTime   @default(now())

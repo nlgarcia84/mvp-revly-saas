@@ -11,6 +11,7 @@ import {
   deleteSelectedCustomers,
   getCustomers,
 } from "@/actions/customers";
+import { redeemDiscountCodeInDashboard } from "@/actions/redeem";
 import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
 import BusinessQR from "@/components/business-qr";
@@ -156,6 +157,14 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const [csvResult, setCsvResult] = useState("");
   const [features, setFeatures] = useState<string[]>([]);
   const [deleting, setDeleting] = useState(false);
+  const [redeemCode, setRedeemCode] = useState("");
+  const [redeeming, setRedeeming] = useState(false);
+  const [redeemError, setRedeemError] = useState("");
+  const [redeemResult, setRedeemResult] = useState<{
+    customerName: string;
+    newCode: string;
+    remainingPoints: number;
+  } | null>(null);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -170,6 +179,22 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   useEffect(() => {
     load();
   }, [id, load]);
+
+  const handleRedeem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRedeeming(true);
+    setRedeemError("");
+    setRedeemResult(null);
+    try {
+      const result = await redeemDiscountCodeInDashboard(id, redeemCode);
+      setRedeemResult(result);
+      setRedeemCode("");
+      await load();
+    } catch (err) {
+      setRedeemError(err instanceof Error ? err.message : "Error al canjear");
+    }
+    setRedeeming(false);
+  };
 
   const handleSend = async (customerId: string) => {
     setSendingId(customerId);
@@ -400,6 +425,45 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Canje de descuento */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
+        <h2 className="text-sm font-semibold mb-1">Canjear descuento</h2>
+        <p className="text-xs text-neutral-400 mb-4">
+          Introduce el código que te da el cliente en caja. Se descontarán 5
+          puntos y se generará un código nuevo.
+        </p>
+        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2">
+          <input
+            value={redeemCode}
+            onChange={(e) => setRedeemCode(e.target.value)}
+            placeholder="REVLY-XXXX"
+            required
+            className="flex-1 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
+          />
+          <Button type="submit" variant="primary" disabled={redeeming}>
+            {redeeming ? "Canjeando..." : "Canjear"}
+          </Button>
+        </form>
+        {redeemError && (
+          <p className="text-sm text-red-500 mt-3">{redeemError}</p>
+        )}
+        {redeemResult && (
+          <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-lg p-4">
+            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              ✅ Descuento aplicado a {redeemResult.customerName}
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              Aplica el 10% en el TPV. Le quedan {redeemResult.remainingPoints}{" "}
+              puntos.
+            </p>
+            <p className="text-xs text-neutral-500 mt-1">
+              Nuevo código del cliente:{" "}
+              <strong className="font-mono">{redeemResult.newCode}</strong>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats */}

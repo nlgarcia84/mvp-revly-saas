@@ -17,7 +17,7 @@ const plans = [
       'Clientes ilimitados',
       'Gestión de clientes con filtros',
       'Sistema de puntos y descuentos',
-      'Canje en caja con QR + PIN',
+      'Canje en caja desde el dashboard',
       'Reseñas de Google (últimas 5)',
       'Invitaciones por email y WhatsApp',
       'Analítica básica',
