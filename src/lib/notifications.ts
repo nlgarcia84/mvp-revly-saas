@@ -30,11 +30,13 @@ export async function notifyCustomerRegistered({
   email,
   businessName,
   points,
+  discountCode,
 }: {
   name: string | null;
   email: string;
   businessName: string;
   points: number;
+  discountCode: string | null;
 }) {
   const displayName = name || 'cliente';
 
@@ -45,7 +47,13 @@ export async function notifyCustomerRegistered({
       `¡Hola, ${displayName}!`,
       `<p>Te has registrado en el programa de puntos de <strong>${businessName}</strong>.</p>
        <p>Ya tienes <strong>${points} punto${points !== 1 ? 's' : ''}</strong>. Cada 5 puntos consigues un 10% de descuento.</p>
-       <p>Guarda tu código de descuento y muéstralo en caja cuando quieras canjearlo.</p>`,
+       ${
+         discountCode
+           ? `<p>Tu código de descuento es:</p>
+              <p style="font-family:monospace;font-size:20px;font-weight:bold;letter-spacing:2px;margin:8px 0;">${discountCode}</p>
+              <p>Muéstralo o dítalo en caja cuando quieras canjearlo.</p>`
+           : ''
+       }`,
     ),
   });
 }
@@ -59,6 +67,7 @@ export async function notifyCustomerPoints({
   whatsappOptIn,
   businessName,
   points,
+  discountCode,
 }: {
   name: string | null;
   email: string;
@@ -66,6 +75,7 @@ export async function notifyCustomerPoints({
   whatsappOptIn: boolean;
   businessName: string;
   points: number;
+  discountCode: string | null;
 }) {
   const displayName = name || 'cliente';
   const reachedDiscount = points > 0 && points % 5 === 0;
@@ -81,6 +91,11 @@ export async function notifyCustomerPoints({
          ${
            reachedDiscount
              ? `<p>¡Ya tienes un <strong>10% de descuento</strong> disponible! Muéstralo en caja.</p>`
+             : ''
+         }
+         ${
+           discountCode
+             ? `<p>Tu código de descuento actual: <strong style="font-family:monospace;">${discountCode}</strong></p>`
              : ''
          }`,
       ),

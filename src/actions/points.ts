@@ -84,6 +84,7 @@ export const claimTicketPoint = async (
     whatsappOptIn: customer.whatsappOptIn,
     businessName: customer.business.name,
     points: updatedPoints,
+    discountCode: customer.discountCode,
   });
 
   return { success: true as const, points: updatedPoints };

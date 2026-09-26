@@ -138,6 +138,7 @@ export const addPublicCustomer = async (data: {
     email: customer.email,
     businessName: business.name,
     points: customer.points,
+    discountCode: customer.discountCode,
   });
 
   // Programa la petición de reseña para el día siguiente.
