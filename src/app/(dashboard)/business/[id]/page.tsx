@@ -609,85 +609,78 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
         </div>
       </div>
 
-      {/* Canje de descuento */}
+      {/* Fidelización */}
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
           <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Canjear descuento
+            Fidelización
           </h2>
         </div>
-        <div className="p-6">
-        <h3 className="text-sm font-semibold mb-1">Canjear descuento en caja</h3>
-        <p className="text-xs text-neutral-400 mb-4">
-          Pide al cliente su código (formato <strong>REVLY-XXXX</strong>),
-          escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y se generará un código nuevo.
-        </p>
-        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2 max-w-md">
-          <input
-            value={redeemCode}
-            onChange={(e) => setRedeemCode(e.target.value)}
-            placeholder="REVLY-XXXX"
-            required
-            aria-label="Código de descuento del cliente"
-            className="w-full sm:w-64 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
-          />
-          <Button type="submit" variant="primary" disabled={redeeming}>
-            {redeeming ? "Canjeando..." : "Canjear"}
-          </Button>
-        </form>
-        {redeemError && (
-          <p className="text-sm text-red-500 mt-3">{redeemError}</p>
-        )}
-        {redeemResult && (
-          <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-lg p-4">
-            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-              ✅ Descuento canjeado a {redeemResult.customerName}
+        <div className="flex flex-col">
+
+          {/* Canjear */}
+          <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
+            <h3 className="text-sm font-semibold mb-1">Canjear descuento en caja</h3>
+            <p className="text-xs text-neutral-400 mb-4">
+              Pide al cliente su código (formato <strong>REVLY-XXXX</strong>),
+              escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y se generará un código nuevo.
             </p>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-2">
-              1. Aplica el <strong>10% de descuento</strong> en el TPV.
-            </p>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
-              2. Le quedan <strong>{redeemResult.remainingPoints}</strong> punto(s).
-            </p>
-            <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
-              3. Su nuevo código: <strong className="font-mono">{redeemResult.newCode}</strong>
-            </p>
+            <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2 max-w-md">
+              <input
+                value={redeemCode}
+                onChange={(e) => setRedeemCode(e.target.value)}
+                placeholder="REVLY-XXXX"
+                required
+                aria-label="Código de descuento del cliente"
+                className="w-full sm:w-64 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
+              />
+              <Button type="submit" variant="primary" disabled={redeeming}>
+                {redeeming ? "Canjeando..." : "Canjear"}
+              </Button>
+            </form>
+            {redeemError && (
+              <p className="text-sm text-red-500 mt-3">{redeemError}</p>
+            )}
+            {redeemResult && (
+              <div className="mt-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 rounded-lg p-4">
+                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                  ✅ Descuento canjeado a {redeemResult.customerName}
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-2">
+                  1. Aplica el <strong>10% de descuento</strong> en el TPV.
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
+                  2. Le quedan <strong>{redeemResult.remainingPoints}</strong> punto(s).
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
+                  3. Su nuevo código: <strong className="font-mono">{redeemResult.newCode}</strong>
+                </p>
+              </div>
+            )}
           </div>
-        )}
-        </div>
-      </section>
 
-      {/* Stats */}
-      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
-          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Estadísticas
-          </h2>
-        </div>
-        <div className="grid grid-cols-3 gap-4 p-6">
-          <Card neumorphic className="p-5 text-center">
-            <p className="text-2xl font-bold">{total}</p>
-            <p className="text-[10px] text-neutral-400 mt-0.5">Registrados</p>
-          </Card>
-          <Card neumorphic className="p-5 text-center">
-            <p className="text-2xl font-bold">{invited}</p>
-            <p className="text-[10px] text-neutral-400 mt-0.5">Invitados</p>
-          </Card>
-          <Card neumorphic className="p-5 text-center">
-            <p className="text-2xl font-bold">{completed}</p>
-            <p className="text-[10px] text-neutral-400 mt-0.5">Completados</p>
-          </Card>
-        </div>
-      </section>
+          {/* Resumen */}
+          <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">
+            <h3 className="text-sm font-semibold mb-1">Resumen</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <Card neumorphic className="p-5 text-center">
+                <p className="text-2xl font-bold">{total}</p>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Registrados</p>
+              </Card>
+              <Card neumorphic className="p-5 text-center">
+                <p className="text-2xl font-bold">{invited}</p>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Invitados</p>
+              </Card>
+              <Card neumorphic className="p-5 text-center">
+                <p className="text-2xl font-bold">{completed}</p>
+                <p className="text-[10px] text-neutral-400 mt-0.5">Completados</p>
+              </Card>
+            </div>
+          </div>
 
-      {/* Clientes */}
-      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
-          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Clientes
-          </h2>
-        </div>
-        <div className="p-6 pt-4 flex flex-col gap-4">
+          {/* Clientes */}
+          <div className="p-6 pt-4 flex flex-col gap-4">
+            <h3 className="text-sm font-semibold mb-1">Clientes</h3>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
@@ -910,6 +903,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         )}
         </div>
+        </div>
       </section>
 
       {detail && (
@@ -1031,7 +1025,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
           <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Conexiones Sociales
+            Redes Sociales
           </h2>
         </div>
         <div className="p-6">
@@ -1043,7 +1037,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
           <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Reseñas Google
+            Reputación
           </h2>
         </div>
         <div className="p-6">
@@ -1055,7 +1049,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
         <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
           <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
-            Bandeja y Reportes
+            Bandeja
           </h2>
         </div>
         <div className="p-6 flex flex-col gap-8">
