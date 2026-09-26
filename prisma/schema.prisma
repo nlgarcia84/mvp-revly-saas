@@ -53,6 +53,8 @@ model Subscription {
 // emailTemplate es opcional — texto personalizado para
 // el email de invitación. Si está vacío se usa el
 // mensaje por defecto.
+// ticketFormat es opcional — ejemplo del número de ticket
+// del kiosko, para mostrarlo como placeholder al cliente.
 // ──────────────────────────────────────────────
 model Business {
   id            String     @id @default(uuid())
@@ -62,12 +64,12 @@ model Business {
   slug          String?   @unique
   emailTemplate String?
   verificationPin String?  // PIN de 4 dígitos para canje en caja
-  invoiceFormat String?    // Ejemplo: "FACT-001" — se muestra al cliente al canjear facturas
+  ticketFormat  String?    // Ejemplo: "A-001" — placeholder del ticket del kiosko
   userId        String
   createdAt     DateTime   @default(now())
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers     Customer[]
-  invoices      Invoice[]
+  pointClaims   PointClaim[]
 
   // ── Google Business Profile ────────────────────────
   // Si el usuario conecta su cuenta de Google Business
@@ -116,25 +118,22 @@ model Business {
 }
 
 // ──────────────────────────────────────────────
-// Invoice: Factura registrada por el negocio para
-// que el cliente la canjee y sume puntos.
-// Cada número de factura solo puede usarse una vez.
-// El negocio da de alta los números; el cliente
-// los introduce en su perfil público para canjear.
-// Una vez canjeado (customerId + usedAt), queda
-// bloqueado para siempre.
+// PointClaim: punto ganado canjeando el código de un
+// ticket del kiosko. Sirve de registro antifraude:
+//   - Un cliente solo puede reclamar 1 punto al día.
+//   - Un mismo ticket solo vale una vez al día por negocio.
 // ──────────────────────────────────────────────
-model Invoice {
-  id         String    @id @default(uuid())
-  number     String
-  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+model PointClaim {
+  id         String   @id @default(uuid())
+  ticketCode String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   businessId String
-  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  customerId String?
-  usedAt     DateTime?
-  createdAt  DateTime  @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  claimedAt  DateTime @default(now())
 
-  @@unique([number, businessId])
+  @@index([customerId, claimedAt])
+  @@index([businessId, ticketCode, claimedAt])
 }
 
 model Customer {
@@ -150,18 +149,18 @@ model Customer {
   rating        Int?
   feedback      String?
   // ── Sistema de puntos y descuentos ──────────────────
-  // "points" se incrementa cada vez que el cliente
-  // rellena el formulario (1 punto por envío). Cuando
-  // acumula 5 puntos, puede canjear un 10% de descuento.
+  // "points" empieza en 1 al registrarse. Luego solo sube
+  // canjeando el código del ticket del kiosko (1 punto/día).
+  // Cuando acumula 5 puntos, puede canjear un 10% de descuento.
   // "discountCode" es un código único (ej: REVLY-A3X9)
   // que se genera al crear el cliente y se muestra en
-  // su perfil público con un barcode.
+  // su perfil público con un QR.
   points        Int       @default(1)
   discountCode  String?
   // ─────────────────────────────────────────────────
   createdAt     DateTime  @default(now())
   business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  invoices      Invoice[]
+  pointClaims   PointClaim[]
 
   @@unique([email, businessId])
 }

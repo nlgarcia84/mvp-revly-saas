@@ -78,8 +78,9 @@ export const getBusinessBySlug = async (slug: string) => {
   return prisma.business.findUnique({ where: { slug } });
 };
 
-// Crea o actualiza un cliente desde la página pública. Si el email ya existe
-// para este negocio, suma un punto; si es nuevo, lo crea con 1 punto.
+// Crea un cliente desde la página pública con 1 punto de bienvenida.
+// Si el email ya existe para este negocio, solo actualiza sus datos
+// (no vuelve a sumar puntos; para eso está el ticket del kiosko).
 export const addPublicCustomer = async (data: {
   slug: string;
   name: string;
@@ -112,7 +113,6 @@ export const addPublicCustomer = async (data: {
     update: {
       name: data.name || null,
       phone: data.phone || '',
-      points: { increment: 1 },
     },
   });
 };
@@ -125,6 +125,7 @@ export const updateBusiness = async (
     googleLink: string;
     slug: string;
     emailTemplate: string;
+    ticketFormat?: string;
   },
 ) => {
   const userId = await getUserId();
@@ -154,6 +155,7 @@ export const updateBusiness = async (
       googleLink,
       slug: data.slug || null,
       emailTemplate: data.emailTemplate || null,
+      ticketFormat: data.ticketFormat || null,
     },
   });
 };

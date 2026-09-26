@@ -170,7 +170,7 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
   const customer = await prisma.customer.findUnique({
     where: { id: customerId },
     include: {
-      business: { select: { name: true, slug: true } },
+      business: { select: { name: true, slug: true, ticketFormat: true } },
     },
   });
   if (!customer || customer.business.slug !== slug) return null;
@@ -181,6 +181,7 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
     points: customer.points,
     discountCode: customer.discountCode,
     businessName: customer.business.name,
+    ticketFormat: customer.business.ticketFormat,
   };
 };
 

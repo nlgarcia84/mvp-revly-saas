@@ -1,5 +1,6 @@
 import { getPublicCustomer } from '@/actions/customers';
-import { notFound } from 'next/navigation';
+import { claimTicketPoint } from '@/actions/points';
+import { notFound, redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import Button from '@/components/ui/button';
 import QRCode from 'qrcode';
@@ -14,7 +15,7 @@ import QRCode from 'qrcode';
 //   - Su progreso hacia el próximo descuento (cada 5 puntos)
 //   - Su código de descuento con QR y código alfanumérico
 //   - Cuántos descuentos ha conseguido hasta ahora
-//   - Canjear puntos con número de factura
+//   - Sumar puntos con el código del ticket del kiosko
 //
 // El QR que se muestra codifica la URL de verificación:
 //   revly.es/{slug}/verificar/{discountCode}
@@ -27,10 +28,13 @@ import QRCode from 'qrcode';
 // ─────────────────────────────────────────────────────
 const CustomerProfilePage = async ({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string; customerId: string }>;
+  searchParams: Promise<{ ticket?: string; ticketError?: string }>;
 }) => {
   const { slug, customerId } = await params;
+  const { ticket, ticketError } = await searchParams;
   const customer = await getPublicCustomer(customerId, slug);
 
   if (!customer) {
@@ -50,6 +54,7 @@ const CustomerProfilePage = async ({
     qrSvg = await QRCode.toString(verifyUrl, { type: 'svg', margin: 1, width: 200 });
   }
 
+  const ticketPlaceholder = (customer as any).ticketFormat || 'Nº de ticket';
   const puntos = customer.points;
   const descuentosConseguidos = Math.floor(puntos / 5);
   const puntosSiguiente = 5 - (puntos % 5);
@@ -143,6 +148,53 @@ const CustomerProfilePage = async ({
             </p>
           </div>
         )}
+
+        {/* ── Tarjeta: sumar punto con el ticket ────── */}
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
+          <h2 className="text-sm font-semibold mb-1">Suma puntos con tu ticket</h2>
+          <p className="text-xs text-neutral-400 mb-3">
+            Introduce el número de tu ticket del kiosko para ganar 1 punto. Solo
+            puedes sumar 1 punto al día.
+          </p>
+
+          {ticket && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium mb-3">
+              ¡Has ganado 1 punto! 🎉
+            </p>
+          )}
+          {ticketError && (
+            <p className="text-sm text-red-500 mb-3">{ticketError}</p>
+          )}
+
+          <form
+            action={async (formData: FormData) => {
+              'use server';
+              const code = formData.get('ticket') as string;
+              if (!code) {
+                redirect(`/${slug}/customer/${customerId}?ticketError=Introduce el número de tu ticket`);
+              }
+              try {
+                await claimTicketPoint(customerId, slug, code);
+                redirect(`/${slug}/customer/${customerId}?ticket=1`);
+              } catch (e) {
+                const msg = e instanceof Error ? e.message : 'Error al sumar el punto';
+                redirect(`/${slug}/customer/${customerId}?ticketError=${encodeURIComponent(msg)}`);
+              }
+            }}
+            className="flex gap-2"
+          >
+            <input
+              name="ticket"
+              type="text"
+              required
+              placeholder={ticketPlaceholder}
+              className="flex-1 min-w-0 px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none transition-all duration-150 focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)] placeholder:text-neutral-400"
+            />
+            <Button type="submit" variant="secondary">
+              Sumar
+            </Button>
+          </form>
+        </div>
 
         {/* ── Enlace para volver al inicio ──────────── */}
         <div className="text-center pb-8">

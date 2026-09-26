@@ -43,6 +43,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
     googleLink: "",
     slug: "",
     emailTemplate: "",
+    ticketFormat: "",
   });
   const [urlValidation, setUrlValidation] =
     useState<UrlValidationResult | null>(null);
@@ -179,6 +180,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
           googleLink: b.googleLink ?? "",
           slug: b.slug ?? "",
           emailTemplate: (b as any).emailTemplate ?? "",
+          ticketFormat: (b as any).ticketFormat ?? "",
         });
         setPin((b as any).verificationPin ?? "");
       }
@@ -537,6 +539,29 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
             className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 resize-y font-mono"
             placeholder={`<h1>Hola, {{nombre}}</h1>\n<p>Gracias por visitar {{negocio}}...</p>`}
           />
+        </div>
+
+        {/* ── Formato del ticket ───────────────────────── */}
+        <div className={`${nCard} p-6 flex flex-col gap-5`}>
+          <h2 className="text-sm font-semibold">Formato del ticket</h2>
+          <p className="text-xs text-neutral-400 leading-relaxed">
+            Los clientes escribirán el número de su ticket del kiosko para sumar
+            puntos. Pon un ejemplo para que sepan el formato exacto.
+          </p>
+          <input
+            value={form.ticketFormat}
+            onChange={(e) =>
+              setForm({ ...form, ticketFormat: e.target.value })
+            }
+            placeholder="Ej: A-001 o #042"
+            className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+          />
+          {form.ticketFormat && (
+            <p className="text-xs text-neutral-400">
+              En el perfil del cliente aparecerá:{" "}
+              <span className="font-mono">{form.ticketFormat}</span>
+            </p>
+          )}
         </div>
 
         {/* ── Canje en caja ────────────────────────────── */}
