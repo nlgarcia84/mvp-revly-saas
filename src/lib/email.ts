@@ -8,11 +8,13 @@ export async function sendEmail({
   subject,
   html,
   replyTo,
+  scheduledAt,
 }: {
   to: string | null | undefined;
   subject: string;
   html: string;
   replyTo?: string;
+  scheduledAt?: string;
 }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || !to) return false;
@@ -30,6 +32,7 @@ export async function sendEmail({
         subject,
         html,
         ...(replyTo ? { replyTo } : {}),
+        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
       }),
     });
 

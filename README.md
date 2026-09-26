@@ -224,18 +224,26 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
-## Notificaciones al cliente (email + WhatsApp)
+## Notificaciones al cliente
 
-Avisa al cliente por **email y WhatsApp** al **registrarse** y cada vez que
-**suma un punto** con el ticket del kiosko.
+Tres avisos, con distinto canal y momento:
+
+| Evento | Cuándo | Email | WhatsApp |
+|---|---|---|---|
+| **Registro** | Inmediato | ✅ | ✅ |
+| **Suma de punto** (ticket) | Inmediato | ✅ | ✅ |
+| **Petición de reseña** | **+1 día** (programado) | ✅ | ❌ |
 
 - **Código:** `src/lib/notifications.ts` (`notifyCustomerRegistered`,
-  `notifyCustomerPoints`). Cada evento envía por los dos canales; si uno no está
-  configurado, el otro sigue funcionando.
+  `notifyCustomerPoints`, `scheduleReviewRequest`). Cada evento envía por sus
+  canales; si uno no está configurado, el otro sigue funcionando.
 - **Email:** `src/lib/email.ts` (Resend), remitente `Revly <hola@revly.es>`
-  (configurable con `EMAIL_FROM`).
+  (configurable con `EMAIL_FROM`). La reseña se **programa** con `scheduled_at` de Resend.
+- **Plantilla de reseña:** `src/lib/review-email.ts` (editable desde Settings con
+  `business.emailTemplate` y las variables `{{nombre}}`, `{{negocio}}`, `{{link}}`).
 - **WhatsApp:** `src/lib/whatsapp.ts` (Cloud API).
-- **Dónde se dispara:** `addPublicCustomer` (bienvenida) y `claimTicketPoint` (puntos).
+- **Dónde se dispara:** `addPublicCustomer` (bienvenida + programación de reseña) y
+  `claimTicketPoint` (puntos).
 - **Plantillas a crear en Meta** (WhatsApp Manager → Plantillas), categoría *Utility*,
   idioma `es`, con 3 variables `{{1}} {{2}} {{3}}` en el cuerpo:
   - `revly_registro` → "¡Hola {{1}}! Te has registrado en {{2}}. Ya tienes {{3}} punto(s). Cada 5 puntos, 10% de descuento."

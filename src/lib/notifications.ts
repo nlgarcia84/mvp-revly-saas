@@ -2,11 +2,15 @@
 // dos canales a la vez; si uno no está configurado, el otro sigue funcionando.
 
 import { sendEmail } from '@/lib/email';
+import { buildReviewEmail } from '@/lib/review-email';
 import {
   sendWhatsAppTemplate,
   WHATSAPP_TEMPLATE_WELCOME,
   WHATSAPP_TEMPLATE_POINTS,
 } from '@/lib/whatsapp';
+
+// Horas de espera antes de pedir la reseña (al día siguiente del registro).
+const REVIEW_DELAY_MS = 24 * 60 * 60 * 1000;
 
 // Plantilla HTML común para las notificaciones.
 function emailLayout(title: string, body: string): string {
@@ -86,4 +90,40 @@ export async function notifyCustomerPoints({
       bodyParams: [displayName, businessName, String(points)],
     }),
   ]);
+}
+
+// Programa el email de invitación a reseñar para el día siguiente (solo email).
+export async function scheduleReviewRequest({
+  customerId,
+  name,
+  email,
+  businessName,
+  googleLink,
+  emailTemplate,
+}: {
+  customerId: string;
+  name: string | null;
+  email: string;
+  businessName: string;
+  googleLink: string | null;
+  emailTemplate?: string | null;
+}) {
+  if (!email || !googleLink) return false;
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const { subject, html } = buildReviewEmail({
+    customerId,
+    customerName: name ?? '',
+    businessName,
+    googleLink,
+    emailTemplate,
+    baseUrl,
+  });
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    scheduledAt: new Date(Date.now() + REVIEW_DELAY_MS).toISOString(),
+  });
 }

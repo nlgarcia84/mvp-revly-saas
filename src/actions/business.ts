@@ -6,7 +6,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { resolveShortUrl } from '@/lib/google-places';
 import { getPlan, canCreateBusiness } from '@/lib/subscription';
 import { generateDiscountCode } from '@/lib/discount-code';
-import { notifyCustomerRegistered } from '@/lib/notifications';
+import {
+  notifyCustomerRegistered,
+  scheduleReviewRequest,
+} from '@/lib/notifications';
 
 // Convierte un texto en un slug URL-friendly: minúsculas, sin acentos y
 // espacios convertidos en guiones. "Cafetería El Centro" → "cafeteria-el-centro".
@@ -130,6 +133,16 @@ export const addPublicCustomer = async (data: {
     phone: customer.phone,
     businessName: business.name,
     points: customer.points,
+  });
+
+  // Programa la petición de reseña para el día siguiente.
+  await scheduleReviewRequest({
+    customerId: customer.id,
+    name: customer.name,
+    email: customer.email,
+    businessName: business.name,
+    googleLink: business.googleLink,
+    emailTemplate: business.emailTemplate,
   });
 
   return customer;
