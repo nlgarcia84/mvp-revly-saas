@@ -1,6 +1,6 @@
 # Revly — MVP
 
-Ayuda a negocios locales a conseguir más reseñas en Google, gestionar clientes y fidelizarlos con un sistema de puntos y descuentos canjeables en caja mediante QR + PIN.
+Ayuda a negocios locales a conseguir más reseñas en Google, gestionar clientes y fidelizarlos con un sistema de puntos y descuentos canjeables desde el dashboard.
 
 ## Stack
 
@@ -29,23 +29,23 @@ Ayuda a negocios locales a conseguir más reseñas en Google, gestionar clientes
 | **Filtros de reseñas** | Por calificación (positivas/críticas) y por fecha (1m/3m/6m) |
 | **Respuestas con IA** | Genera respuestas a reseñas críticas usando IA |
 | **Conectar Google Business Profile** | OAuth para ver TODAS las reseñas (sin límite de 5) |
-| **Sistema de puntos** | Los clientes acumulan puntos al registrarse (1 punto = 1 registro) |
-| **Facturas para sumar puntos** | Dar de alta números de factura únicos; el cliente los canjea por +1 punto |
-| **PIN de caja** | PIN de 4 dígitos que el empleado usa para verificar descuentos |
+| **Sistema de puntos** | 1 punto al registrarse + 1 punto al día canjeando el código del ticket del kiosko |
+| **Canje de descuento** | El dueño teclea el código del cliente en el dashboard; descuenta 5 puntos y genera un código nuevo |
+| **Formato del ticket** | Ejemplo del número de ticket del kiosko (placeholder que ve el cliente) |
 
 ### Para el cliente (público)
 
 | Funcionalidad | Ruta | Descripción |
 |---|---|---|
-| **Formulario de registro** | `/{slug}` | El cliente da sus datos y obtiene puntos. Si ya existe, redirige a su perfil |
-| **Perfil del cliente** | `/{slug}/customer/{id}` | Puntos acumulados, QR con código de descuento, canje de factura |
-| **Canje de descuento** | QR → empleado escanea | El empleado escanea el QR, introduce PIN y canjea 5 puntos = 10% OFF |
+| **Formulario de registro** | `/{slug}` | El cliente da sus datos y obtiene 1 punto. Si ya existe, redirige a su perfil |
+| **Perfil del cliente** | `/{slug}/customer/{id}` | Puntos, código de descuento y suma de puntos con el ticket del kiosko |
+| **Canje de descuento** | Dashboard | El dueño teclea el código del cliente; se descuentan 5 puntos = 10% OFF |
 
 ## Modelo de datos
 
 ```
 User → Business → Customer
-               → Invoice
+               → PointClaim
 ```
 
 ### Modelos
@@ -53,56 +53,52 @@ User → Business → Customer
 **User:** Cuenta con email y suscripción Stripe.
 
 **Business:** Negocio con nombre, slug, logo, enlace de Google, tokens de Business Profile.
-- `verificationPin` — PIN de 4 dígitos para canje en caja
-- `invoiceFormat` — Ejemplo del formato de factura (ej: "FACT-001")
+- `ticketFormat` — Ejemplo del número de ticket del kiosko (ej: "A-001")
 
 **Customer:** Cliente con email, teléfono, puntos, código de descuento, rating y feedback.
-- `points` (Int, default 1) — Puntos acumulados
+- `points` (Int, default 1) — Empieza en 1 al registrarse; sube con el ticket del kiosko
 - `discountCode` (String?) — Código único formato REVLY-XXXX. **Cambia cada vez que se canjea**
 
-**Invoice:** Factura dada de alta por el negocio.
-- `number` + `businessId` — Unique constraint (mismo número no puede repetirse en el mismo negocio)
-- `customerId` (nullable) — Se asigna cuando el cliente la canjea
-- `usedAt` (nullable) — Fecha de canje
+**PointClaim:** Registro de un punto ganado con el ticket del kiosko.
+- `ticketCode` + `businessId` — Un mismo ticket solo vale una vez al día
+- `customerId` — Cliente que lo canjeó
+- `claimedAt` — Fecha; limita a 1 punto por cliente y día
 
 ## Sistema de puntos
 
 ### Cómo se ganan puntos
 
-1. **Registro vía QR** — Cada vez que el cliente rellena el formulario público (`/{slug}`):
-   - Si es **nuevo** → se crea con 1 punto y un código de descuento único (REVLY-XXXX)
-   - Si ya **existe** (mismo email) → suma 1 punto adicional (sin duplicar cliente)
-2. **Factura de compra** — Desde su perfil público, el cliente introduce el número de factura
-   - El negocio da de alta los números de factura en su dashboard (botón "Facturas")
-   - Cada factura solo puede usarse **una vez**
-   - Si es válida → +1 punto
+1. **Registro vía QR** — La primera vez que el cliente rellena el formulario público (`/{slug}`)
+   se crea con **1 punto** y un código de descuento único (REVLY-XXXX). Si vuelve a
+   rellenarlo con el mismo email, **no vuelve a sumar** (solo actualiza sus datos).
+2. **Ticket del kiosko** — Desde su perfil público, el cliente introduce el número de su
+   ticket y suma **1 punto**.
+   - Solo puede sumar **1 punto al día**.
+   - Un mismo ticket solo vale una vez al día por negocio.
 
 ### Canje de descuento (en caja)
 
-Cada **5 puntos** = **10% de descuento**. El canje se hace en caja mediante:
+Cada **5 puntos** = **10% de descuento**. El canje se hace desde el **dashboard**:
 
 ```
-Cliente                          Cajero
+Cliente                          Empresario
    │                                │
    ├── Abre su perfil ──────────────┤
    │   (revly.es/{slug}/customer/id) │
    │                                │
-   ├── Muestra el QR ───────────────┤
-   │                                ├── Abre cámara del móvil
-   │                                ├── Escanea el QR
-   │                                ├── Se abre revly.es/{slug}/verificar/{code}
-   │                                ├── Introduce PIN de 4 dígitos
-   │                                ├── Pulsa "Verificar y canjear"
+   ├── Muestra o dicta su código ───┤
+   │   (REVLY-A3X9)                 ├── Abre el dashboard del negocio
+   │                                ├── Escribe el código en "Canjear descuento"
    │                                ├── ✅ Válido
-   │                                └── Aplica 10% en TPV
+   │                                ├── Se descuentan 5 puntos y se genera un código nuevo
+   │                                └── Aplica el 10% en el TPV
 ```
 
 **Seguridad antifraude:**
-- El QR codifica una URL con el código de descuento
-- Al canjear, el código **cambia** por uno nuevo (el anterior queda inválido)
-- Una captura de pantalla del QR antiguo **ya no sirve** (el código fue reemplazado)
-- El PIN lo protege: solo el empleado que lo conoce puede canjear
-- Los números de factura son únicos y los controla el negocio: no se puede inventar uno
+- El canje requiere estar **autenticado** en el dashboard (solo el dueño).
+- Al canjear, el código **cambia** por uno nuevo (el anterior queda inválido).
+- Una captura del código antiguo **ya no sirve**.
+- El ticket del kiosko limita a **1 punto por cliente y día**.
 
 ## Reseñas de Google
 
@@ -142,13 +138,11 @@ https://mybusiness.googleapis.com/v4/accounts/123456789/locations/987654321/revi
 | `/` | Pública | Landing page |
 | `/dashboard` | Privada | Panel principal del usuario |
 | `/business` | Privada | Lista de negocios |
-| `/business/{id}` | Privada | Detalle del negocio (clientes, reseñas, facturas) |
-| `/business/{id}/settings` | Privada | Configuración (logo, slug, PIN, Google BP, formato factura) |
+| `/business/{id}` | Privada | Detalle del negocio (clientes, reseñas, canje de descuento) |
+| `/business/{id}/settings` | Privada | Configuración (logo, slug, Google BP, formato del ticket) |
 | `/{slug}` | Pública | Formulario de registro para clientes (con búsqueda por email) |
-| `/{slug}/customer/{id}` | Pública | Perfil del cliente: puntos, QR descuento, canje de factura |
-| `/{slug}/verificar/{code}` | Pública | Verificación de descuento para empleados (con PIN) |
+| `/{slug}/customer/{id}` | Pública | Perfil del cliente: puntos, código de descuento y ticket |
 | `/api/review-confirm/{id}` | Pública | Flujo de confirmación de reseña |
-| `/api/barcode/{code}` | Pública | Imagen PNG del código de barras |
 | `/api/google-business/connect` | Pública | OAuth para conectar Google Business Profile |
 | `/api/google-business/callback` | Pública | Callback OAuth de Google |
 | `/api/google-business/disconnect` | Pública | Desconectar Google Business Profile |
@@ -158,8 +152,8 @@ https://mybusiness.googleapis.com/v4/accounts/123456789/locations/987654321/revi
 
 | Fichero | Acciones | Descripción |
 |---|---|---|
-| `src/actions/redeem.ts` | `checkDiscountCode`, `redeemDiscountCode`, `updateVerificationPin`, `getBusinessVerificationInfo` | Canje en caja con PIN + código descuento |
-| `src/actions/invoices.ts` | `addInvoices`, `getInvoices`, `claimInvoice`, `deleteInvoice` | Gestión de facturas para sumar puntos |
+| `src/actions/redeem.ts` | `redeemDiscountCodeInDashboard` | Canje del descuento desde el dashboard |
+| `src/actions/points.ts` | `claimTicketPoint` | Suma 1 punto con el ticket del kiosko (1/día) |
 | `src/actions/customers.ts` | `addCustomer`, `getCustomers`, `updateCustomerStatus`, `addCustomerBatch`, `deleteCustomer`, `clearCustomers`, `clearCompletedCustomers`, `findPublicCustomerByEmail`, `getPublicCustomer`, `deleteSelectedCustomers` | CRUD de clientes |
 | `src/actions/business.ts` | `createBusiness`, `getBusinesses`, `getBusinessBySlug`, `addPublicCustomer`, `updateBusiness`, `deleteBusiness`, `uploadBusinessImage` | CRUD de negocios |
 

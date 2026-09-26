@@ -13,8 +13,8 @@ un gimnasio...). Les ayuda a tres cosas:
 
 1. **Conseguir clientes y opiniones.** El negocio tiene una página pública con su
    enlace. Un cliente entra, deja sus datos y, si quiere, deja una reseña.
-2. **Fidelizar con puntos.** Cada vez que un cliente rellena el formulario suma un
-   punto. Con 5 puntos consigue un descuento. También puede canjear facturas.
+2. **Fidelizar con puntos.** El cliente gana 1 punto al registrarse y otro cada día
+   que introduce el código de su ticket del kiosko. Con 5 puntos consigue un descuento.
 3. **Cuidar su reputación en internet.** Revly trae las reseñas de Google y los
    comentarios de Instagram y Facebook, y ayuda a responderlos con inteligencia
    artificial.
@@ -53,7 +53,7 @@ El "almacén" es la base de datos. Guarda, a grandes rasgos:
 - **Usuario:** quien usa Revly (dueño del negocio).
 - **Negocio:** cada negocio que crea ese usuario. Tiene un enlace público propio.
 - **Cliente:** los clientes que dejan sus datos a través del formulario público.
-- **Factura:** números de factura que el negocio da de alta para que los clientes canjeen.
+- **Registro de puntos:** cada punto que un cliente gana con el ticket del kiosko.
 - **Suscripción:** el plan de pago del usuario.
 
 Además, en el negocio se guardan "llaves" (tokens) para poder hablar con Google e
@@ -82,20 +82,21 @@ solo mira los nombres y piensa "esto es un usuario, esto es un negocio, etc.".
 ### Viaje C — El cliente deja sus datos (el más importante)
 1. El cliente abre el enlace público (`src/app/[slug]/`).
 2. Rellena el formulario (nombre, email, teléfono) y lo envía.
-3. La app guarda al cliente y le suma **1 punto**.
+3. La app guarda al cliente y le da **1 punto** (solo la primera vez).
 4. Si el cliente deja una reseña, la app la registra también.
 
 ### Viaje D — Puntos y descuento
-1. Cada formulario relleno suma 1 punto.
-2. Al llegar a 5 puntos, el cliente puede conseguir un **10% de descuento**.
-3. La app le genera un **código único** (tipo `REVLY-A3X9`) y un **código de barras**
-   que enseña en el móvil.
+1. Al registrarse, el cliente gana **1 punto** y recibe un **código único** (tipo
+   `REVLY-A3X9`).
+2. Cada día puede ganar **1 punto más** escribiendo el número de su ticket del kiosko
+   en su perfil.
+3. Al llegar a 5 puntos, consigue un **10% de descuento**.
 
-### Viaje E — Canje de factura
-1. El negocio da de alta números de factura en su panel.
-2. El cliente introduce el número de una factura y la "canjea" para ganar puntos.
-3. Cada factura solo se puede usar **una vez**. El negocio tiene un **PIN de 4 dígitos**
-   para confirmar el canje en caja.
+### Viaje E — Canje del descuento
+1. El cliente muestra o dicta su código (`REVLY-XXXX`) en caja.
+2. El empresario lo escribe en el dashboard, en "Canjear descuento".
+3. La app descuenta 5 puntos y genera un **código nuevo** (el anterior ya no vale).
+4. El empresario aplica el 10% en el TPV.
 
 ### Viaje F — Reseñas de Google
 - Si el negocio **no** ha conectado su cuenta de Google: la app usa una herramienta
@@ -160,13 +161,14 @@ Revly no lo hace todo solo: se apoya en otros servicios. Cada uno vive en `src/l
 4. `src/app/` → mira la estructura de carpetas y piensa en "páginas".
 5. `src/app/[slug]/` → el formulario público del cliente.
 6. `src/actions/customers.ts` → qué pasa cuando el cliente envía el formulario.
-7. `src/actions/send.ts` → cómo se envía un email.
-8. `src/lib/sentiment.ts` → cómo se decide si un comentario es negativo.
-9. `src/actions/generate-response.ts` → cómo la IA escribe una respuesta.
-10. `src/lib/google-places.ts` → la integración más sencilla (solo una llave).
-11. `src/lib/stripe.ts` + `src/app/api/stripe/` → pagos.
-12. `src/lib/instagram-graph.ts` y `src/lib/facebook-graph.ts` → redes sociales.
-13. `src/lib/subscription.ts` → qué funciones tiene cada plan.
+7. `src/actions/points.ts` → cómo se suma un punto con el ticket del kiosko.
+8. `src/actions/send.ts` → cómo se envía un email.
+9. `src/lib/sentiment.ts` → cómo se decide si un comentario es negativo.
+10. `src/actions/generate-response.ts` → cómo la IA escribe una respuesta.
+11. `src/lib/google-places.ts` → la integración más sencilla (solo una llave).
+12. `src/lib/stripe.ts` + `src/app/api/stripe/` → pagos.
+13. `src/lib/instagram-graph.ts` y `src/lib/facebook-graph.ts` → redes sociales.
+14. `src/lib/subscription.ts` → qué funciones tiene cada plan.
 
 ---
 
