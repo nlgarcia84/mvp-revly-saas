@@ -1,14 +1,6 @@
-// ─── Google Business Profile API ─────────────────────
-// Esta API permite obtener TODAS las reseñas de un
-// negocio (no solo 5 como con Places API). Para usarla,
-// el dueño del negocio debe:
-//   1. Tener su perfil de Google Business Profile verificado
-//   2. Conectar su cuenta de Google desde Settings
-//   3. Autorizar el acceso vía OAuth
-//
-// Cuando está conectado, las reseñas se obtienen desde
-// aquí. Si no, el sistema usa Google Places API (5 reseñas).
-// ─────────────────────────────────────────────────────
+// Google Business Profile API: permite obtener TODAS las reseñas de un negocio
+// (no solo 5 como Places API). Requiere que el dueño tenga su perfil verificado,
+// conecte su cuenta desde Settings y autorice vía OAuth. Si no, se usa Places API.
 
 export type BusinessProfileReview = {
   authorName: string;
@@ -19,8 +11,7 @@ export type BusinessProfileReview = {
   relativeTimeDescription: string;
   hasReply: boolean;
   reviewId?: string;
-  // Nombre completo del recurso de la reseña:
-  // "accounts/{account}/locations/{location}/reviews/{reviewId}".
+  // Nombre completo del recurso: "accounts/{account}/locations/{location}/reviews/{reviewId}".
   // Es lo que necesita el endpoint de respuesta (reply).
   reviewName?: string;
 };
@@ -32,16 +23,12 @@ export type BusinessProfileData = {
   reviews: BusinessProfileReview[];
 };
 
-// ─── Formulario oficial para pedir acceso a la GBP API ──
+// Formulario oficial para pedir acceso a la GBP API.
 const GBP_ACCESS_FORM_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSfC_FKSWzbSae_5rOpgwFeIUzXUF1JCQnlsZM_gC1I2UHjA3w/viewform";
 
-// ─── Convierte un error de la API en un mensaje claro ──
-// Cuando el proyecto no está aprobado por Google para la
-// My Business API, las respuestas llegan con 403 y texto
-// de SERVICE_DISABLED / AUTH_PERMISSION_DENIED. En vez de
-// mostrar el error crudo, damos instrucciones accionables.
-// ─────────────────────────────────────────────────────
+// Convierte un error de la API en un mensaje accionable. Cuando el proyecto no
+// está aprobado por Google, llegan 403 con SERVICE_DISABLED/AUTH_PERMISSION_DENIED.
 export function friendlyBusinessProfileError(
   status: number,
   body: string,
@@ -57,18 +44,14 @@ export function friendlyBusinessProfileError(
   return `No se pudo acceder a Google Business Profile (${status}). ${detail}`;
 }
 
-// ─── Renueva el token de acceso cuando caduca ────────
-// El token de acceso de OAuth solo dura 1 hora. Google
-// nos da un "refresh token" para renovarlo sin que el
-// usuario tenga que volver a autorizar.
-// ─────────────────────────────────────────────────────
+// Renueva el access token de OAuth (dura 1 hora) usando el refresh token.
 export async function refreshAccessToken(
   refreshToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date } | null> {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
-  const res = await fetch("https://oauth2.googleapis.com/token", {
+  const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -79,75 +62,67 @@ export async function refreshAccessToken(
     }),
   });
 
-  if (!res.ok) {
-    console.error(`[BusinessProfile] Error renovando token | HTTP ${res.status}`);
+  if (!response.ok) {
+    console.error(
+      `[BusinessProfile] Error renovando token | HTTP ${response.status}`,
+    );
     return null;
   }
 
-  const data = await res.json();
-  const expiresAt = new Date(Date.now() + (data.expires_in ?? 3600) * 1000);
-  return { accessToken: data.access_token, expiresAt };
+  const payload = await response.json();
+  const expiresAt = new Date(Date.now() + (payload.expires_in ?? 3600) * 1000);
+  return { accessToken: payload.access_token, expiresAt };
 }
 
-// ─── Obtiene las cuentas de Business Profile ─────────
-// Cada usuario de Google puede tener una o varias
-// cuentas de Business Profile. Normalmente es solo una.
-// ─────────────────────────────────────────────────────
+// Lista las cuentas de Business Profile del usuario. El listado vive en la
+// Account Management API, no en la Business Information API.
 export async function getBusinessAccounts(accessToken: string) {
-  // El listado de cuentas vive en la Account Management API,
-  // NO en la Business Information API (ahí no existe /accounts).
-  const res = await fetch(
+  const response = await fetch(
     "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!response.ok) {
+    const body = await response.text();
     console.error("[BusinessProfile] Error listando cuentas:", body);
     return {
       accounts: [],
-      error: friendlyBusinessProfileError(res.status, body),
+      error: friendlyBusinessProfileError(response.status, body),
     };
   }
 
-  const data = await res.json();
-  return { accounts: data.accounts ?? [] };
+  const payload = await response.json();
+  return { accounts: payload.accounts ?? [] };
 }
 
-// ─── Obtiene las ubicaciones (locales) de una cuenta ──
-// Cada cuenta puede tener varios negocios/ubicaciones.
-// Normalmente es una por dirección física.
-// ─────────────────────────────────────────────────────
+// Lista las ubicaciones (locales) de una cuenta.
 export async function getBusinessLocations(
   accessToken: string,
   accountId: string,
 ) {
-  // Se acepta "accounts/123", "123" o el comodín "-" (todas las cuentas)
+  // Se acepta "accounts/123", "123" o el comodín "-" (todas las cuentas).
   const normalizedAccountId = accountId.replace(/^accounts\//, "");
   const url = `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${normalizedAccountId}/locations?pageSize=100&readMask=name,title`;
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!response.ok) {
+    const body = await response.text();
     console.error(
-      `[BusinessProfile] Error listando ubicaciones | HTTP ${res.status} | URL: ${url} | ${body}`,
+      `[BusinessProfile] Error listando ubicaciones | HTTP ${response.status} | URL: ${url} | ${body}`,
     );
     return {
       locations: [],
-      error: friendlyBusinessProfileError(res.status, body),
+      error: friendlyBusinessProfileError(response.status, body),
     };
   }
 
-  const data = await res.json();
-  return { locations: data.locations ?? [] };
+  const payload = await response.json();
+  return { locations: payload.locations ?? [] };
 }
 
-// ─── Convierte la estrella de Google a número ────────
-// Google devuelve "FOUR" en vez de 4. Esta función lo
-// pasa a número.
-// ─────────────────────────────────────────────────────
+// Google devuelve "FOUR" en vez de 4; lo pasamos a número.
 function starRatingToNumber(rating: string): number {
   const map: Record<string, number> = {
     ONE: 1,
@@ -159,17 +134,13 @@ function starRatingToNumber(rating: string): number {
   return map[rating] ?? 0;
 }
 
-// ─── Obtiene TODAS las reseñas de una ubicación ──────
-// Google Business Profile API devuelve todas las reseñas
-// con paginación (nextPageToken). Vamos pidiendo páginas
-// hasta que no haya más.
-// ─────────────────────────────────────────────────────
 export type BusinessReviewsResult = {
   reviews: BusinessProfileReview[];
   averageRating: number;
   totalReviewCount: number;
 };
 
+// Obtiene TODAS las reseñas de una ubicación, paginando con nextPageToken.
 export async function getBusinessReviews(
   accessToken: string,
   accountId: string,
@@ -184,126 +155,113 @@ export async function getBusinessReviews(
     let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50`;
     if (pageToken) url += `&pageToken=${pageToken}`;
 
-    const res = await fetch(url, {
+    const response = await fetch(url, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    if (!res.ok) {
-      const reviewsBody = await res.text();
+    if (!response.ok) {
+      const body = await response.text();
       console.error(
-        `[BusinessProfile] Error obteniendo reseñas | HTTP ${res.status} | URL: ${url} | ${reviewsBody}`,
+        `[BusinessProfile] Error obteniendo reseñas | HTTP ${response.status} | URL: ${url} | ${body}`,
       );
-      throw new Error(friendlyBusinessProfileError(res.status, reviewsBody));
+      throw new Error(friendlyBusinessProfileError(response.status, body));
     }
 
-    const data = await res.json();
+    const payload = await response.json();
 
-    if (typeof data.averageRating === "number") {
-      averageRating = data.averageRating;
+    if (typeof payload.averageRating === "number") {
+      averageRating = payload.averageRating;
     }
-    if (typeof data.totalReviewCount === "number") {
-      totalReviewCount = data.totalReviewCount;
+    if (typeof payload.totalReviewCount === "number") {
+      totalReviewCount = payload.totalReviewCount;
     }
 
-    if (data.reviews) {
-      for (const r of data.reviews) {
+    if (payload.reviews) {
+      for (const review of payload.reviews) {
         reviews.push({
-          authorName: r.reviewer?.displayName ?? "Anónimo",
-          rating: starRatingToNumber(r.starRating),
-          text: r.comment ?? "",
-          time: Math.floor(new Date(r.createTime).getTime() / 1000),
-          profilePhotoUrl: r.reviewer?.profilePhotoUrl ?? "",
-          relativeTimeDescription: calcularTiempoRelativo(r.createTime),
-          hasReply: !!r.reviewReply,
-          reviewId: r.reviewId ?? undefined,
-          reviewName: r.name ?? undefined,
+          authorName: review.reviewer?.displayName ?? "Anónimo",
+          rating: starRatingToNumber(review.starRating),
+          text: review.comment ?? "",
+          time: Math.floor(new Date(review.createTime).getTime() / 1000),
+          profilePhotoUrl: review.reviewer?.profilePhotoUrl ?? "",
+          relativeTimeDescription: formatRelativeTime(review.createTime),
+          hasReply: !!review.reviewReply,
+          reviewId: review.reviewId ?? undefined,
+          reviewName: review.name ?? undefined,
         });
       }
     }
 
-    pageToken = data.nextPageToken;
+    pageToken = payload.nextPageToken;
   } while (pageToken);
 
   return { reviews, averageRating, totalReviewCount };
 }
 
-// ─── Calcula el tiempo relativo desde una fecha ──────
 // Convierte "2024-03-15T10:30:00Z" en "hace 3 meses".
-// ─────────────────────────────────────────────────────
-function calcularTiempoRelativo(isoDate: string): string {
-  const ahora = Date.now();
-  const fecha = new Date(isoDate).getTime();
-  const diffMs = ahora - fecha;
-  const diffMin = Math.floor(diffMs / 60000);
+function formatRelativeTime(isoDate: string): string {
+  const now = Date.now();
+  const date = new Date(isoDate).getTime();
+  const diffMinutes = Math.floor((now - date) / 60000);
 
-  if (diffMin < 1) return "hace unos segundos";
-  if (diffMin < 60) return `hace ${diffMin} min`;
+  if (diffMinutes < 1) return "hace unos segundos";
+  if (diffMinutes < 60) return `hace ${diffMinutes} min`;
 
-  const diffHoras = Math.floor(diffMin / 60);
-  if (diffHoras < 24) return `hace ${diffHoras} h`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `hace ${diffHours} h`;
 
-  const diffDias = Math.floor(diffHoras / 24);
-  if (diffDias < 30) return `hace ${diffDias} días`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `hace ${diffDays} días`;
 
-  const diffMeses = Math.floor(diffDias / 30);
-  if (diffMeses < 12) return `hace ${diffMeses} meses`;
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `hace ${diffMonths} meses`;
 
-  const diffAños = Math.floor(diffMeses / 12);
-  return `hace ${diffAños} años`;
+  const diffYears = Math.floor(diffMonths / 12);
+  return `hace ${diffYears} años`;
 }
 
-// ─── Obtiene datos completos del negocio + reseñas ───
-// Función principal: dado un access token válido y los
-// IDs de cuenta/ubicación, devuelve nombre, rating y
-// todas las reseñas.
-// ─────────────────────────────────────────────────────
+// Función principal: devuelve nombre, rating y todas las reseñas de un negocio.
 export async function getBusinessProfileData(
   accessToken: string,
   accountId: string,
   locationId: string,
 ): Promise<BusinessProfileData | null> {
-  // Primero obtener datos de la ubicación (nombre)
-  // En la API de Business Information (v1) un local se
-  // consulta por su ID en la ruta /locations/{locationId},
-  // no con la ruta antigua accounts/{accountId}/locations...
+  // Un local se consulta por su ID en /locations/{locationId} (Business Information v1).
   const numericLocationId =
     locationId.match(/locations\/([^/]+)$/)?.[1] ?? locationId;
-  const locUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${numericLocationId}?readMask=title`;
-  const locRes = await fetch(locUrl, {
+  const locationUrl = `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${numericLocationId}?readMask=title`;
+  const locationResponse = await fetch(locationUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  if (!locRes.ok) {
-    const locBody = await locRes.text();
+  if (!locationResponse.ok) {
+    const locationBody = await locationResponse.text();
     console.error(
-      `[BusinessProfile] Error obteniendo datos de ubicación | HTTP ${locRes.status} | URL: ${locUrl} | ${locBody}`,
+      `[BusinessProfile] Error obteniendo datos de ubicación | HTTP ${locationResponse.status} | URL: ${locationUrl} | ${locationBody}`,
     );
     throw new Error(
-      `Google Business Profile: error ${locRes.status} al obtener ubicación`,
+      `Google Business Profile: error ${locationResponse.status} al obtener ubicación`,
     );
   }
 
-  const location = await locRes.json();
+  const locationData = await locationResponse.json();
 
-  // Luego obtener todas las reseñas
-  const { reviews, averageRating, totalReviewCount } =
-    await getBusinessReviews(accessToken, accountId, locationId);
+  const { reviews, averageRating, totalReviewCount } = await getBusinessReviews(
+    accessToken,
+    accountId,
+    locationId,
+  );
 
   return {
-    name: location.title ?? "",
+    name: locationData.title ?? "",
     rating: averageRating,
     userRatingsTotal: totalReviewCount > 0 ? totalReviewCount : reviews.length,
     reviews,
   };
 }
 
-// ─── Publica una respuesta a una reseña ──────────────
-// Usa el endpoint v4 de reviews. `reviewName` es el nombre
-// completo del recurso:
-//   "accounts/{account}/locations/{location}/reviews/{reviewId}"
-// Requiere que Google haya aprobado la cuota de la Business
-// Profile API; si no, responde 429/403.
-// ─────────────────────────────────────────────────────
+// Publica una respuesta a una reseña. `reviewName` es el nombre completo del
+// recurso. Requiere que Google haya aprobado la cuota (si no, responde 429/403).
 export async function replyToBusinessReview(
   accessToken: string,
   reviewName: string,
@@ -311,7 +269,7 @@ export async function replyToBusinessReview(
 ): Promise<{ ok: boolean; error?: string }> {
   const url = `https://mybusiness.googleapis.com/v4/${reviewName}/reply`;
 
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -320,12 +278,12 @@ export async function replyToBusinessReview(
     body: JSON.stringify({ comment }),
   });
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!response.ok) {
+    const body = await response.text();
     console.error(
-      `[BusinessProfile] Error publicando respuesta | HTTP ${res.status} | URL: ${url} | ${body}`,
+      `[BusinessProfile] Error publicando respuesta | HTTP ${response.status} | URL: ${url} | ${body}`,
     );
-    return { ok: false, error: friendlyBusinessProfileError(res.status, body) };
+    return { ok: false, error: friendlyBusinessProfileError(response.status, body) };
   }
 
   return { ok: true };

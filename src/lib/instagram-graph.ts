@@ -1,38 +1,18 @@
-// ─── Instagram API with Instagram Login (Business Login) ──
-// Este flujo N0 requiere página de Facebook: el usuario se
-// autentica directamente en Instagram (instagram.com/oauth/
-// authorize) y la app hace llamadas a graph.instagram.com.
-//
-//   1. El negocio debe tener una cuenta profesional de
-//      Instagram (Business o Creator).
-//   2. La app en Meta se crea con el uso de caso "API de
-//      Instagram" y las claves son el App ID y App Secret
-//      de Instagram (distintos de los de Facebook).
-//   3. Se pide permiso instagram_business_basic e
-//      instagram_business_manage_comments.
-//
-// Tokens: code -> short-lived (~1h) -> long-lived (60 días).
-// NO se puede hacer renovación indefinida: si caduca, el
-// usuario vuelve a conectar. Por eso avisamos de la fecha
-// de caducidad.
-// ─────────────────────────────────────────────────────
+// Instagram API with Instagram Login (Business Login). No requiere página de
+// Facebook: el usuario se autentica en Instagram y la app llama a
+// graph.instagram.com. La cuenta debe ser profesional (Business o Creator).
+// Flujo de tokens: code → short-lived (~1h) → long-lived (60 días).
+// No hay renovación indefinida: si caduca, el usuario vuelve a conectar.
 
 const GRAPH_HOST = "https://graph.instagram.com";
 const TOKEN_ENDPOINT = "https://api.instagram.com/oauth/access_token";
 const TOKEN_TTL_DAYS = 60;
 
-// ─── Credenciales de Instagram ───────────────────────
-// El flujo "Instagram API with Instagram Login" usa el
-// Instagram App ID / App Secret, que en Meta son DISTINTOS
-// del App ID/Secret de Facebook. Si no están definidos,
+// Credenciales de Instagram. El flujo "Instagram API with Instagram Login" usa
+// el App ID/Secret de Instagram, distintos de los de Facebook. Si no están,
 // caemos a META_CLIENT_ID/SECRET por compatibilidad.
-// ─────────────────────────────────────────────────────
 export function getInstagramClientId(): string {
-  return (
-    process.env.META_INSTAGRAM_CLIENT_ID ||
-    process.env.META_CLIENT_ID ||
-    ""
-  );
+  return process.env.META_INSTAGRAM_CLIENT_ID || process.env.META_CLIENT_ID || "";
 }
 
 export function getInstagramClientSecret(): string {
@@ -58,7 +38,7 @@ type GraphResponse = {
   paging?: { next?: string; cursors?: { after?: string } };
 };
 
-// ─── Tipos de Media y Comentarios ────────────────────
+// ─── Tipos de media y comentarios ────────────────────
 export type InstagramMedia = {
   id: string;
   caption?: string;
@@ -89,40 +69,40 @@ export type InstagramUserProfile = {
   accountType: "BUSINESS" | "CREATOR" | string;
 };
 
-// ─── Convierte un error de la API en mensaje claro ────
+// Convierte un error de la API de Meta en un mensaje claro, con datos
+// técnicos (subcódigo, trace) para poder diagnosticar.
 export function friendlyMetaError(status: number, body: string): string {
   let message = body.slice(0, 400);
-  let diag = "";
+  let diagnostics = "";
   try {
     const parsed = JSON.parse(body) as GraphResponse;
-    const err = parsed?.error;
-    if (err?.message) message = err.message;
+    const error = parsed?.error;
+    if (error?.message) message = error.message;
 
-    // Añadimos los datos técnicos del error (subcódigo y
-    // fbtrace_id) para poder diagnosticar y reportar a Meta.
-    if (err) {
-      const bits: string[] = [];
-      if (err.type) bits.push(`tipo ${err.type}`);
-      if (typeof err.code !== "undefined") bits.push(`código ${err.code}`);
-      if (typeof err.error_subcode !== "undefined")
-        bits.push(`subcódigo ${err.error_subcode}`);
-      if (err.fbtrace_id) bits.push(`trace ${err.fbtrace_id}`);
-      if (bits.length) diag = ` (${bits.join(", ")})`;
+    if (error) {
+      const details: string[] = [];
+      if (error.type) details.push(`tipo ${error.type}`);
+      if (typeof error.code !== "undefined") details.push(`código ${error.code}`);
+      if (typeof error.error_subcode !== "undefined") {
+        details.push(`subcódigo ${error.error_subcode}`);
+      }
+      if (error.fbtrace_id) details.push(`trace ${error.fbtrace_id}`);
+      if (details.length) diagnostics = ` (${details.join(", ")})`;
     }
 
-    if (err?.code === 190) {
+    if (error?.code === 190) {
       return "El token de Instagram ha caducado. Vuelve a conectar la cuenta desde Configuración.";
     }
-    if (err?.code === 200) {
-      return `Instagram no tiene acceso a esta cuenta: ${message}${diag}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
+    if (error?.code === 200) {
+      return `Instagram no tiene acceso a esta cuenta: ${message}${diagnostics}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
     }
   } catch {
     // no es JSON, usamos el texto tal cual
   }
-  return `Instagram API error ${status}: ${message}${diag}`;
+  return `Instagram API error ${status}: ${message}${diagnostics}`;
 }
 
-// ─── Convierte un token corto en long-lived (60 días) ──
+// Convierte un token corto en long-lived (60 días).
 export async function exchangeForLongLivedToken(
   accessToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
@@ -133,29 +113,27 @@ export async function exchangeForLongLivedToken(
     client_secret: clientSecret,
     access_token: accessToken,
   });
-  const res = await fetch(`${GRAPH_HOST}/access_token?${params.toString()}`);
+  const response = await fetch(`${GRAPH_HOST}/access_token?${params.toString()}`);
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(friendlyMetaError(res.status, body));
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(friendlyMetaError(response.status, body));
   }
 
-  const data = (await res.json()) as GraphResponse;
-  if (!data?.access_token) throw new Error("Instagram no devolvió un token long-lived");
+  const payload = (await response.json()) as GraphResponse;
+  if (!payload?.access_token) {
+    throw new Error("Instagram no devolvió un token long-lived");
+  }
 
-  const expiresIn = data.expires_in ?? TOKEN_TTL_DAYS * 86400;
+  const expiresIn = payload.expires_in ?? TOKEN_TTL_DAYS * 86400;
   return {
-    accessToken: data.access_token,
+    accessToken: payload.access_token,
     expiresAt: new Date(Date.now() + expiresIn * 1000),
   };
 }
 
-// ─── Renueva un token long-lived (otros 60 días) ─────
-// Meta permite refrescar un token long-lived una vez ha
-// pasado al menos 24 h desde su emisión, sin que el usuario
-// tenga que volver a autenticarse. Se usa cuando el token
-// está cerca de caducar.
-// ─────────────────────────────────────────────────────
+// Renueva un token long-lived (otros 60 días). Meta permite refrescarlo una
+// vez ha pasado al menos 24 h desde su emisión.
 export async function refreshLongLivedToken(
   accessToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
@@ -163,63 +141,62 @@ export async function refreshLongLivedToken(
     grant_type: "ig_refresh_token",
     access_token: accessToken,
   });
-  const res = await fetch(
+  const response = await fetch(
     `${GRAPH_HOST}/refresh_access_token?${params.toString()}`,
   );
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(friendlyMetaError(res.status, body));
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(friendlyMetaError(response.status, body));
   }
 
-  const data = (await res.json()) as GraphResponse;
-  if (!data?.access_token) throw new Error("Instagram no devolvió un token renovado");
+  const payload = (await response.json()) as GraphResponse;
+  if (!payload?.access_token) {
+    throw new Error("Instagram no devolvió un token renovado");
+  }
 
-  const expiresIn = data.expires_in ?? TOKEN_TTL_DAYS * 86400;
+  const expiresIn = payload.expires_in ?? TOKEN_TTL_DAYS * 86400;
   return {
-    accessToken: data.access_token,
+    accessToken: payload.access_token,
     expiresAt: new Date(Date.now() + expiresIn * 1000),
   };
 }
 
-// ─── Comprueba si el token está caducado ─────────────
+// Comprueba si el token está caducado (avisamos 2 días antes).
 export function isInstagramTokenExpired(expiresAt: Date | null): boolean {
   if (!expiresAt) return true;
-  // Avisamos 2 días antes para que el usuario reconecte a tiempo
   return expiresAt.getTime() - 2 * 86400 * 1000 < Date.now();
 }
 
-// ─── Obtiene el perfil de la cuenta (username) ───────
+// Obtiene el perfil de la cuenta. Usamos /me en vez de /{user_id} porque con
+// Instagram Login el ID del token no siempre es válido para el Graph API.
 export async function getInstagramUserProfile(
   accessToken: string,
   userId?: string,
 ): Promise<InstagramUserProfile> {
-  // Usamos /me en vez de /{user_id}: con Instagram Login el
-  // ID devuelto en el token no siempre es válido para el
-  // Graph API, y /me devuelve el ID correcto de la cuenta.
   const url = `${GRAPH_HOST}/me?fields=user_id,username,account_type&access_token=${encodeURIComponent(accessToken)}`;
-  const res = await fetch(url);
+  const response = await fetch(url);
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!response.ok) {
+    const body = await response.text();
     console.error("[Instagram] Error obteniendo perfil:", body);
-    throw new Error(friendlyMetaError(res.status, body));
+    throw new Error(friendlyMetaError(response.status, body));
   }
 
-  const data = (await res.json()) as {
+  const payload = (await response.json()) as {
     id?: string;
     user_id?: string;
     username?: string;
     account_type?: string;
   };
   return {
-    id: data.user_id ?? data.id ?? userId ?? "",
-    username: data.username ?? "",
-    accountType: (data.account_type ?? "").toUpperCase(),
+    id: payload.user_id ?? payload.id ?? userId ?? "",
+    username: payload.username ?? "",
+    accountType: (payload.account_type ?? "").toUpperCase(),
   };
 }
 
-// ─── Obtiene las publicaciones recientes ─────────────
+// Obtiene las publicaciones recientes (máx. 2 páginas de paginación).
 export async function getRecentMedia(
   accessToken: string,
   instagramUserId: string,
@@ -228,26 +205,25 @@ export async function getRecentMedia(
   const media: InstagramMedia[] = [];
   let url = `${GRAPH_HOST}/${instagramUserId}/media?fields=id,caption,timestamp,media_type,permalink,thumbnail_url,media_url,comments_count&limit=${Math.min(limit, 25)}&access_token=${encodeURIComponent(accessToken)}`;
 
-  // Pedimos como mucho 2 páginas (paginación con cursor)
   for (let page = 0; page < 2; page++) {
-    const res = await fetch(url);
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(friendlyMetaError(res.status, body));
+    const response = await fetch(url);
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(friendlyMetaError(response.status, body));
     }
-    const data = (await res.json()) as {
+    const payload = (await response.json()) as {
       data?: InstagramMedia[];
       paging?: { next?: string };
     };
-    if (data?.data) media.push(...data.data);
-    if (media.length >= limit || !data?.paging?.next) break;
-    url = data.paging.next;
+    if (payload?.data) media.push(...payload.data);
+    if (media.length >= limit || !payload?.paging?.next) break;
+    url = payload.paging.next;
   }
 
   return media.slice(0, limit);
 }
 
-// ─── Obtiene los comentarios de una publicación ──────
+// Obtiene los comentarios de una publicación (con sus respuestas).
 export async function getMediaComments(
   accessToken: string,
   mediaId: string,
@@ -255,15 +231,15 @@ export async function getMediaComments(
   const fields =
     "id,text,timestamp,username,from{id,username},replies{id,text,timestamp,username,from{id,username}}";
   const url = `${GRAPH_HOST}/${mediaId}/comments?fields=${fields}&limit=50&access_token=${encodeURIComponent(accessToken)}`;
-  const res = await fetch(url);
+  const response = await fetch(url);
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!response.ok) {
+    const body = await response.text();
     console.error(`[Instagram] Error obteniendo comentarios de ${mediaId}:`, body);
     return [];
   }
 
-  const data = (await res.json()) as {
+  const payload = (await response.json()) as {
     data?: Array<{
       id: string;
       text?: string;
@@ -282,24 +258,25 @@ export async function getMediaComments(
     }>;
   };
 
-  return (data?.data ?? []).map((c) => ({
-    id: c.id,
-    text: c.text ?? "",
-    timestamp: c.timestamp ?? "",
-    username: c.username ?? c.from?.username ?? "Anónimo",
-    from_id: c.from?.id,
-    replies: (c.replies?.data ?? []).map((r) => ({
-      id: r.id,
-      text: r.text ?? "",
-      timestamp: r.timestamp ?? "",
-      username: r.username ?? r.from?.username ?? "Anónimo",
-      from_id: r.from?.id,
+  return (payload?.data ?? []).map((comment) => ({
+    id: comment.id,
+    text: comment.text ?? "",
+    timestamp: comment.timestamp ?? "",
+    username: comment.username ?? comment.from?.username ?? "Anónimo",
+    from_id: comment.from?.id,
+    replies: (comment.replies?.data ?? []).map((reply) => ({
+      id: reply.id,
+      text: reply.text ?? "",
+      timestamp: reply.timestamp ?? "",
+      username: reply.username ?? reply.from?.username ?? "Anónimo",
+      from_id: reply.from?.id,
       replies: [],
     })),
   }));
 }
 
-// ─── Obtiene publicaciones + comentarios de las recientes ──
+// Obtiene publicaciones recientes con sus comentarios. Solo consultamos los
+// comentarios de publicaciones que tienen alguno.
 export async function getInstagramCommentsData(
   accessToken: string,
   instagramUserId: string,
@@ -307,21 +284,20 @@ export async function getInstagramCommentsData(
 ): Promise<InstagramMediaWithComments[]> {
   const media = await getRecentMedia(accessToken, instagramUserId, limit);
 
-  const withComments = await Promise.all(
-    media.map(async (m) => {
-      // Solo consultamos comentarios si la publicación tiene alguno
-      if ((m.comments_count ?? 0) > 0) {
-        const comments = await getMediaComments(accessToken, m.id);
-        return { ...m, comments };
+  const mediaWithComments = await Promise.all(
+    media.map(async (item) => {
+      if ((item.comments_count ?? 0) > 0) {
+        const comments = await getMediaComments(accessToken, item.id);
+        return { ...item, comments };
       }
-      return { ...m, comments: [] };
+      return { ...item, comments: [] };
     }),
   );
 
-  return withComments;
+  return mediaWithComments;
 }
 
-// ─── Publica una respuesta a un comentario ───────────
+// Publica una respuesta a un comentario.
 export async function postCommentReply(
   accessToken: string,
   commentId: string,
@@ -329,13 +305,13 @@ export async function postCommentReply(
 ): Promise<{ ok: boolean; replyId?: string; error?: string }> {
   const safeMessage = message.slice(0, 1000);
   const url = `${GRAPH_HOST}/${commentId}/replies?message=${encodeURIComponent(safeMessage)}&access_token=${encodeURIComponent(accessToken)}`;
-  const res = await fetch(url, { method: "POST" });
+  const response = await fetch(url, { method: "POST" });
 
-  if (!res.ok) {
-    const body = await res.text();
-    return { ok: false, error: friendlyMetaError(res.status, body) };
+  if (!response.ok) {
+    const body = await response.text();
+    return { ok: false, error: friendlyMetaError(response.status, body) };
   }
 
-  const data = (await res.json()) as { id?: string };
-  return { ok: true, replyId: data.id };
+  const payload = (await response.json()) as { id?: string };
+  return { ok: true, replyId: payload.id };
 }

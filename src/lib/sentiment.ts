@@ -1,13 +1,7 @@
-// ─── Heurística ligera de negatividad ────────────────
-// Detecta si un comentario de Instagram parece una queja
-// para adaptar el tono de la respuesta generada por IA y
-// para marcar el badge "Crítico" en la bandeja.
-//
-// No hace llamadas costosas: es una lista ampliada de
-// marcadores (español, catalán, inglés y transliteración
-// árabe) + patrones de negación. En el futuro se podría
-// sustituir por análisis de sentimiento con IA.
-// ─────────────────────────────────────────────────────
+// Heurística ligera de negatividad: detecta si un comentario parece una queja
+// para adaptar el tono de la respuesta de IA y marcar el badge "Crítico".
+// Es una lista de marcadores (español, catalán, inglés y árabe) + negaciones;
+// no hace llamadas costosas.
 
 // Palabras y expresiones con alta precisión de negatividad.
 const NEGATIVE_MARKERS = [
@@ -55,66 +49,64 @@ const NEGATIVE_MARKERS = [
 // Emojis/iconos claramente negativos.
 const NEGATIVE_EMOJI = ['😡', '🤬', '👎', '🙄', '😤', '🤢', '🤮', '💩'];
 
-// Excepciones: comentarios que parecen negativos pero son
-// respuestas del propio negocio (@hfc.barcelona responde a
-// usuarios) o contextos donde la palabra no es un ataque.
-const OWN_ACCOUNT_RE = /^@\S+\s+.*(gracias|thank|de nada|buena|genial|sí|si|por supuesto)/i;
+// Respuestas amables del propio negocio: parecen negativas pero no lo son.
+const OWN_ACCOUNT_RE =
+  /^@\S+\s+.*(gracias|thank|de nada|buena|genial|sí|si|por supuesto)/i;
 
-// Marcadores de islamofobia / discurso de odio religioso.
-// Muy específicos para no marcar un comentario musulmán
-// normal (por ejemplo "bismillah", "alhamdulillah", "inshallah").
+// Marcadores de islamofobia/discurso de odio religioso. Muy específicos para
+// no marcar un comentario musulmán normal ("bismillah", "alhamdulillah"...).
 const ISLAMOPHOBIC_MARKERS = [
-  // Insultos y desprecio
   'moro', 'moros', 'moraco', 'moracas', 'moro de mierda', 'morica',
   'turco de mierda', 'musulman de mierda', 'musulmana de mierda',
-  // Ataques al profeta
   'supuesto profeta', 'tu profeta', 'el falsa profeta', 'falso profeta',
   'profeta de la pedofilia', 'pedofilo tu profeta', 'tu mahoma',
-  // Terrorismo / incendio
   'terrorista', 'yihad', 'yihadista', 'bomba en', 'explosion', 'decapita',
   'expulsadlos', 'fuera los', 'fuera de aqui los', 'invasion ',
-  // Comparaciones y deshumanización
   'alá es un', 'vuestro dios es', 'vuestra religion es un',
   'come puerco en su pais', 'vuelve a tu pais', 'vuelve a tu pueblo',
   'no es tu pais', 'no es vuestra tierra', 'os vais a todos',
   'invadisteis', 'invadieron', 'colonizad', 'islamizacion',
-  // Discurso anti-hijab/burkini despectivo
   'quitale el burka', 'fuera el hijab', 'prohibid el hijab',
   'no al burkini',
 ];
 
 export function isIslamophobic(text: string): boolean {
   if (!text) return false;
-  const lower = text.toLowerCase();
-  return (
-    ISLAMOPHOBIC_MARKERS.some((w) => lower.includes(w.toLowerCase())) &&
-    // No aplicamos si es la propia cuenta musulmana hablando de su fe
-    !/alhamdulillah|bismillah|inshallah|insha'allah|salam|waalikom|\bamin\b|allahumma/.test(lower)
+  const normalizedText = text.toLowerCase();
+  const hasHateMarker = ISLAMOPHOBIC_MARKERS.some((marker) =>
+    normalizedText.includes(marker.toLowerCase()),
   );
+  // No aplicamos si es la propia cuenta musulmana hablando de su fe.
+  const isOwnFaith =
+    /alhamdulillah|bismillah|inshallah|insha'allah|salam|waalikom|\bamin\b|allahumma/.test(
+      normalizedText,
+    );
+  return hasHateMarker && !isOwnFaith;
 }
 
 export function isLikelyNegative(text: string): boolean {
   if (isIslamophobic(text)) return true;
   if (!text) return false;
-  const lower = text.toLowerCase();
+  const normalizedText = text.toLowerCase();
 
   // Si es una respuesta amable del negocio, no marcar como crítico.
   if (OWN_ACCOUNT_RE.test(text)) return false;
 
-  const hasMarker = NEGATIVE_MARKERS.some((w) =>
-    lower.includes(w.toLowerCase()),
+  const hasMarker = NEGATIVE_MARKERS.some((marker) =>
+    normalizedText.includes(marker.toLowerCase()),
   );
   if (hasMarker) return true;
 
-  // Negaciones compuestas: "no + adjetivo" sin palabra clave,
-  // p. ej. "no estaba bueno", "no merece la pena", "no sirve".
+  // Negaciones compuestas: "no + adjetivo" sin palabra clave.
   const negationPatterns = [
     /no (estaba|está|estuvo|ha estado|había) (bueno|buen|rico|sabroso|bien|genial|rico)/,
     /no (está|estaba|es) (hecho|listo|terminado)/,
     /no sirve/,
     /no me (gustó|gusta|fue|apareció)+/,
   ];
-  if (negationPatterns.some((re) => re.test(lower))) return true;
+  if (negationPatterns.some((pattern) => pattern.test(normalizedText))) {
+    return true;
+  }
 
-  return NEGATIVE_EMOJI.some((e) => lower.includes(e));
+  return NEGATIVE_EMOJI.some((emoji) => normalizedText.includes(emoji));
 }

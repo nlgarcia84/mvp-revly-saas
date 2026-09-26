@@ -15,56 +15,54 @@ export type PlaceDetails = {
   reviews: GoogleReview[];
 };
 
-// ─── resuelve enlaces cortos de Google ─────────────
-// Cuando un usuario pega un enlace tipo
-// "https://maps.app.goo.gl/XXXX" (enlace corto de Google),
-// este código sigue la redirección hasta obtener la URL
-// completa de Google Maps, que es la que contiene los
-// datos del lugar (Place ID, coordenadas, etc.).
-//
-// Si la URL no es de goo.gl, la devuelve tal cual.
-// ─────────────────────────────────────────────────────
+// Resuelve enlaces cortos de Google (goo.gl / share.google) siguiendo la
+// redirección hasta la URL completa de Google Maps. Si no es corto, la devuelve igual.
 export async function resolveShortUrl(url: string): Promise<string> {
   try {
-    const u = new URL(url);
-    // Solo seguimos redirecciones si el dominio es de acceso corto
-    // de Google: "goo.gl" (incluye maps.app.goo.gl) o "share.google",
-    // que redirigen a la URL final de Google Maps / Search.
-    if (u.hostname.endsWith('goo.gl') || u.hostname === 'share.google') {
-      const res = await fetch(url, { method: 'GET', redirect: 'follow' });
-      return res.url;
+    const parsedUrl = new URL(url);
+    const isShortLink =
+      parsedUrl.hostname.endsWith('goo.gl') ||
+      parsedUrl.hostname === 'share.google';
+    if (isShortLink) {
+      const response = await fetch(url, { method: 'GET', redirect: 'follow' });
+      return response.url;
     }
   } catch {}
   return url;
 }
 
+// Extrae el Place ID de una URL de Google Maps/Reviews, probando varios formatos.
 export function extractPlaceId(url: string): string | null {
   try {
-    const u = new URL(url);
+    const parsedUrl = new URL(url);
 
-    const placeid = u.searchParams.get('placeid') || u.searchParams.get('place_id');
+    const placeid =
+      parsedUrl.searchParams.get('placeid') ||
+      parsedUrl.searchParams.get('place_id');
     if (placeid) return placeid;
 
-    const q = u.searchParams.get('q');
+    const q = parsedUrl.searchParams.get('q');
     if (q?.startsWith('place_id:')) return q.slice(9);
 
-    const cid = u.searchParams.get('cid');
+    const cid = parsedUrl.searchParams.get('cid');
     if (cid) {
       if (/^\d+$/.test(cid)) return cid;
       console.warn(`[extractPlaceId] cid no numérico ignorado: ${cid}`);
     }
 
-    const ftid = u.searchParams.get('ftid');
+    const ftid = parsedUrl.searchParams.get('ftid');
     if (ftid) {
       console.warn(`[extractPlaceId] ftid ignorado (no es Place ID válido): ${ftid}`);
     }
 
-    const rldimm = u.searchParams.get('rldimm');
+    const rldimm = parsedUrl.searchParams.get('rldimm');
     if (rldimm) {
       console.warn(`[extractPlaceId] rldimm ignorado (no es Place ID válido): ${rldimm}`);
     }
 
-    const data = u.searchParams.get('data') || u.href.match(/data=([^&?]+)/)?.[1];
+    const data =
+      parsedUrl.searchParams.get('data') ||
+      parsedUrl.href.match(/data=([^&?]+)/)?.[1];
     if (data) {
       const raw = decodeURIComponent(data);
       const p1s = raw.match(/!1s(ChI[^!]+)/)?.[1];
@@ -84,58 +82,71 @@ export function extractPlaceId(url: string): string | null {
   }
 }
 
+// Extrae las coordenadas (@lat,lng) de una URL de Google Maps.
 function extractLatLng(url: string): { lat: number; lng: number } | null {
-  const m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
   return null;
 }
 
+// Compara nombres ignorando mayúsculas y acentos.
 function nameMatches(resultName: string, queryName: string): boolean {
-  const a = resultName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const b = queryName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return a.includes(b) || b.includes(a);
+  const normalize = (value: string) =>
+    value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const normalizedResult = normalize(resultName);
+  const normalizedQuery = normalize(queryName);
+  return (
+    normalizedResult.includes(normalizedQuery) ||
+    normalizedQuery.includes(normalizedResult)
+  );
 }
 
-export async function resolveWithTextSearch(queryName: string, url?: string): Promise<string | null> {
+// Busca el Place ID por el nombre del negocio con Text Search. Prueba primero
+// sesgando por coordenadas (si la URL las trae) y luego sin ellas.
+export async function resolveWithTextSearch(
+  queryName: string,
+  url?: string,
+): Promise<string | null> {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY!;
   const coords = url ? extractLatLng(url) : null;
 
-  // Try 3 strategies in order: with coords, without coords, with more specific name
   const searches: { query: string; coordBias: boolean }[] = [
     { query: queryName, coordBias: true },
     { query: queryName, coordBias: false },
   ];
 
-  for (const s of searches) {
+  for (const search of searches) {
     let searchUrl: string;
-    if (s.coordBias && coords) {
-      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(s.query)}&location=${coords.lat},${coords.lng}&radius=200&key=${apiKey}`;
+    if (search.coordBias && coords) {
+      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(search.query)}&location=${coords.lat},${coords.lng}&radius=200&key=${apiKey}`;
     } else {
-      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(s.query)}&key=${apiKey}`;
+      searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(search.query)}&key=${apiKey}`;
     }
 
-    const res = await fetch(searchUrl);
-    if (!res.ok) continue;
-    const data = await res.json();
-    // Si la API está denegada (sin billing) o excedimos la cuota,
-    // lanzamos el error para que el usuario vea el motivo real en
-    // vez de un "no hay reseñas" genérico.
-    if (data.status === 'REQUEST_DENIED') {
-      throw new Error(`Google Places API: ${data.error_message ?? 'acceso denegado'}`);
+    const response = await fetch(searchUrl);
+    if (!response.ok) continue;
+
+    const payload = await response.json();
+    // Lanzamos el error real (billing/cuota) en vez de un "no hay reseñas" genérico.
+    if (payload.status === 'REQUEST_DENIED') {
+      throw new Error(
+        `Google Places API: ${payload.error_message ?? 'acceso denegado'}`,
+      );
     }
-    if (data.status === 'OVER_QUERY_LIMIT') {
+    if (payload.status === 'OVER_QUERY_LIMIT') {
       throw new Error('Google Places API: límite de consultas excedido');
     }
-    if (data.status === 'INVALID_REQUEST') {
-      throw new Error(`Google Places API: solicitud inválida - ${data.error_message ?? ''}`);
+    if (payload.status === 'INVALID_REQUEST') {
+      throw new Error(
+        `Google Places API: solicitud inválida - ${payload.error_message ?? ''}`,
+      );
     }
-    if (data.status !== 'OK' || !data.results?.length) continue;
+    if (payload.status !== 'OK' || !payload.results?.length) continue;
 
-    // Prefer result whose name matches the business name
-    for (const result of data.results) {
-      if (nameMatches(result.name, queryName)) {
-        const pid = result.place_id;
-        if (/^ChIJ/.test(pid)) return pid;
+    // Preferimos el resultado cuyo nombre coincide con el del negocio.
+    for (const result of payload.results) {
+      if (nameMatches(result.name, queryName) && /^ChIJ/.test(result.place_id)) {
+        return result.place_id;
       }
     }
   }
@@ -143,6 +154,7 @@ export async function resolveWithTextSearch(queryName: string, url?: string): Pr
   return null;
 }
 
+// Si el ID es numérico (CID), lo resolvemos a un Place ID real por nombre.
 async function resolvePlaceId(
   placeId: string,
   queryName?: string,
@@ -154,6 +166,7 @@ async function resolvePlaceId(
   return placeId;
 }
 
+// Obtiene los detalles (nombre, nota y reseñas) de un lugar por su Place ID.
 export async function fetchPlaceDetails(
   placeId: string,
   queryName?: string,
@@ -174,31 +187,36 @@ export async function fetchPlaceDetails(
 
   const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&language=es&key=${apiKey}`;
 
-  const res = await fetch(apiUrl);
-  if (!res.ok) {
-    console.error(`[fetchPlaceDetails] HTTP ${res.status} al llamar Places API`);
+  const response = await fetch(apiUrl);
+  if (!response.ok) {
+    console.error(`[fetchPlaceDetails] HTTP ${response.status} al llamar Places API`);
     return null;
   }
 
-  const data = await res.json();
-  if (data.status === 'REQUEST_DENIED') {
-    throw new Error(`Google Places API: ${data.error_message ?? 'acceso denegado'}`);
+  const payload = await response.json();
+  if (payload.status === 'REQUEST_DENIED') {
+    throw new Error(
+      `Google Places API: ${payload.error_message ?? 'acceso denegado'}`,
+    );
   }
-  if (data.status === 'OVER_QUERY_LIMIT') {
+  if (payload.status === 'OVER_QUERY_LIMIT') {
     throw new Error('Google Places API: límite de consultas excedido');
   }
-  if (data.status === 'INVALID_REQUEST') {
-    throw new Error(`Google Places API: solicitud inválida - ${data.error_message ?? ''}`);
+  if (payload.status === 'INVALID_REQUEST') {
+    throw new Error(
+      `Google Places API: solicitud inválida - ${payload.error_message ?? ''}`,
+    );
   }
-  if (data.status !== 'OK' || !data.result) {
-    console.warn(`[fetchPlaceDetails] API status: ${data.status} | placeId: ${resolved}`);
+  if (payload.status !== 'OK' || !payload.result) {
+    console.warn(`[fetchPlaceDetails] API status: ${payload.status} | placeId: ${resolved}`);
     return null;
   }
 
-  const result = data.result;
-
+  const result = payload.result;
   if (queryName && !nameMatches(result.name, queryName)) {
-    console.warn(`[fetchPlaceDetails] El nombre no coincide | Google: "${result.name}" | Negocio: "${queryName}"`);
+    console.warn(
+      `[fetchPlaceDetails] El nombre no coincide | Google: "${result.name}" | Negocio: "${queryName}"`,
+    );
     return null;
   }
 
@@ -206,13 +224,13 @@ export async function fetchPlaceDetails(
     name: result.name ?? '',
     rating: result.rating ?? 0,
     userRatingsTotal: result.user_ratings_total ?? 0,
-    reviews: (result.reviews ?? []).map((r: any) => ({
-      authorName: r.author_name ?? '',
-      rating: r.rating ?? 0,
-      text: r.text ?? '',
-      time: r.time ?? 0,
-      profilePhotoUrl: r.profile_photo_url ?? '',
-      relativeTimeDescription: r.relative_time_description ?? '',
+    reviews: (result.reviews ?? []).map((review: any) => ({
+      authorName: review.author_name ?? '',
+      rating: review.rating ?? 0,
+      text: review.text ?? '',
+      time: review.time ?? 0,
+      profilePhotoUrl: review.profile_photo_url ?? '',
+      relativeTimeDescription: review.relative_time_description ?? '',
     })),
   };
 }
