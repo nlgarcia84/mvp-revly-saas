@@ -622,14 +622,14 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           Pide al cliente su código (formato <strong>REVLY-XXXX</strong>),
           escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y se generará un código nuevo.
         </p>
-        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2">
+        <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2 max-w-md">
           <input
             value={redeemCode}
             onChange={(e) => setRedeemCode(e.target.value)}
             placeholder="REVLY-XXXX"
             required
             aria-label="Código de descuento del cliente"
-            className="flex-1 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
+            className="w-full sm:w-64 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
           />
           <Button type="submit" variant="primary" disabled={redeeming}>
             {redeeming ? "Canjeando..." : "Canjear"}
