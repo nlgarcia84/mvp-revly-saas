@@ -28,15 +28,15 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 
 type Business = Awaited<ReturnType<typeof getBusinesses>>[number];
 type Customer = Awaited<ReturnType<typeof getCustomers>>[number];
 
 const statusLabel: Record<string, string> = {
-  pending: "P",
-  invited: "I",
-  completed: "C",
+  pending: "Pendiente",
+  invited: "Invitado",
+  completed: "Completado",
 };
 
 const statusColor: Record<string, string> = {
@@ -44,15 +44,6 @@ const statusColor: Record<string, string> = {
   invited: "bg-blue-100 text-blue-700",
   completed: "bg-emerald-100 text-emerald-700",
 };
-
-// ──────────────────────────────────────────────
-// CustomerDetail
-// ──────────────────────────────────────────────
-// Modal con el historial de invitaciones del
-// cliente: fecha de registro, cuántas veces se
-// le ha enviado la invitación, última fecha
-// de envío y estado actual.
-// ──────────────────────────────────────────────
 
 const CustomerDetail = ({
   customer,
@@ -103,9 +94,15 @@ const CustomerDetail = ({
             </dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-neutral-500">Invitaciones enviadas</dt>
-            <dd>{(customer as any).invitedCount ?? 0}</dd>
+            <dt className="text-neutral-500">Puntos</dt>
+            <dd className="font-medium">{customer.points}</dd>
           </div>
+          {(customer as any).invitedCount != null && (
+            <div className="flex justify-between">
+              <dt className="text-neutral-500">Invitaciones enviadas</dt>
+              <dd>{(customer as any).invitedCount ?? 0}</dd>
+            </div>
+          )}
           {(customer as any).lastInvitedAt && (
             <div className="flex justify-between">
               <dt className="text-neutral-500">Último envío</dt>
@@ -147,6 +144,111 @@ const CustomerDetail = ({
   </>
 );
 
+const ActionMenu = ({
+  customer,
+  isOpen,
+  onToggle,
+  onClose,
+  onAddPoint,
+  onSubtractPoint,
+  onSendEmail,
+  onWhatsApp,
+  onDelete,
+  onDetail,
+}: {
+  customer: Customer;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onAddPoint: (id: string) => void;
+  onSubtractPoint: (id: string) => void;
+  onSendEmail: (id: string) => void;
+  onWhatsApp: (phone: string) => void;
+  onDelete: (id: string) => void;
+  onDetail: (customer: Customer) => void;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isOpen, onClose]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggle(); }}
+        className="text-[10px] sm:text-[11px] font-medium px-2 py-1 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+        aria-label="Acciones"
+      >
+        ⋮
+      </button>
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={onClose} />
+          <div className="absolute right-0 z-20 mt-1 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1">
+            <button
+              onClick={(e) => { e.stopPropagation(); onDetail(customer); onClose(); }}
+              className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              Ver detalle
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onAddPoint(customer.id); onClose(); }}
+              className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              +1 punto
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onSubtractPoint(customer.id); onClose(); }}
+              disabled={customer.points === 0}
+              className="block w-full text-left px-4 py-2 text-xs text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 cursor-not-allowed"
+            >
+              -1 punto
+            </button>
+            {customer.status !== "completed" && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSendEmail(customer.id); onClose(); }}
+                  className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                >
+                  Enviar email
+                </button>
+                {customer.phone && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onWhatsApp(customer.phone); onClose(); }}
+                    className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  >
+                    Enviar WhatsApp
+                  </button>
+                )}
+              </>
+            )}
+            {customer.status === "completed" && (
+              <div className="px-4 py-2 text-[11px] text-emerald-600">
+                ✅ Reseña completada
+              </div>
+            )}
+            <hr className="my-1 border-neutral-200 dark:border-neutral-700" />
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(customer.id); onClose(); }}
+              className="block w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+            >
+              Eliminar
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = use(params);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -174,6 +276,8 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
     newCode: string;
     remainingPoints: number;
   } | null>(null);
+  const [dropdownId, setDropdownId] = useState<string | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -202,6 +306,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       alert(result.error);
     }
     setAddingPointId(null);
+    setDropdownId(null);
   };
 
   const handleSubtractPoint = async (customerId: string) => {
@@ -217,6 +322,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       alert(result.error);
     }
     setAddingPointId(null);
+    setDropdownId(null);
   };
 
   const handleSetPoints = async () => {
@@ -270,6 +376,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       );
     }
     setSendingId(null);
+    setDropdownId(null);
   };
 
   const toggleSelect = (customerId: string) => {
@@ -314,6 +421,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           (e instanceof Error ? e.message : "desconocido"),
       );
     }
+    setDropdownId(null);
   };
 
   const handleClearCompleted = () => {
@@ -411,7 +519,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       return;
     }
 
-    const customers = lines
+    const customerRows = lines
       .slice(1)
       .map((line) => {
         const cols = line.split(",").map((c) => c.trim());
@@ -423,7 +531,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       })
       .filter((c) => c.email);
 
-    const result = await addCustomerBatch(id, customers);
+    const result = await addCustomerBatch(id, customerRows);
     setCsvResult(
       `Importados ${result.created} cliente(s). ${result.errors} error(es).`,
     );
@@ -437,13 +545,28 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const total = customers.length;
   const invited = customers.filter((c) => c.status === "invited").length;
   const completed = customers.filter((c) => c.status === "completed").length;
+  const canDeleteSelected = selected.size > 0;
+  const canBatchSend = selected.size > 0 && !batchSending;
+
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMoreMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMoreMenu]);
 
   return (
-    <div className="flex flex-col gap-10 sm:gap-12">
+    <div className="flex flex-col gap-8">
       {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 sm:gap-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="mb-4">
+          <div className="mb-3">
             <BackButton label="Volver a negocios" />
           </div>
           <div className="flex items-center gap-3">
@@ -462,7 +585,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               <h1 className="text-2xl sm:text-3xl font-semibold">
                 {business?.name ?? "Cargando..."}
               </h1>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-1.5">
                 <p className="text-sm text-neutral-500">
                   {total} cliente{total !== 1 ? "s" : ""} registrado
                   {total !== 1 ? "s" : ""}
@@ -473,9 +596,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                     <a
                       href={`/${business.slug}`}
                       target="_blank"
-                      className="text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
+                      className="text-[10px] sm:text-xs font-medium px-2.5 py-1 rounded-md border border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-colors"
                     >
-                      Enlace fidelización cliente
+                      Enlace fidelización
                     </a>
                     <BusinessQR slug={business.slug} />
                   </>
@@ -487,26 +610,23 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       </div>
 
       {/* Canje de descuento */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-        <h2 className="text-sm font-semibold mb-1">
-          Canjear descuento en caja
-        </h2>
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
+        <h2 className="text-sm font-semibold mb-1">Canjear descuento en caja</h2>
         <p className="text-xs text-neutral-400 mb-4">
-          Pide al cliente su código de descuento (formato <strong>REVLY-XXXX</strong>),
-          escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y
-          se le generará un código nuevo automáticamente.
+          Pide al cliente su código (formato <strong>REVLY-XXXX</strong>),
+          escríbelo aquí y pulsa <strong>Canjear</strong>. Se descontarán 5 puntos y se generará un código nuevo.
         </p>
         <form onSubmit={handleRedeem} className="flex flex-col sm:flex-row gap-2">
           <input
             value={redeemCode}
             onChange={(e) => setRedeemCode(e.target.value)}
-            placeholder="Escribe el código del cliente (REVLY-XXXX)"
+            placeholder="REVLY-XXXX"
             required
             aria-label="Código de descuento del cliente"
             className="flex-1 px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 font-mono tracking-wider uppercase"
           />
           <Button type="submit" variant="primary" disabled={redeeming}>
-            {redeeming ? "Canjeando..." : "Canjear descuento"}
+            {redeeming ? "Canjeando..." : "Canjear"}
           </Button>
         </form>
         {redeemError && (
@@ -518,161 +638,137 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               ✅ Descuento canjeado a {redeemResult.customerName}
             </p>
             <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-2">
-              1. Aplica ahora el <strong>10% de descuento</strong> en el TPV.
+              1. Aplica el <strong>10% de descuento</strong> en el TPV.
             </p>
             <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
-              2. Al cliente le quedan <strong>{redeemResult.remainingPoints}</strong> punto(s).
+              2. Le quedan <strong>{redeemResult.remainingPoints}</strong> punto(s).
             </p>
             <p className="text-xs text-neutral-600 dark:text-neutral-300 mt-1">
-              3. Su nuevo código es{" "}
-              <strong className="font-mono">{redeemResult.newCode}</strong>. Díselo
-              o muéstraselo para su próxima compra.
+              3. Su nuevo código: <strong className="font-mono">{redeemResult.newCode}</strong>
             </p>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Stats */}
-      <div className="flex flex-col gap-5">
-        <div>
-          <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
-            Estadísticas
-          </h2>
-          <p className="text-xs text-neutral-400 mt-2">
-            Resumen de clientes registrados, invitaciones enviadas y reseñas
-            completadas.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <Card neumorphic className="flex flex-col gap-2 p-6">
-            <span className="text-xs text-neutral-500 font-medium">
-              Registrados
-            </span>
-            <span className="text-3xl font-bold">{total}</span>
+      <section>
+        <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-1">
+          Estadísticas
+        </h2>
+        <div className="grid grid-cols-3 gap-4">
+          <Card neumorphic className="p-5 text-center">
+            <p className="text-2xl font-bold">{total}</p>
+            <p className="text-[10px] text-neutral-400 mt-0.5">Registrados</p>
           </Card>
-          <Card neumorphic className="flex flex-col gap-2 p-6">
-            <span className="text-xs text-neutral-500 font-medium">
-              Invitados
-            </span>
-            <span className="text-3xl font-bold">{invited}</span>
+          <Card neumorphic className="p-5 text-center">
+            <p className="text-2xl font-bold">{invited}</p>
+            <p className="text-[10px] text-neutral-400 mt-0.5">Invitados</p>
           </Card>
-          <Card neumorphic className="flex flex-col gap-2 p-6">
-            <span className="text-xs text-neutral-500 font-medium">
-              Completados
-            </span>
-            <span className="text-3xl font-bold">{completed}</span>
+          <Card neumorphic className="p-5 text-center">
+            <p className="text-2xl font-bold">{completed}</p>
+            <p className="text-[10px] text-neutral-400 mt-0.5">Completados</p>
           </Card>
         </div>
-      </div>
+      </section>
 
-      {/* Client section */}
-      <div className="flex flex-col gap-5">
-        <div>
-          <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-2">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 00-3-3.87" />
-              <path d="M16 3.13a4 4 0 010 7.75" />
-            </svg>
-            CLIENTES BD PROPIA
-          </h2>
-          <p className="text-xs text-neutral-400 mt-2">
-            Gestiona los clientes de tu negocio. Selecciona varios para enviar
-            invitaciones en lote o eliminar.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-            onClick={() => {
-              if (selected.size > 0) {
-                handleDeleteSelected();
-              } else {
-                alert(
-                  "Selecciona uno o más clientes de la tabla para eliminar",
-                );
-              }
-            }}
-          >
-            Eliminar clientes
-          </Button>
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-            onClick={() => setShowAdd(true)}
-          >
-            + Añadir cliente
-          </Button>
-          <Button
-            variant="secondary"
-            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-            onClick={() => setShowCsv(true)}
-          >
-            CSV clientes
-          </Button>
-          <Link
-            href={`/business/${id}/settings`}
-            className="text-[10px] sm:text-xs px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors"
-          >
-            Configuración
-          </Link>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex gap-3 flex-wrap">
+      {/* Clientes */}
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              Clientes
+            </h2>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              Gestiona tu base de clientes
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
             {["all", "pending", "invited", "completed"].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`text-[11px] sm:text-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-md border transition-colors cursor-pointer ${
+                className={`text-[11px] px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
                   filter === f
                     ? "border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950"
                     : "border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100"
                 }`}
               >
-                {f === "all"
-                  ? "Todos"
-                  : ({
-                      pending: "Pendiente",
-                      invited: "Invitado",
-                      completed: "Completado",
-                    }[f] ?? f)}
+                {f === "all" ? "Todos" : statusLabel[f]}
               </button>
             ))}
-          </div>
-          <div className="flex gap-2">
-            {customers.filter((c) => c.status === "completed").length > 0 &&
-              filter !== "pending" && (
-                <Button
-                  variant="secondary"
-                  className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                  onClick={handleClearCompleted}
-                >
-                  <span className="hidden sm:inline">Ocultar completados</span>
-                  <span className="sm:hidden">Ocultar</span>
-                </Button>
-              )}
-            {selected.size > 0 && (
+            <div className="relative" ref={moreMenuRef}>
               <Button
-                variant="primary"
-                className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                onClick={handleBatchSend}
-                disabled={batchSending}
+                variant="secondary"
+                className="!px-2.5 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
+                onClick={() => setShowMoreMenu(!showMoreMenu)}
               >
-                {batchSending ? "..." : `${selected.size}`}
+                ▾ Más
               </Button>
-            )}
+              {showMoreMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} />
+                  <div className="absolute right-0 z-20 mt-1 w-44 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg py-1">
+                    <button
+                      onClick={() => { setShowAdd(true); setShowMoreMenu(false); }}
+                      className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      + Añadir cliente
+                    </button>
+                    <button
+                      onClick={() => { setShowCsv(true); setShowMoreMenu(false); }}
+                      className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      Importar CSV
+                    </button>
+                    <button
+                      onClick={() => { setShowMoreMenu(false); }}
+                      className="block w-full text-left px-4 py-2 text-xs text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      <Link href={`/business/${id}/settings`}>Configuración</Link>
+                    </button>
+                    {canDeleteSelected && (
+                      <button
+                        onClick={() => { handleDeleteSelected(); setShowMoreMenu(false); }}
+                        className="block w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                      >
+                        Eliminar seleccionados ({selected.size})
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Batch actions */}
+        {selected.size > 0 && (
+          <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/10 rounded-lg px-4 py-2">
+            <span className="text-xs text-blue-700 dark:text-blue-300">
+              {selected.size} seleccionado{selected.size !== 1 ? "s" : ""}
+            </span>
+            <Button
+              variant="primary"
+              className="!px-3 !py-1 text-[10px] sm:!px-4 sm:!py-1.5 sm:text-[11px]"
+              onClick={handleBatchSend}
+              disabled={!canBatchSend}
+            >
+              {batchSending ? "..." : "Enviar email"}
+            </Button>
+            <button
+              onClick={handleDeleteSelected}
+              className="text-xs text-red-500 hover:text-red-700 transition-colors"
+            >
+              Eliminar
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
 
         {/* Tabla */}
         {filtered.length === 0 ? (
@@ -694,7 +790,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
               </svg>
               <p className="text-sm text-neutral-400 text-center">
                 {customers.length === 0
-                  ? "Todavía no hay clientes registrados. Comparte el código QR del negocio."
+                  ? "Comparte el código QR del negocio para empezar."
                   : "No hay clientes con este estado."}
               </p>
             </div>
@@ -704,41 +800,30 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800">
-                  <th className="pb-4 pr-2 w-8">
+                  <th className="pb-3 pr-2 w-8">
                     <input
                       type="checkbox"
                       onChange={toggleAll}
-                      checked={
-                        selected.size === filtered.length && filtered.length > 0
-                      }
+                      checked={selected.size === filtered.length && filtered.length > 0}
                       className="w-4 h-4 accent-neutral-950"
                     />
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                  <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
                     Cliente
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
+                  <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden sm:table-cell">
                     Teléfono
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden md:table-cell">
+                  <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap hidden md:table-cell">
                     Email
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                  <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
                     Estado
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap">
+                  <th className="text-left font-medium text-neutral-500 pb-3 pr-4 whitespace-nowrap">
                     Puntos
                   </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden lg:table-cell">
-                    Valoración
-                  </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 pr-4 whitespace-nowrap hidden sm:table-cell">
-                    Feedback
-                  </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap">
-                    Envío
-                  </th>
-                  <th className="text-left font-medium text-neutral-500 pb-4 whitespace-nowrap pl-2">
+                  <th className="text-left font-medium text-neutral-500 pb-3 whitespace-nowrap pl-2">
                     Acciones
                   </th>
                 </tr>
@@ -747,13 +832,9 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                 {filtered.map((c) => (
                   <tr
                     key={c.id}
-                    onClick={() => setDetail(c)}
-                    className={`cursor-pointer border-b border-neutral-100 dark:border-neutral-800 last:border-0 ${(c as any).feedback && c.rating != null && c.rating < 4 ? "animate-pulse-bg bg-red-50/50 dark:bg-red-950/10" : ""}`}
+                    className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors"
                   >
-                    <td
-                      className="py-3.5 pr-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
+                    <td className="py-3 pr-2">
                       <input
                         type="checkbox"
                         checked={selected.has(c.id)}
@@ -761,157 +842,51 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
                         className="w-4 h-4 accent-neutral-950"
                       />
                     </td>
-                    <td className="py-3.5 pr-4">
+                    <td className="py-3 pr-4">
                       <span className="font-medium">{c.name ?? "—"}</span>
                     </td>
-                    <td className="py-3.5 pr-4 text-neutral-500 hidden sm:table-cell">
+                    <td className="py-3 pr-4 text-neutral-500 hidden sm:table-cell">
                       {c.phone}
                     </td>
-                    <td className="py-3.5 pr-4 text-neutral-500 hidden md:table-cell">
+                    <td className="py-3 pr-4 text-neutral-500 hidden md:table-cell">
                       {c.email}
                     </td>
-                    <td className="py-3.5 pr-4">
+                    <td className="py-3 pr-4">
                       <span
                         className={`inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                          c.status === "completed" &&
-                          c.rating != null &&
-                          c.rating < 4
+                          c.status === "completed" && c.rating != null && c.rating < 4
                             ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                            : (statusColor[c.status] ??
-                              "bg-neutral-100 text-neutral-500")
+                            : statusColor[c.status] ?? "bg-neutral-100 text-neutral-500"
                         }`}
                       >
                         {statusLabel[c.status] ?? c.status}
                       </span>
                     </td>
-                    <td className="py-3.5 pr-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditPoints(c);
-                          setPointsInput(String(c.points));
+                    <td className="py-3 pr-4">
+                      <span className="font-medium">{c.points}</span>
+                    </td>
+                    <td className="py-3 pl-2">
+                      <ActionMenu
+                        customer={c}
+                        isOpen={dropdownId === c.id}
+                        onToggle={() =>
+                          setDropdownId(dropdownId === c.id ? null : c.id)
+                        }
+                        onClose={() => setDropdownId(null)}
+                        onAddPoint={handleAddPoint}
+                        onSubtractPoint={handleSubtractPoint}
+                        onSendEmail={handleSend}
+                        onWhatsApp={(phone) => {
+                          const cleanPhone = phone.replace(/[\s\-()\+]/g, "");
+                          window.open(
+                            `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${c.name ?? ""}, ¿cómo valorarías tu experiencia en ${business?.name ?? ""}?`)}`,
+                            "_blank",
+                          );
+                          setDropdownId(null);
                         }}
-                        className="font-medium underline decoration-dotted hover:text-neutral-950 dark:hover:text-neutral-100"
-                        title="Corregir puntos"
-                      >
-                        {c.points}
-                      </button>
-                    </td>
-                    <td className="py-3.5 pr-4 text-neutral-500 hidden lg:table-cell">
-                      {c.rating ? (
-                        <span
-                          style={{
-                            color: c.rating < 4 ? "#ef4444" : "#f59e0b",
-                          }}
-                        >
-                          {"★".repeat(c.rating)}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-300">—</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 pr-4 whitespace-nowrap hidden sm:table-cell">
-                      <span className="text-xs">
-                        {(c as any).feedback &&
-                        c.rating != null &&
-                        c.rating < 4 ? (
-                          <span className="font-medium text-red-600 dark:text-red-400">
-                            Sí
-                          </span>
-                        ) : (
-                          <span className="text-neutral-300">—</span>
-                        )}
-                      </span>
-                    </td>
-                    <td className="py-3.5 whitespace-nowrap">
-                      <div
-                        className="flex items-center gap-1.5 sm:gap-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button
-                          variant="secondary"
-                          className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                          onClick={() => handleSubtractPoint(c.id)}
-                          disabled={addingPointId === c.id || c.points === 0}
-                          title="Restar 1 punto"
-                        >
-                          -1
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                          onClick={() => handleAddPoint(c.id)}
-                          disabled={addingPointId === c.id}
-                          title="Sumar 1 punto manualmente"
-                        >
-                          {addingPointId === c.id ? "..." : "+1 punto"}
-                        </Button>
-                        {c.status !== "completed" && (
-                          <Button
-                            variant="primary"
-                            className="!px-2 !py-1 text-[10px] sm:!px-3 sm:!py-1.5 sm:text-[11px]"
-                            onClick={() => handleSend(c.id)}
-                            disabled={sendingId === c.id}
-                          >
-                            {sendingId === c.id ? (
-                              "..."
-                            ) : (
-                              <>
-                                <span className="sm:hidden">Mail</span>
-                                <span className="hidden sm:inline">
-                                  {c.status === "invited"
-                                    ? "Reenviar mail"
-                                    : "Enviar mail"}
-                                </span>
-                              </>
-                            )}
-                          </Button>
-                        )}
-                        {c.status === "completed" && (
-                          <svg
-                            className="w-4 h-4 text-emerald-500"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2.5}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        )}
-                        {c.phone &&
-                          business?.googleLink &&
-                          c.status !== "completed" && (
-                            <a
-                              href={`https://wa.me/${c.phone.replace(/[\s\-\(\)\+]/g, "")}?text=${encodeURIComponent(
-                                `Hola ${c.name ?? ""}, ¿cómo valorarías tu experiencia en ${business.name}?`,
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] px-2 py-1 rounded-md font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors sm:px-2.5 sm:py-1.5 sm:text-[11px]"
-                              title="Enviar por WhatsApp"
-                            >
-                              <span className="sm:hidden">WA</span>
-                              <span className="hidden sm:inline">
-                                Enviar WhatsApp
-                              </span>
-                            </a>
-                          )}
-                      </div>
-                    </td>
-                    <td
-                      className="py-3.5 whitespace-nowrap pl-2"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() => handleDelete(c.id)}
-                        className="text-[10px] sm:text-[11px] text-neutral-400 hover:text-red-500 transition-colors"
-                      >
-                        Eliminar
-                      </button>
+                        onDelete={handleDelete}
+                        onDetail={setDetail}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -919,201 +894,138 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
             </table>
           </div>
         )}
+      </section>
 
-        {detail && (
-          <CustomerDetail customer={detail} onClose={() => setDetail(null)} />
-        )}
+      {detail && (
+        <CustomerDetail customer={detail} onClose={() => setDetail(null)} />
+      )}
 
-        {/* Modal: Añadir cliente manual */}
-        {showAdd && (
-          <>
+      {/* Modal: Añadir cliente */}
+      {showAdd && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAdd(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => setShowAdd(false)}
-            />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div
-                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-lg font-semibold mb-4">Añadir cliente</h2>
-                <form
-                  onSubmit={handleAddManual}
-                  className="flex flex-col gap-4"
-                >
-                  <input
-                    value={addForm.name}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, name: e.target.value })
-                    }
-                    placeholder="Nombre"
-                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-                  />
-                  <input
-                    value={addForm.email}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, email: e.target.value })
-                    }
-                    placeholder="Email"
-                    required
-                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-                  />
-                  <input
-                    value={addForm.phone}
-                    onChange={(e) =>
-                      setAddForm({ ...addForm, phone: e.target.value })
-                    }
-                    placeholder="Teléfono"
-                    required
-                    className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      onClick={() => setShowAdd(false)}
-                    >
-                      Cancelar
-                    </Button>
-                    <Button variant="primary" type="submit">
-                      Guardar
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Modal: Importar CSV */}
-        {showCsv && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => {
-                setShowCsv(false);
-                setCsvResult("");
-              }}
-            />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div
-                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-lg font-semibold mb-1">Importar CSV</h2>
-                <p className="text-xs text-neutral-400 mb-4">
-                  Columnas: nombre, email, teléfono (separado por comas)
-                </p>
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-semibold mb-4">Añadir cliente</h2>
+              <form onSubmit={handleAddManual} className="flex flex-col gap-4">
                 <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleCsv}
-                  className="text-sm text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:bg-white dark:file:bg-neutral-800 file:text-neutral-950 dark:file:text-neutral-100 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 file:cursor-pointer"
-                />
-                {csvResult && (
-                  <p className="text-sm text-neutral-500 mt-3">{csvResult}</p>
-                )}
-                <div className="flex justify-end mt-4">
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    onClick={() => {
-                      setShowCsv(false);
-                      setCsvResult("");
-                    }}
-                  >
-                    Cerrar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Modal: Corregir puntos */}
-        {editPoints && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/50 z-40"
-              onClick={() => setEditPoints(null)}
-            />
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div
-                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <h2 className="text-lg font-semibold mb-1">Corregir puntos</h2>
-                <p className="text-xs text-neutral-400 mb-4">
-                  {editPoints.name ?? "Cliente"} · total actual:{" "}
-                  {editPoints.points}
-                </p>
-                <input
-                  type="number"
-                  min={0}
-                  value={pointsInput}
-                  onChange={(e) => setPointsInput(e.target.value)}
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  placeholder="Nombre"
                   className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
                 />
-                <div className="flex gap-2 justify-end mt-4">
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    onClick={() => setEditPoints(null)}
-                  >
+                <input
+                  value={addForm.email}
+                  onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                  placeholder="Email"
+                  required
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                />
+                <input
+                  value={addForm.phone}
+                  onChange={(e) => setAddForm({ ...addForm, phone: e.target.value })}
+                  placeholder="Teléfono"
+                  required
+                  className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button variant="secondary" type="button" onClick={() => setShowAdd(false)}>
                     Cancelar
                   </Button>
-                  <Button
-                    variant="primary"
-                    type="button"
-                    onClick={handleSetPoints}
-                    disabled={savingPoints}
-                  >
-                    {savingPoints ? "Guardando..." : "Guardar"}
-                  </Button>
+                  <Button variant="primary" type="submit">Guardar</Button>
                 </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal: CSV */}
+      {showCsv && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => { setShowCsv(false); setCsvResult(""); }} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-semibold mb-1">Importar CSV</h2>
+              <p className="text-xs text-neutral-400 mb-4">
+                Columnas: nombre, email, teléfono (separado por comas)
+              </p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleCsv}
+                className="text-sm text-neutral-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-neutral-200 dark:file:border-neutral-700 file:text-sm file:bg-white dark:file:bg-neutral-800 file:text-neutral-950 dark:file:text-neutral-100 hover:file:bg-neutral-100 dark:hover:file:bg-neutral-700 file:cursor-pointer"
+              />
+              {csvResult && <p className="text-sm text-neutral-500 mt-3">{csvResult}</p>}
+              <div className="flex justify-end mt-4">
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => { setShowCsv(false); setCsvResult(""); }}
+                >
+                  Cerrar
+                </Button>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
-      {/* Conexión con perfiles sociales y Google */}
+      {/* Modal: Corregir puntos */}
+      {editPoints && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setEditPoints(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm w-full max-w-sm p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-semibold mb-1">Corregir puntos</h2>
+              <p className="text-xs text-neutral-400 mb-4">
+                {editPoints.name ?? "Cliente"} · total actual: {editPoints.points}
+              </p>
+              <input
+                type="number"
+                min={0}
+                max={10}
+                value={pointsInput}
+                onChange={(e) => setPointsInput(e.target.value)}
+                className="w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+              />
+              <div className="flex gap-2 justify-end mt-4">
+                <Button variant="secondary" type="button" onClick={() => setEditPoints(null)}>Cancelar</Button>
+                <Button variant="primary" type="button" onClick={handleSetPoints} disabled={savingPoints}>
+                  {savingPoints ? "Guardando..." : "Guardar"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Secciones inferiores */}
       <SocialConnectionsSection businessId={id} onConnected={load} />
-
-      {/* Reseñas de Google */}
-      <GoogleReviewsSection
-        businessId={id}
-        googleLink={business?.googleLink ?? ""}
-        features={features}
-      />
-
-      {/* Bandeja de redes sociales (una a la vez) */}
+      <GoogleReviewsSection businessId={id} googleLink={business?.googleLink ?? ""} features={features} />
       <SocialInbox businessId={id} features={features} />
 
-      {/* Reporte PDF (plan Pro) */}
       {features.includes("pdf-reports") && (
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-6">
-          <h2 className="text-sm font-semibold mb-1">
-            Reporte de plan de acción
-          </h2>
+          <h2 className="text-sm font-semibold mb-1">Reporte de plan de acción</h2>
           <p className="text-xs text-neutral-400 mb-3">
-            Genera un informe basado en las reseñas negativas con
-            recomendaciones y plan de acción.
+            Genera un informe basado en las reseñas negativas.
           </p>
           <a
             href={`/api/report/${id}`}
             target="_blank"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <svg
-              className="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
@@ -1126,8 +1038,7 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       {/* Eliminar negocio */}
       <div className="border border-red-200 dark:border-red-900/50 rounded-xl p-6 flex flex-col items-center gap-3">
         <p className="text-xs text-neutral-400 text-center">
-          Eliminará permanentemente este negocio y todos sus clientes. Esta
-          acción no se puede deshacer.
+          Eliminará permanentemente este negocio y todos sus clientes. Esta acción no se puede deshacer.
         </p>
         <button
           type="button"
