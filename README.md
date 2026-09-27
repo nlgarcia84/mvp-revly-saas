@@ -25,8 +25,10 @@ Ayuda a negocios locales a conseguir más reseñas en Google, gestionar clientes
 | **Código QR** | Genera QR que apunta al formulario público del negocio |
 | **Importar clientes** | Añadir clientes manualmente o por lote (CSV) |
 | **Enviar invitaciones** | Email automático para que el cliente deje reseña en Google |
-| **Panel de reseñas** | Visualiza reseñas de Google (5 por Places API o todas si conecta Business Profile) |
-| **Filtros de reseñas** | Por calificación (positivas/críticas) y por fecha (1m/3m/6m) |
+| **Panel de reseñas** | Visualiza las últimas reseñas de Google (5 por Places API o todas si conecta Business Profile, ordenadas por fecha reciente) |
+| **Filtros de reseñas** | Por calificación (positivas/críticas) y por fecha |
+| **Respuestas con IA** | Genera respuestas a reseñas críticas usando IA |
+| **Responder en Google** | Responde reseñas directamente desde el dashboard (requiere Business Profile conectado) |
 | **Respuestas con IA** | Genera respuestas a reseñas críticas usando IA |
 | **Conectar Google Business Profile** | OAuth para ver TODAS las reseñas (sin límite de 5) |
 | **Sistema de puntos** | 1 punto al registrarse + 1 punto al día canjeando el código del ticket del kiosko |
@@ -126,10 +128,20 @@ Google devuelve los resource names con los prefijos `accounts/` y `locations/` i
 
 **Ejemplo concreto de URL final para reseñas:**
 ```
-https://mybusiness.googleapis.com/v4/accounts/123456789/locations/987654321/reviews?pageSize=50
+https://mybusiness.googleapis.com/v4/accounts/123456789/locations/987654321/reviews?pageSize=50&readMask=reviewer,starRating,comment,createTime,name&sortOrder=NEWEST
 ```
 
-**Paginación:** se itera con `nextPageToken` hasta obtener todas las páginas. Si la API devuelve error (4xx/5xx), se lanza una excepción con el HTTP status y la respuesta de Google. Durante la fase de diagnóstico no hay fallback silencioso a Places API cuando Business Profile está conectado.
+**Places API (fallback):** `https://maps.googleapis.com/maps/api/place/details/json?place_id=...&fields=name,rating,user_ratings_total,reviews&reviews_sort=most_recent&language=es&key=...`
+
+**Paginación:** se itera con `nextPageToken` hasta obtener todas las páginas. Las reseñas se ordenan por fecha reciente (`sortOrder=NEWEST`). Cada reseña incluye `reviewName` (recurso completo) necesario para publicar respuestas directamente desde el dashboard.
+
+**Campos de reseña:** se usa `readMask=reviewer,starRating,comment,createTime,name` para incluir el campo `name` (necesario para el endpoint de respuesta).
+
+Si la API falla (4xx/5xx), se lanza una excepción con el HTTP status y la respuesta de Google. El fallback a Places API solo se usa si Business Profile no está conectado o la API falla.
+
+### Places API (fallback)
+
+Cuando Business Profile no está conectado, se usa Google Places API que devuelve hasta 5 reseñas. Se ordenan por fecha reciente (`reviews_sort=most_recent`).
 
 ## Rutas principales
 
