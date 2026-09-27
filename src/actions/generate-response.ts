@@ -7,7 +7,14 @@ const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = 'qwen/qwen3.8-27b';
 
 // Llamada base a Groq. El system + prompt varía según el canal.
-async function callGroq(system: string, prompt: string, maxTokens = 400) {
+// Exportada para reutilizarla desde Smart Analytics sin duplicar
+// el cliente de IA. `temperature` es opcional (0.8 por defecto).
+export async function callGroq(
+  system: string,
+  prompt: string,
+  maxTokens = 400,
+  temperature = 0.8,
+) {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('Falta GROQ_API_KEY en .env.local');
 
@@ -24,7 +31,7 @@ async function callGroq(system: string, prompt: string, maxTokens = 400) {
         { role: 'user', content: prompt },
       ],
       max_tokens: maxTokens,
-      temperature: 0.8,
+      temperature,
     }),
   });
 

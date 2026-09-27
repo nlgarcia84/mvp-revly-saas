@@ -64,11 +64,12 @@ model Business {
   slug          String?   @unique
   emailTemplate String?
   ticketFormat  String?    // Ejemplo: "A-001" — placeholder del ticket del kiosko
-  userId        String
-  createdAt     DateTime   @default(now())
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  customers     Customer[]
-  pointClaims   PointClaim[]
+  userId         String
+  createdAt      DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customers      Customer[]
+  pointClaims    PointClaim[]
+  reviewAnalyses ReviewAnalysis[]
 
   // ── Google Business Profile ────────────────────────
   // Si el usuario conecta su cuenta de Google Business
@@ -163,4 +164,33 @@ model Customer {
   pointClaims   PointClaim[]
 
   @@unique([email, businessId])
+}
+
+// ──────────────────────────────────────────────
+// ReviewAnalysis: análisis generado por IA (Smart Analytics)
+// de una reseña de Google. NO copia la reseña completa;
+// solo guarda el resultado del análisis (sentimiento,
+// categorías, aspectos positivos/negativos y resumen).
+// Identifica la reseña por source + externalReviewId
+// (reviewName de Business Profile, o id determinista).
+// ──────────────────────────────────────────────
+model ReviewAnalysis {
+  id               String   @id @default(uuid())
+  businessId       String
+  source           String
+  externalReviewId String
+
+  sentiment        String
+  categories       Json
+  positiveAspects  Json
+  negativeAspects  Json
+  summary          String
+
+  analyzedAt       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, source, externalReviewId])
+  @@index([businessId, source])
 }

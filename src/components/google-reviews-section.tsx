@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { getBusinessGoogleReviews, getBusinessProfileStatus, replyToGoogleReview } from '@/actions/google-reviews';
 import { generateReviewResponse } from '@/actions/generate-response';
 import { nCard } from '@/components/ui/card';
+import SmartAnalyticsSection from '@/components/smart-analytics-section';
+import { deriveExternalReviewId, type ReviewSource } from '@/lib/review-analysis';
+import type { ReviewCategory } from '@/actions/review-analytics';
 
 type GoogleData = {
   placeId: string;
   name: string;
   rating: number;
   userRatingsTotal: number;
+  source?: string;
   reviews: {
     authorName: string;
     rating: number;
@@ -212,6 +216,17 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
   const [generating, setGenerating] = useState<string | null>(null);
   const [responseModal, setResponseModal] = useState<{ text: string; authorName: string; placeId: string; reviewName?: string } | null>(null);
   const [generateError, setGenerateError] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categoryIndex, setCategoryIndex] = useState<Record<string, string[]>>({});
+
+  // Recibe el índice de categorías desde SmartAnalyticsSection (tras analizar).
+  const handleCategoriesLoaded = useCallback((index: ReviewCategory[]) => {
+    const map: Record<string, string[]> = {};
+    for (const entry of index) {
+      map[entry.externalReviewId] = entry.categories;
+    }
+    setCategoryIndex(map);
+  }, []);
 
   const handleGenerate = async (review: { authorName: string; text: string; rating: number; reviewName?: string }, placeId: string) => {
     const key = `${review.authorName}|${review.text.slice(0, 20)}`;
@@ -270,7 +285,35 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
       .catch(() => setBpConnected(false));
   }, [businessId]);
 
+  // Categorías de cada reseña (desde ReviewAnalysis persistido; sin Groq).
+  const categoriesOf = (review: GoogleData['reviews'][number]): string[] => {
+    if (!data) return [];
+    const source = (data.source as ReviewSource) ?? 'google-places';
+    return categoryIndex[deriveExternalReviewId(review, source)] ?? [];
+  };
+
+  // Recuento de reseñas por categoría (para los chips del filtro).
+  const categoryCounts = useMemo(() => {
+    if (!data?.reviews) return [];
+    const counts = new Map<string, number>();
+    for (const r of data.reviews) {
+      for (const c of categoriesOf(r)) {
+        counts.set(c, (counts.get(c) ?? 0) + 1);
+      }
+    }
+    return Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, categoryIndex]);
+
   const filtered = data?.reviews.filter((r) => {
+    if (selectedCategory) {
+      const cats = categoriesOf(r);
+      if (!cats.some((c) => c.toLowerCase() === selectedCategory.toLowerCase())) {
+        return false;
+      }
+    }
     if (starFilter !== null && Number(r.rating) !== Number(starFilter)) return false;
     if (dateFrom) {
       const from = new Date(dateFrom).getTime() / 1000;
@@ -405,6 +448,40 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
           </div>
         </div>
 
+        {categoryCounts.length > 0 && (
+          <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-3 flex flex-col gap-2">
+            <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Categoría</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+                  selectedCategory === null
+                    ? 'border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
+                    : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-neutral-950 dark:hover:border-neutral-100'
+                }`}
+              >
+                Todas
+              </button>
+              {categoryCounts.map((c) => (
+                <button
+                  key={c.name}
+                  onClick={() => setSelectedCategory(selectedCategory === c.name ? null : c.name)}
+                  className={`text-xs px-2 py-1 rounded-md border transition-colors cursor-pointer ${
+                    selectedCategory === c.name
+                      ? 'border-violet-600 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                      : 'border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:border-violet-400'
+                  }`}
+                >
+                  {c.name} ({c.count})
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-neutral-400">
+              💡 Combina categoría, valoración y fecha para encontrar las reseñas que buscas.
+            </p>
+          </div>
+        )}
+
         {generateError && (
           <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-4 py-2.5 rounded-lg border border-red-200 dark:border-red-800">
             {generateError}
@@ -425,7 +502,9 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
               </div>
             </div>
             <span className="text-xs text-neutral-400">
-              {filtered.length} {bpConnected ? 'mostradas' : 'mostradas (máx. 5 sin conectar)'}
+              {selectedCategory
+                ? `${filtered.length} reseñas · Categoría: ${selectedCategory}`
+                : `${filtered.length} ${bpConnected ? 'mostradas' : 'mostradas (máx. 5 sin conectar)'}`}
             </span>
           </div>
 
@@ -500,6 +579,14 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
           )}
         </div>
       </div>
+
+      <SmartAnalyticsSection
+        businessId={businessId}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+        categoryCounts={categoryCounts}
+        onCategoriesLoaded={handleCategoriesLoaded}
+      />
 
       {responseModal && (
         <ResponseModal

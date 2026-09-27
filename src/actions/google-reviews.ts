@@ -99,6 +99,7 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
           rating: businessProfile.rating,
           userRatingsTotal: businessProfile.userRatingsTotal,
           reviews: businessProfile.reviews,
+          source: 'google-business-profile',
         };
       }
     } catch (error) {
@@ -132,7 +133,7 @@ export const getBusinessGoogleReviews = async (businessId: string) => {
     return null;
   }
   const sortedReviews = [...details.reviews].sort((a, b) => b.time - a.time);
-  return { ...details, placeId, reviews: sortedReviews };
+  return { ...details, placeId, reviews: sortedReviews, source: 'google-places' };
 };
 
 // Estado de la conexión con Business Profile, para mostrar en Settings.
@@ -227,6 +228,7 @@ export const getAllGoogleReviews = async () => {
         rating: number;
         userRatingsTotal: number;
         placeId: string;
+        source: string;
         reviews: GoogleReview[];
       }> => result.status === 'fulfilled' && result.value !== null,
     )
