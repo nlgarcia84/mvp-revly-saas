@@ -33,6 +33,21 @@ export type Conclusions = {
   proposals: string[];
 };
 
+// Contexto agregado que se envía a la IA para generar las propuestas
+// globales. Reúne toda la información relevante del análisis agregado
+// (negocio, conclusión, fortalezas, problemas, categorías, sentimiento y
+// resúmenes de las reseñas) en un único prompt.
+export type ProposalsContext = {
+  businessName: string;
+  general: string;
+  strengths: string[];
+  problems: string[];
+  categories: string[];
+  sentiment: { positive: number; neutral: number; negative: number };
+  total: number;
+  reviewSummaries: string[];
+};
+
 export type GlobalAnalytics = {
   total: number;
   sentimentDistribution: { positive: number; neutral: number; negative: number };
@@ -171,9 +186,13 @@ function topItems(
 
 // Analítica global construida a partir de los análisis individuales
 // (no se llama a Groq; es agregación determinista).
+// `proposals` es opcional: si se pasa, sustituye a las propuestas
+// deterministas (lo usa el server action para inyectar las propuestas
+// generadas por IA o las persistidas).
 export function computeGlobalAnalytics(
   analyses: ReviewAnalysisResult[],
   reviews: NormalizedReview[],
+  proposals?: string[],
 ): GlobalAnalytics {
   const total = analyses.length;
 
@@ -211,9 +230,9 @@ export function computeGlobalAnalytics(
   const conclusions = buildConclusions({
     total,
     sentimentDistribution,
-    topCategories,
     strengths,
     recurringProblems,
+    proposals,
   });
 
   return {
@@ -230,12 +249,10 @@ export function computeGlobalAnalytics(
 function buildGeneralConclusion(data: {
   total: number;
   sentimentDistribution: GlobalAnalytics['sentimentDistribution'];
-  topCategories: GlobalAnalytics['topCategories'];
   strengths: GlobalAnalytics['strengths'];
   recurringProblems: GlobalAnalytics['recurringProblems'];
 }): string {
-  const { total, sentimentDistribution, topCategories, strengths, recurringProblems } =
-    data;
+  const { total, sentimentDistribution, strengths, recurringProblems } = data;
 
   if (total === 0) return 'Todavía no hay reseñas analizadas.';
 
@@ -258,26 +275,18 @@ function buildGeneralConclusion(data: {
 
   const parts: string[] = [];
   parts.push(
-    `Se han analizado ${total} reseñas. La mayoría son ${dominantLabel[dominant]} (${pct(dominant === 'positive' ? positive : dominant === 'negative' ? negative : neutral)}%).`,
+    `Se han analizado ${total} reseñas, de las cuales el ${pct(dominant === 'positive' ? positive : dominant === 'negative' ? negative : neutral)}% son ${dominantLabel[dominant]}.`,
   );
 
-  if (topCategories.length > 0) {
-    parts.push(
-      `Las categorías más mencionadas son: ${topCategories
-        .map((c) => c.name)
-        .join(', ')}.`,
-    );
+  const topStrengths = strengths.slice(0, 3).map((s) => s.text);
+  if (topStrengths.length > 0) {
+    parts.push(`Destacan especialmente ${topStrengths.join(', ')}.`);
   }
-  if (strengths.length > 0) {
+
+  const topProblems = recurringProblems.slice(0, 3).map((s) => s.text);
+  if (topProblems.length > 0) {
     parts.push(
-      `Puntos fuertes: ${strengths.map((s) => s.text).join(', ')}.`,
-    );
-  }
-  if (recurringProblems.length > 0) {
-    parts.push(
-      `Problemas recurrentes a vigilar: ${recurringProblems
-        .map((s) => s.text)
-        .join(', ')}.`,
+      `Las principales oportunidades se concentran en ${topProblems.join(', ')}.`,
     );
   }
 
@@ -286,59 +295,63 @@ function buildGeneralConclusion(data: {
 
 // Reglas deterministas que convierten un problema detectado en una propuesta
 // de acción concreta. Solo se aplican sobre los problemas reales ya detectados
-// en los análisis (nunca se inventa información ni se llama a la IA).
+// en los análisis (nunca se inventa información ni se llama a la IA). Son el
+// fallback cuando la generación IA no está disponible.
 const PROPOSAL_RULES: { patterns: RegExp[]; proposal: string }[] = [
   {
     patterns: [/espera|tarda|tard[oó]|demora|lent[oa]|tiempo/],
     proposal:
-      'Revisar los tiempos de espera y agilizar el servicio mencionado en las reseñas.',
+      'Agilizar el servicio en los momentos de mayor demanda: revisar los picos de afluencia y redistribuir tareas para reducir los tiempos de espera.',
   },
   {
     patterns: [/fr[ií][oa]|temperatura|caliente/],
     proposal:
-      'Revisar la temperatura a la que se sirven los platos mencionados.',
+      'Garantizar que los platos lleguen a la temperatura adecuada, revisando el flujo entre cocina y servicio.',
   },
   {
     patterns: [/combo|promoci[oó]n|oferta|disponibilidad|agotad|no hab[ií]a/],
     proposal:
-      'Comprobar que la comunicación sobre combos y ofertas coincida con su disponibilidad real.',
+      'Alinear la comunicación de combos y ofertas con su disponibilidad real para no generar expectativas que no se puedan cumplir.',
   },
   {
     patterns: [/recoger|recoge|autoservicio|servicio en mesa|en mesa|pedir en barra/],
     proposal:
-      'Revisar el flujo de servicio en mesa para evitar que el cliente tenga que recoger sus propios platos.',
+      'Clarificar el flujo de servicio para que el cliente no tenga que recoger sus propios platos ni pedir en barra si no corresponde.',
   },
   {
     patterns: [/precio|car[oa]|car[ií]simo|coste/],
     proposal:
-      'Revisar la relación calidad-precio de los productos mencionados en las reseñas.',
+      'Revisar la relación calidad-precio y comunicar mejor el valor de los productos mencionados en las reseñas.',
   },
   {
-    patterns: [/atenci[oó]n|camarer|personal|emplead|trato|groser|maleducad/],
+    patterns: [/atenci[oó]n|camarer|personal|emplead|trato|groser|maleducad|desgana|inter[eé]s|don de gentes/],
     proposal:
-      'Revisar la atención al cliente del personal mencionado en las reseñas.',
+      'Definir unas pautas comunes de atención al cliente (bienvenida, detección de necesidades, tono y resolución de conflictos) para todo el equipo.',
   },
   {
     patterns: [/calidad|sabor|ins[ií]pido|soso|quemado|crudo|preparaci[oó]n|chicloso|duro|seco|malo/],
     proposal:
-      'Revisar la preparación y calidad de los platos mencionados.',
+      'Revisar la preparación de los platos mencionados para asegurar una calidad y un sabor consistentes.',
   },
   {
     patterns: [/limpieza|suci[oa]|higiene|ba[ñn]o|limpio/],
-    proposal: 'Revisar la limpieza e higiene de las instalaciones.',
+    proposal:
+      'Reforzar la limpieza e higiene de las instalaciones, con especial atención a los puntos señalados en las reseñas.',
   },
   {
     patterns: [/estacionamiento|aparcar|parking|aparcamiento/],
-    proposal: 'Revisar la disponibilidad de estacionamiento para los clientes.',
+    proposal:
+      'Facilitar el estacionamiento de los clientes con información clara o alternativas cercanas.',
   },
   {
     patterns: [/entrega|delivery|reparto|env[ií]o|pedido/],
     proposal:
-      'Revisar el proceso de entrega o reparto mencionado en las reseñas.',
+      'Optimizar el proceso de entrega o reparto para cumplir los plazos prometidos.',
   },
 ];
 
 // Genera hasta 4 propuestas concretas a partir de los problemas detectados.
+// Los problemas que comparten una misma causa se agrupan en una sola propuesta.
 function generateProposals(
   problems: { text: string; count: number }[],
 ): string[] {
@@ -349,24 +362,105 @@ function generateProposals(
     );
     const proposal = rule
       ? rule.proposal
-      : `Revisar el aspecto detectado: ${problem.text}.`;
+      : `Definir un plan de acción concreto para abordar el siguiente aspecto detectado: ${problem.text}.`;
     if (!proposals.includes(proposal)) proposals.push(proposal);
     if (proposals.length >= 4) break;
   }
   return proposals;
 }
 
-// Conclusiones y propuestas agregadas (deterministas, sin IA).
+// System prompt para la generación global de propuestas. Pide JSON estricto.
+export const PROPOSALS_SYSTEM_PROMPT = `Eres un consultor de negocio local especializado en reputación online. A partir del análisis agregado de las reseñas de Google de un negocio, genera propuestas de mejora accionables y específicas. Devuelve ÚNICAMENTE un objeto JSON válido, sin texto adicional ni markdown, con esta estructura exacta:
+{
+  "proposals": ["string"]
+}
+Reglas:
+- Genera entre 2 y 4 propuestas como máximo.
+- Cada propuesta debe ser un siguiente paso accionable y concreto, no una reformulación del problema.
+- No repitas literalmente los "aspectos a mejorar".
+- Agrupa problemas relacionados en una única propuesta cuando tenga sentido.
+- Cuando una fortaleza detectada pueda ayudar a resolver un problema, intégrala en la propuesta (fortaleza + problema → propuesta).
+- Sé específico del negocio y de lo que dicen las reseñas. No inventes problemas que no aparezcan ni des consejos genéricos aplicables a cualquier negocio.
+- Prioriza las oportunidades más importantes.
+- Escribe en español, en tono profesional, directo y útil.`;
+
+export function buildProposalsUserPrompt(ctx: ProposalsContext): string {
+  const lines: string[] = [];
+  lines.push(`Negocio: ${ctx.businessName || '(no disponible)'}`);
+  lines.push(`Total de reseñas analizadas: ${ctx.total}`);
+  lines.push(
+    `Distribución de sentimiento: ${ctx.sentiment.positive} positivas, ${ctx.sentiment.neutral} neutras, ${ctx.sentiment.negative} negativas.`,
+  );
+  if (ctx.categories.length > 0) {
+    lines.push(`Categorías principales: ${ctx.categories.join(', ')}.`);
+  }
+  lines.push(`Conclusión general: ${ctx.general}`);
+  if (ctx.strengths.length > 0) {
+    lines.push(
+      `Fortalezas detectadas:\n${ctx.strengths.map((s) => `- ${s}`).join('\n')}`,
+    );
+  }
+  if (ctx.problems.length > 0) {
+    lines.push(
+      `Aspectos a mejorar detectados:\n${ctx.problems.map((s) => `- ${s}`).join('\n')}`,
+    );
+  }
+  if (ctx.reviewSummaries.length > 0) {
+    lines.push(
+      `Resúmenes de las reseñas analizadas:\n${ctx.reviewSummaries
+        .map((s) => `- ${s}`)
+        .join('\n')}`,
+    );
+  }
+  lines.push('Genera ahora las propuestas de mejora (entre 2 y 4).');
+  return lines.join('\n');
+}
+
+// Extrae y valida el JSON de propuestas. Devuelve null si no es válido.
+export function parseProposalsJson(raw: string): string[] | null {
+  if (!raw) return null;
+
+  const text = raw.replace(/```(?:json)?/gi, '').trim();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+
+  if (!parsed || typeof parsed !== 'object') return null;
+  const obj = parsed as Record<string, unknown>;
+
+  const proposals = Array.isArray(obj.proposals)
+    ? obj.proposals
+        .filter((v): v is string => typeof v === 'string')
+        .map((v) => v.trim())
+        .filter(Boolean)
+    : [];
+
+  if (proposals.length === 0) return null;
+  return proposals.slice(0, 4);
+}
+
+// Conclusiones y propuestas agregadas. Las propuestas pueden venir
+// inyectadas (IA o persistidas); si no, se usan las deterministas.
 function buildConclusions(data: {
   total: number;
   sentimentDistribution: GlobalAnalytics['sentimentDistribution'];
-  topCategories: GlobalAnalytics['topCategories'];
   strengths: GlobalAnalytics['strengths'];
   recurringProblems: GlobalAnalytics['recurringProblems'];
+  proposals?: string[];
 }): Conclusions {
   return {
     general: buildGeneralConclusion(data),
-    proposals: generateProposals(data.recurringProblems),
+    proposals:
+      data.proposals && data.proposals.length > 0
+        ? data.proposals
+        : generateProposals(data.recurringProblems),
   };
 }
 

@@ -71,6 +71,16 @@ model Business {
   pointClaims    PointClaim[]
   reviewAnalyses ReviewAnalysis[]
 
+  // ── Smart Analytics (propuestas globales) ─────────────
+  // Propuestas globales de mejora generadas por IA a partir
+  // del análisis agregado de las reseñas. Se regeneran solo
+  // cuando aparecen reseñas nuevas; el resto de cargas
+  // reutilizan este valor persistido (evita llamadas Groq
+  // innecesarias). Es un resultado agregado del negocio, no
+  // de una reseña concreta, por eso vive en Business.
+  analyticsProposals Json?
+  // ─────────────────────────────────────────────────
+
   // ── Google Business Profile ────────────────────────
   // Si el usuario conecta su cuenta de Google Business
   // Profile (OAuth), guardamos aquí los tokens y los IDs

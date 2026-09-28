@@ -7,12 +7,16 @@ import { callGroq } from '@/actions/generate-response';
 import {
   ANALYSIS_SYSTEM_PROMPT,
   buildAnalysisUserPrompt,
+  buildProposalsUserPrompt,
   computeGlobalAnalytics,
   mapWithConcurrency,
   normalizeReviews,
   parseAnalysisJson,
+  parseProposalsJson,
+  PROPOSALS_SYSTEM_PROMPT,
   type GlobalAnalytics,
   type NormalizedReview,
+  type ProposalsContext,
   type ReviewAnalysisResult,
   type ReviewSource,
 } from '@/lib/review-analysis';
@@ -68,6 +72,64 @@ function toAnalysisResult(row: {
   };
 }
 
+function asStringArray(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === 'string')
+    : [];
+}
+
+// Genera (una única llamada global a Groq) las propuestas de mejora a partir
+// del análisis agregado. Devuelve null si la IA falla o devuelve un resultado
+// inválido (el llamador decide el fallback).
+async function generateAiProposals(
+  businessName: string,
+  analyses: ReviewAnalysisResult[],
+  global: GlobalAnalytics,
+): Promise<string[] | null> {
+  try {
+    const ctx: ProposalsContext = {
+      businessName,
+      general: global.conclusions.general,
+      strengths: global.strengths.map((s) => s.text),
+      problems: global.recurringProblems.map((s) => s.text),
+      categories: global.topCategories.map((c) => c.name),
+      sentiment: global.sentimentDistribution,
+      total: global.total,
+      reviewSummaries: analyses.map((a) => a.summary).filter(Boolean),
+    };
+
+    const raw = await callGroq(
+      PROPOSALS_SYSTEM_PROMPT,
+      buildProposalsUserPrompt(ctx),
+      700,
+      0.7,
+    );
+    const proposals = parseProposalsJson(raw);
+    if (!proposals || proposals.length === 0) {
+      console.error('[SmartAnalytics] Propuestas IA vacías o inválidas');
+      return null;
+    }
+
+    return proposals;
+  } catch (error) {
+    console.error('[SmartAnalytics] Error generando propuestas IA:', error);
+    return null;
+  }
+}
+
+// Persiste las propuestas globales en Business. Se usa tanto con el resultado
+// de la IA como con el fallback determinista, para que el valor persistido
+// siempre corresponda al análisis agregado actual (nunca queda desincronizado).
+async function persistAnalyticsProposals(
+  businessId: string,
+  proposals: string[],
+): Promise<void> {
+  await prisma.business.update({
+    where: { id: businessId },
+    data: { analyticsProposals: proposals },
+  });
+}
+
 // Smart Analytics: analiza con IA solo las reseñas nuevas y reutiliza las
 // ya analizadas (idempotente). La fuente de verdad sigue siendo Google.
 export const getSmartAnalytics = async (
@@ -77,7 +139,7 @@ export const getSmartAnalytics = async (
 
   const business = await prisma.business.findFirst({
     where: { id: businessId, userId },
-    select: { id: true },
+    select: { id: true, name: true, analyticsProposals: true },
   });
   if (!business) throw new Error('Negocio no encontrado');
 
@@ -186,6 +248,30 @@ export const getSmartAnalytics = async (
   const analyses = allRows.map(toAnalysisResult);
   const global = computeGlobalAnalytics(analyses, reviews);
 
+  // Propuestas globales de mejora. Se regeneran con IA solo cuando hay
+  // reseñas nuevas (que pueden haber cambiado el análisis agregado); el
+  // resto de cargas reutilizan las persistidas en Business. Si la IA falla,
+  // se persiste el fallback determinista para que el valor guardado siga
+  // correspondiendo al análisis actual (evita reutilizar propuestas antiguas).
+  const persisted = asStringArray(business.analyticsProposals);
+  let proposals: string[] | undefined;
+
+  if (newlyAnalyzed > 0 && analyses.length > 0) {
+    const generated = await generateAiProposals(business.name, analyses, global);
+    proposals =
+      generated && generated.length > 0
+        ? generated
+        : global.conclusions.proposals;
+    await persistAnalyticsProposals(business.id, proposals);
+  } else if (persisted.length > 0) {
+    proposals = persisted;
+  }
+
+  const globalWithProposals =
+    proposals && proposals.length > 0
+      ? { ...global, conclusions: { ...global.conclusions, proposals } }
+      : global;
+
   // Categorías por reseña (índice) para el filtro por categoría. Se lee de
   // ReviewAnalysis ya persistido; no se llama a Groq ni se vuelve a analizar.
   const reviewCategories: ReviewCategory[] = allRows.map((row) => ({
@@ -201,7 +287,7 @@ export const getSmartAnalytics = async (
     totalReviews: reviews.length,
     analyzedCount: analyses.length,
     newlyAnalyzed,
-    global,
+    global: globalWithProposals,
     reviewCategories,
   };
 };
