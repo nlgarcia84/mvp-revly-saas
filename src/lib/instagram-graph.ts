@@ -70,8 +70,14 @@ export type InstagramUserProfile = {
 };
 
 // Convierte un error de la API de Meta en un mensaje claro, con datos
-// técnicos (subcódigo, trace) para poder diagnosticar.
-export function friendlyMetaError(status: number, body: string): string {
+// técnicos (subcódigo, trace) para poder diagnosticar. `endpoint` identifica la
+// llamada que falló: Meta devuelve el mismo error 100 en /access_token y en
+// /me, así que sin esto no se puede saber cuál fue.
+export function friendlyMetaError(
+  status: number,
+  body: string,
+  endpoint?: string,
+): string {
   let message = body.slice(0, 400);
   let diagnostics = "";
   try {
@@ -96,28 +102,56 @@ export function friendlyMetaError(status: number, body: string): string {
     if (error?.code === 200) {
       return `Instagram no tiene acceso a esta cuenta: ${message}${diagnostics}. Comprueba los permisos de la app y que la cuenta sea Business o Creator.`;
     }
+    // Error 100 IGApiException: Meta rechaza la llamada cuando la cuenta que
+    // autoriza no tiene rol en la app y la app aún no tiene App Review /
+    // Access Verification. Es la causa habitual al conectar un cliente real.
+    if (error?.code === 100 && error?.type === "IGApiException") {
+      return `Instagram rechazó la operación${endpoint ? ` (${endpoint})` : ""} porque esta cuenta no tiene acceso a la app${diagnostics}. En modo Desarrollo, Meta solo permite conectar cuentas con rol en la app (Instagram Testers). Para clientes reales hace falta App Review y Access Verification (Tech Provider) en el panel de Meta.`;
+    }
   } catch {
     // no es JSON, usamos el texto tal cual
   }
-  return `Instagram API error ${status}: ${message}${diagnostics}`;
+  return `Instagram API error ${status}: ${message}${diagnostics}${endpoint ? ` [${endpoint}]` : ""}`;
 }
 
 // Convierte un token corto en long-lived (60 días).
+// Meta documenta esta llamada con GET, pero en la práctica Graph API de
+// Instagram devuelve 400 IGApiException code 100 ("Unsupported request - method
+// type: get") en bastantes casos. Intentamos GET y, si falla, repetimos con
+// POST, que es la variante que sí responde.
 export async function exchangeForLongLivedToken(
   accessToken: string,
 ): Promise<{ accessToken: string; expiresAt: Date }> {
   const clientSecret = getInstagramClientSecret();
-
   const params = new URLSearchParams({
     grant_type: "ig_exchange_token",
     client_secret: clientSecret,
     access_token: accessToken,
   });
-  const response = await fetch(`${GRAPH_HOST}/access_token?${params.toString()}`);
+
+  let response = await fetch(`${GRAPH_HOST}/access_token?${params.toString()}`);
+  let body: string | null = null;
 
   if (!response.ok) {
-    const body = await response.text();
-    throw new Error(friendlyMetaError(response.status, body));
+    body = await response.text();
+    const postResponse = await fetch(`${GRAPH_HOST}/access_token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+    if (postResponse.ok) {
+      response = postResponse;
+      body = null;
+    } else {
+      // POST también falla: reportamos el error del GET, que es el más
+      // descriptivo, indicando que se probaron ambos métodos.
+      console.error(
+        `[Instagram] Intercambio de token falló (GET y POST). GET: ${body} | POST: ${await postResponse.text()}`,
+      );
+      throw new Error(
+        friendlyMetaError(response.status, body, "GET+POST /access_token"),
+      );
+    }
   }
 
   const payload = (await response.json()) as GraphResponse;
@@ -147,7 +181,9 @@ export async function refreshLongLivedToken(
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(friendlyMetaError(response.status, body));
+    throw new Error(
+      friendlyMetaError(response.status, body, "/refresh_access_token"),
+    );
   }
 
   const payload = (await response.json()) as GraphResponse;
@@ -180,7 +216,7 @@ export async function getInstagramUserProfile(
   if (!response.ok) {
     const body = await response.text();
     console.error("[Instagram] Error obteniendo perfil:", body);
-    throw new Error(friendlyMetaError(response.status, body));
+    throw new Error(friendlyMetaError(response.status, body, "/me"));
   }
 
   const payload = (await response.json()) as {
@@ -209,7 +245,9 @@ export async function getRecentMedia(
     const response = await fetch(url);
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(friendlyMetaError(response.status, body));
+      throw new Error(
+        friendlyMetaError(response.status, body, "/{ig-user-id}/media"),
+      );
     }
     const payload = (await response.json()) as {
       data?: InstagramMedia[];

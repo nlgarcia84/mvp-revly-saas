@@ -87,16 +87,42 @@ export async function GET(request: Request) {
     }
 
     // 2. Token corto → long-lived (60 días).
-    const { accessToken, expiresAt } = await exchangeForLongLivedToken(
-      tokenPayload.access_token,
-    );
+    // Si el intercambio falla, el token que Instagram acaba de devolver sigue
+    // siendo válido, así que lo conservamos en vez de tirar la conexión: Meta
+    // lo renueva con refresh_access_token (ya implementado en actions/instagram).
+    let accessToken = tokenPayload.access_token;
+    let expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    try {
+      const exchanged = await exchangeForLongLivedToken(accessToken);
+      accessToken = exchanged.accessToken;
+      expiresAt = exchanged.expiresAt;
+    } catch (error) {
+      console.error(
+        "[Instagram/Callback] No se pudo hacer el long-lived exchange; se guarda el token inicial:",
+        error,
+      );
+    }
 
-    // 3. Username de la cuenta conectada.
-    const profile = await getInstagramUserProfile(
-      accessToken,
-      tokenPayload.user_id,
-    );
-    if (!profile.username) {
+    // 3. Username de la cuenta conectada. El ID de cuenta ya viene en la
+    // respuesta del token, así que si /me falla guardamos la conexión igualmente
+    // y dejamos el username vacío.
+    let accountId = tokenPayload.user_id;
+    let username = "";
+    try {
+      const profile = await getInstagramUserProfile(
+        accessToken,
+        tokenPayload.user_id,
+      );
+      accountId = profile.id || accountId;
+      username = profile.username;
+    } catch (error) {
+      console.error(
+        "[Instagram/Callback] No se pudo leer /me; se guarda la conexión sin username:",
+        error,
+      );
+    }
+
+    if (!accountId) {
       return NextResponse.redirect(
         `${settingsUrl}?ig_error=${encodeURIComponent(
           "No se pudo obtener el usuario de Instagram. Comprueba que la cuenta sea profesional (Business o Creator).",
@@ -110,13 +136,17 @@ export async function GET(request: Request) {
       data: {
         instagramAccessToken: accessToken,
         instagramTokenExpiry: expiresAt,
-        instagramBusinessAccountId: profile.id,
-        instagramUsername: profile.username,
+        instagramBusinessAccountId: accountId,
+        instagramUsername: username || null,
       },
     });
 
     return NextResponse.redirect(
-      `${settingsUrl}?ig_success=${encodeURIComponent(`Conectado correctamente a Instagram (@${profile.username})`)}`,
+      `${settingsUrl}?ig_success=${encodeURIComponent(
+        username
+          ? `Conectado correctamente a Instagram (@${username})`
+          : "Conectado correctamente a Instagram",
+      )}`,
     );
   } catch (error) {
     console.error("[Instagram/Callback] Error:", error);
