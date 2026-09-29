@@ -2,6 +2,8 @@
 
 import prisma from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { generateQrToken } from "@/lib/qr-token";
+import { POINTS_PER_REDEMPTION, POINTS_CAP, DISCOUNT_PERCENT, todayKey } from "@/lib/loyalty";
 
 // Devuelve el id del usuario autenticado o lanza si no hay sesión.
 async function requireUserId(): Promise<string> {
@@ -11,6 +13,19 @@ async function requireUserId(): Promise<string> {
   } = await supabase.auth.getUser();
   if (!user) throw new Error("No autenticado");
   return user.id;
+}
+
+// Genera un token de QR único (reintenta en el improbable caso de colisión).
+async function generateUniqueQrToken(): Promise<string> {
+  for (let i = 0; i < 5; i++) {
+    const token = generateQrToken();
+    const existing = await prisma.customer.findUnique({
+      where: { qrToken: token },
+      select: { id: true },
+    });
+    if (!existing) return token;
+  }
+  return generateQrToken();
 }
 
 // Comprueba que el negocio exista y pertenezca al usuario indicado.
@@ -32,13 +47,29 @@ export const addCustomer = async (data: {
   const userId = await requireUserId();
   await requireOwnedBusiness(data.businessId, userId);
 
-  return prisma.customer.create({
-    data: {
-      name: data.name || null,
-      email: data.email,
-      phone: data.phone,
-      businessId: data.businessId,
-    },
+  const qrToken = await generateUniqueQrToken();
+
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.customer.create({
+      data: {
+        name: data.name || null,
+        email: data.email,
+        phone: data.phone,
+        businessId: data.businessId,
+        qrToken,
+      },
+    });
+    // Punto de bienvenida registrado en el historial.
+    await tx.pointMovement.create({
+      data: {
+        type: "welcome",
+        points: 1,
+        day: null,
+        businessId: data.businessId,
+        customerId: created.id,
+      },
+    });
+    return created;
   });
 };
 
@@ -83,17 +114,41 @@ export const addCustomerBatch = async (
 
   for (const { name, email, phone } of customers) {
     try {
-      await prisma.customer.upsert({
+      const existing = await prisma.customer.findUnique({
         where: { email_businessId: { email, businessId } },
-        create: {
-          name: name || null,
-          email,
-          phone,
-          businessId,
-          source: "manual",
-        },
-        update: { name: name || null, phone },
+        select: { id: true },
       });
+
+      if (existing) {
+        await prisma.customer.update({
+          where: { id: existing.id },
+          data: { name: name || null, phone },
+        });
+      } else {
+        const qrToken = await generateUniqueQrToken();
+        await prisma.$transaction(async (tx) => {
+          const created = await tx.customer.create({
+            data: {
+              name: name || null,
+              email,
+              phone,
+              businessId,
+              source: "manual",
+              qrToken,
+            },
+          });
+          // Punto de bienvenida registrado en el historial.
+          await tx.pointMovement.create({
+            data: {
+              type: "welcome",
+              points: 1,
+              day: null,
+              businessId,
+              customerId: created.id,
+            },
+          });
+        });
+      }
       created++;
     } catch (error) {
       console.error("Error procesando cliente:", error);
@@ -175,6 +230,17 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
   });
   if (!customer || customer.business.slug !== slug) return null;
 
+  // Si el cliente aún no tiene token de QR (clientes antiguos),
+  // lo generamos ahora para que su QR personal funcione.
+  let qrToken = customer.qrToken;
+  if (!qrToken) {
+    qrToken = await generateUniqueQrToken();
+    await prisma.customer.update({
+      where: { id: customer.id },
+      data: { qrToken },
+    });
+  }
+
   return {
     id: customer.id,
     name: customer.name,
@@ -182,6 +248,7 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
     discountCode: customer.discountCode,
     businessName: customer.business.name,
     ticketFormat: customer.business.ticketFormat,
+    qrToken,
   };
 };
 
@@ -197,4 +264,72 @@ export const deleteSelectedCustomers = async (ids: string[]) => {
 
   await prisma.customer.deleteMany({ where: { id: { in: ownedIds } } });
   return { deleted: ownedIds.length };
+};
+
+// Identifica a un cliente a partir del token de su QR personal
+// (escaneado por el empleado en caja). Solo funciona si el cliente
+// pertenece a un negocio del usuario autenticado: un QR de otro
+// negocio simplemente no se encontrará.
+export const scanCustomerToken = async (token: string, businessId: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false as const, error: "No autenticado" };
+  }
+
+  const normalized = token.trim();
+  if (!normalized) {
+    return { success: false as const, error: "QR vacío" };
+  }
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId: user.id },
+    select: { id: true, loyaltyEnabled: true, name: true },
+  });
+  if (!business) {
+    return { success: false as const, error: "Negocio no encontrado" };
+  }
+  if (!business.loyaltyEnabled) {
+    return {
+      success: false as const,
+      error: "El programa de puntos no está activo",
+    };
+  }
+
+  const customer = await prisma.customer.findFirst({
+    where: { qrToken: normalized, businessId: business.id },
+    select: { id: true, name: true, points: true, discountCode: true },
+  });
+  if (!customer) {
+    return {
+      success: false as const,
+      error: "Cliente no encontrado para este negocio",
+    };
+  }
+
+  const alreadyEarnedToday = await prisma.pointMovement.findFirst({
+    where: {
+      customerId: customer.id,
+      businessId: business.id,
+      type: "earn",
+      day: todayKey(),
+    },
+  });
+
+  return {
+    success: true as const,
+    customer: {
+      id: customer.id,
+      name: customer.name,
+      points: customer.points,
+      discountCode: customer.discountCode,
+      canEarnToday: !alreadyEarnedToday,
+      rewardAvailable: customer.points >= POINTS_PER_REDEMPTION,
+      pointsPerRedemption: POINTS_PER_REDEMPTION,
+      pointsCap: POINTS_CAP,
+      discountPercent: DISCOUNT_PERCENT,
+    },
+  };
 };

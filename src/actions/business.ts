@@ -6,6 +6,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { resolveShortUrl } from '@/lib/google-places';
 import { getPlan, canCreateBusiness } from '@/lib/subscription';
 import { generateDiscountCode } from '@/lib/discount-code';
+import { generateQrToken } from '@/lib/qr-token';
 import {
   notifyCustomerRegistered,
   scheduleReviewRequest,
@@ -119,17 +120,31 @@ export const addPublicCustomer = async (data: {
     });
   }
 
-  const customer = await prisma.customer.create({
-    data: {
-      name: data.name || null,
-      email: data.email,
-      phone: data.phone,
-      whatsappOptIn: data.whatsappOptIn ?? false,
-      source: 'qr',
-      businessId: business.id,
-      points: 1,
-      discountCode: generateDiscountCode(),
-    },
+  const customer = await prisma.$transaction(async (tx) => {
+    const created = await tx.customer.create({
+      data: {
+        name: data.name || null,
+        email: data.email,
+        phone: data.phone,
+        whatsappOptIn: data.whatsappOptIn ?? false,
+        source: 'qr',
+        businessId: business.id,
+        points: 1,
+        discountCode: generateDiscountCode(),
+        qrToken: generateQrToken(),
+      },
+    });
+    // Punto de bienvenida registrado en el historial.
+    await tx.pointMovement.create({
+      data: {
+        type: 'welcome',
+        points: 1,
+        day: null,
+        businessId: business.id,
+        customerId: created.id,
+      },
+    });
+    return created;
   });
 
   // Aviso de bienvenida por email (si está configurado).

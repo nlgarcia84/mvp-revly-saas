@@ -20,6 +20,7 @@ import { redeemDiscountCodeInDashboard } from "@/actions/redeem";
 import { sendBatchInvitations, sendInvitation } from "@/actions/send";
 import BackButton from "@/components/back-button";
 import BusinessQR from "@/components/business-qr";
+import ScanCustomer from "@/components/scan-customer";
 import GoogleReviewsSection from "@/components/google-reviews-section";
 import SocialInbox from "@/components/social-inbox";
 import SocialConnectionsSection from "@/components/social-connections-section";
@@ -617,6 +618,18 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
           </h2>
         </div>
         <div className="flex flex-col">
+
+          {/* Escanear cliente */}
+          <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Escanear cliente</h3>
+              <p className="text-xs text-neutral-400">
+                Escanea el QR personal del cliente para identificarlo y sumarle
+                un punto o canjear su recompensa.
+              </p>
+            </div>
+            <ScanCustomer businessId={id} />
+          </div>
 
           {/* Canjear */}
           <div className="p-6 border-b border-neutral-200 dark:border-neutral-800">

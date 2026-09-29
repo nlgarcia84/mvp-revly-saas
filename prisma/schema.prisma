@@ -69,6 +69,7 @@ model Business {
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers      Customer[]
   pointClaims    PointClaim[]
+  pointMovements PointMovement[]
   reviewAnalyses ReviewAnalysis[]
 
   // ── Smart Analytics (propuestas globales) ─────────────
@@ -124,7 +125,38 @@ model Business {
   facebookPending         Json?     // páginas pendientes de elegir tras el OAuth (si administra varias)
   // ─────────────────────────────────────────────────
 
+  // ── Programa de puntos ──────────────────────────────
+  // loyaltyEnabled permite desactivar el programa de puntos
+  // sin borrar datos. Se comprueba en servidor antes de
+  // sumar/canjear puntos.
+  loyaltyEnabled Boolean @default(true)
+  // ─────────────────────────────────────────────────
+
   @@unique([name, userId])
+}
+
+// ──────────────────────────────────────────────
+// PointMovement: libro de movimientos de puntos
+// (historial). Cada alta de punto (+1) y cada canje
+// (-5) quedan registrados aquí. No se borra nunca.
+//   - "day" (YYYY-MM-DD) se usa solo en movimientos
+//     "earn" para imponer el límite de 1 punto/día
+//     a nivel de base de datos (evita condiciones de
+//     carrera al añadir puntos).
+// ──────────────────────────────────────────────
+model PointMovement {
+  id         String   @id @default(uuid())
+  type       String   // "welcome" | "earn" | "redeem" | "adjust"
+  points     Int      // firmado: +1 al ganar, -5 al canjear
+  day        String?  // "YYYY-MM-DD" (solo en "earn")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, createdAt])
+  @@unique([customerId, businessId, type, day])
 }
 
 // ──────────────────────────────────────────────
@@ -168,10 +200,17 @@ model Customer {
   // su perfil público con un QR.
   points        Int       @default(1)
   discountCode  String?
+  // ── Identificador seguro del QR personal ─────────
+  // "qrToken" es un token aleatorio opaco que codifica
+  // el QR del cliente. No contiene puntos, datos ni nada
+  // manipulable: solo sirve para localizar al cliente en
+  // el servidor.
+  qrToken       String?   @unique
   // ─────────────────────────────────────────────────
   createdAt     DateTime  @default(now())
   business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   pointClaims   PointClaim[]
+  pointMovements PointMovement[]
 
   @@unique([email, businessId])
 }
