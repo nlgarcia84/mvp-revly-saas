@@ -2,6 +2,7 @@ import { getBusinessBySlug, addPublicCustomer } from '@/actions/business';
 import { findPublicCustomerByEmail } from '@/actions/customers';
 import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
+import PublicStoreInfo from '@/components/public-store-info';
 
 // ──────────────────────────────────────────────
 // PublicBusinessPage (Server Component)
@@ -233,6 +234,16 @@ const PublicBusinessPage = async ({
           </Button>
         </form>
       </div>
+
+      {/* ── Card: información del local ─────────── */}
+      <PublicStoreInfo
+        businessName={business.name}
+        address={business.address}
+        latitude={business.latitude}
+        longitude={business.longitude}
+        openingHours={business.openingHours}
+        photos={business.photos}
+      />
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
-import stripe from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 const PRICE_TO_PLAN: Record<string, string> = {
   price_1U1WfmR8J40peD82mTLBUosR: 'avanzado',
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
+    const stripe = getStripe();
     const customerId = user.subscription?.stripeCustomerId;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
