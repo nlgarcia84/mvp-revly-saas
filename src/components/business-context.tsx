@@ -15,8 +15,10 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { getBusinessForDashboard } from '@/actions/business';
-import { getUserFeatures } from '@/actions/business';
+import {
+  getBusinessForDashboard,
+  getUserFeatures,
+} from '@/actions/business';
 
 export type DashboardBusiness = Awaited<
   ReturnType<typeof getBusinessForDashboard>
