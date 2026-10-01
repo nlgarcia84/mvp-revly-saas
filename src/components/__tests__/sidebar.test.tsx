@@ -68,6 +68,26 @@ describe('Sidebar', () => {
     });
   });
 
+  it('marks a parent link as active for its sub-routes', () => {
+    // /business/abc123 está bajo /business, así que "Negocios" debe
+    // aparecer activo (antes la igualdad exacta lo dejaba inactivo).
+    mockPathname.mockReturnValue('/business/abc123');
+    render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
+    screen.getAllByText('Negocios').forEach((link) => {
+      expect(link.className).toContain('font-medium');
+      expect(link.className).toContain('bg-white');
+    });
+  });
+
+  it('does not mark a link active for a different prefix', () => {
+    // /businesses-otro no cuelga de /business: "Negocios" queda inactivo.
+    mockPathname.mockReturnValue('/businesses-otro');
+    render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
+    screen.getAllByText('Negocios').forEach((link) => {
+      expect(link.className).toContain('bg-transparent');
+    });
+  });
+
   // ─── Panel móvil ────────────────────────────
 
   it('renders the mobile overlay when mobileOpen is true', () => {

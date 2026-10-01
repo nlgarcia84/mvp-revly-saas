@@ -243,10 +243,10 @@ const FacebookCommentsSection = ({
           <p className="text-sm text-neutral-400">
             {connected === false
               ? 'Conecta tu Página de Facebook para ver los comentarios de tus publicaciones y responderlos con IA.'
-              : 'No hay publicaciones recientes para mostrar. Conecta Facebook en Configuración.'}
+              : 'No hay publicaciones recientes para mostrar. Conecta Facebook en Redes sociales.'}
           </p>
           <a
-            href={`/business/${businessId}/settings`}
+            href={`/business/${businessId}/redes`}
             className="text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity"
           >
             Ir a Configuración

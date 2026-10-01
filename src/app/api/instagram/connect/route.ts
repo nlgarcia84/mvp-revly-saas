@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         "[Instagram/Connect] Falta META_INSTAGRAM_CLIENT_ID / META_CLIENT_ID en .env.local",
       );
       return NextResponse.redirect(
-        `${appUrl}/business/${businessId}/settings?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (falta el App ID de Instagram)")}`,
+        `${appUrl}/business/${businessId}/redes?ig_error=${encodeURIComponent("La conexión con Instagram no está configurada (falta el App ID de Instagram)")}`,
       );
     }
 

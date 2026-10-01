@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${appUrl}/business/${businessId}/settings?ig_success=Desconectado de Instagram`,
+      `${appUrl}/business/${businessId}/redes?ig_success=Desconectado de Instagram`,
     );
   } catch (error) {
     console.error("[Instagram/Disconnect] Error:", error);

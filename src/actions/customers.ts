@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { generateQrToken } from "@/lib/qr-token";
@@ -73,18 +74,146 @@ export const addCustomer = async (data: {
   });
 };
 
-// Devuelve los clientes de un negocio, del más reciente al más antiguo.
-export const getCustomers = async (businessId: string) => {
+// ── Campos seguros para el cliente ──────────────────────
+// qrToken y discountCode nunca salen del servidor: el primero es el
+// secreto del QR personal y el segundo es el código que se canjea en
+// caja. El cliente solo los necesita en su página pública.
+// ─────────────────────────────────────────────────────────
+const customerSelect = {
+  id: true,
+  name: true,
+  email: true,
+  phone: true,
+  status: true,
+  points: true,
+  invitedCount: true,
+  lastInvitedAt: true,
+  rating: true,
+  feedback: true,
+  createdAt: true,
+} as const;
+
+export type CustomerRow = Prisma.CustomerGetPayload<{
+  select: typeof customerSelect;
+}>;
+
+export type CustomerQuery = {
+  status?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export type CustomerPage = {
+  customers: CustomerRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+// Devuelve una página de clientes de un negocio, del más reciente al
+// más antiguo, con filtro por estado y búsqueda por nombre/email/teléfono.
+// La paginación va en servidor: sin ella la tabla crece sin límite y
+// acaba enviando cientos de filas al cliente.
+export const getCustomers = async (
+  businessId: string,
+  query: CustomerQuery = {},
+): Promise<CustomerPage> => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return [];
+  if (!user) {
+    return { customers: [], total: 0, page: 1, pageSize: 25, totalPages: 0 };
+  }
 
-  return prisma.customer.findMany({
-    where: { businessId, business: { userId: user.id } },
-    orderBy: { createdAt: "desc" },
-  });
+  const page = Math.max(1, Math.floor(query.page ?? 1));
+  const pageSize = Math.min(100, Math.max(1, Math.floor(query.pageSize ?? 25)));
+  const q = query.q?.trim();
+
+  const where: Prisma.CustomerWhereInput = {
+    businessId,
+    business: { userId: user.id },
+    ...(query.status && query.status !== "all"
+      ? { status: query.status }
+      : {}),
+    ...(q
+      ? {
+          OR: [
+            { name: { contains: q, mode: "insensitive" } },
+            { email: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  const [total, customers] = await prisma.$transaction([
+    prisma.customer.count({ where }),
+    prisma.customer.findMany({
+      where,
+      select: customerSelect,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
+
+  return {
+    customers,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+};
+
+// Recuentos agregados para la pantalla de Resumen: clientes por estado
+// y descuentos canjeados en el mes en curso.
+export const getCustomerSummary = async (businessId: string) => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return {
+      total: 0,
+      pending: 0,
+      invited: 0,
+      completed: 0,
+      redeemedThisMonth: 0,
+    };
+  }
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [byStatus, redeemedThisMonth] = await prisma.$transaction([
+    prisma.customer.groupBy({
+      by: ["status"],
+      where: { businessId, business: { userId: user.id } },
+      _count: { _all: true },
+    }),
+    prisma.pointMovement.count({
+      where: {
+        businessId,
+        type: "redeem",
+        createdAt: { gte: monthStart },
+      },
+    }),
+  ]);
+
+  const countFor = (status: string) =>
+    byStatus.find((s) => s.status === status)?._count._all ?? 0;
+
+  return {
+    total: byStatus.reduce((acc, s) => acc + s._count._all, 0),
+    pending: countFor("pending"),
+    invited: countFor("invited"),
+    completed: countFor("completed"),
+    redeemedThisMonth,
+  };
 };
 
 // Cambia el estado de un cliente (pending → invited → completed).

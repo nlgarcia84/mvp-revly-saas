@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     return NextResponse.redirect(
-      `${appUrl}/business/${businessId}/settings?fb_success=Desconectado de Facebook`,
+      `${appUrl}/business/${businessId}/redes?fb_success=Desconectado de Facebook`,
     );
   } catch (error) {
     console.error("[Facebook/Disconnect] Error:", error);

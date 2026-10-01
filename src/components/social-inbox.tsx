@@ -143,14 +143,13 @@ const SocialInbox = ({
       {statuses.instagram === false && statuses.facebook === false && (
         <div className={`${nCard} p-5 sm:p-6 flex flex-col gap-3`}>
           <p className="text-sm text-neutral-400">
-            Conecta Instagram o Facebook desde Configuración para empezar a
-            responder comentarios.
+            Conecta Instagram o Facebook para empezar a responder comentarios.
           </p>
           <a
-            href={`/business/${businessId}/settings`}
+            href="#conexiones"
             className="text-xs font-medium px-4 py-2 rounded-md bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:opacity-80 transition-opacity w-fit"
           >
-            Ir a Configuración
+            Ir a Conexiones
           </a>
         </div>
       )}
