@@ -106,10 +106,10 @@ const LandingChat = () => {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-label={open ? 'Cerrar asistente' : 'Abrir asistente de ayuda'}
-        className="fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 rounded-full border border-stone-200 bg-neutral-950 px-4 py-3 text-sm font-medium text-white shadow-lg transition-all hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-300 sm:bottom-6 sm:right-6"
+        className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 inline-flex max-w-[calc(100vw-32px)] items-center gap-2 rounded-full border border-stone-200 bg-neutral-950 px-5 py-3 text-sm font-medium text-white shadow-lg transition-all min-h-[52px] hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-300 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:right-6"
       >
-        <MessageCircle className="h-5 w-5" aria-hidden="true" />
-        <span className="hidden sm:inline">¿Necesitas ayuda?</span>
+        <MessageCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <span>¿Necesitas ayuda?</span>
       </button>
 
       {/* Panel de chat */}
