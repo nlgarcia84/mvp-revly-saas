@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const settingsUrl = businessId
-      ? `${appUrl}/business/${businessId}/settings`
+      ? `${appUrl}/business/${businessId}/redes`
       : `${appUrl}/business`;
 
     if (authError) {

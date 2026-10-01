@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     return NextResponse.redirect(
-      `${appUrl}/business/${businessId}/settings?bp_success=Desconectado de Google Business Profile`,
+      `${appUrl}/business/${businessId}/redes?bp_success=Desconectado de Google Business Profile`,
     );
   } catch (error) {
     console.error('[GoogleBusiness/Disconnect] Error:', error);

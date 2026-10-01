@@ -23,7 +23,7 @@ export async function GET(request: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const settingsUrl = businessId
-      ? `${appUrl}/business/${businessId}/settings`
+      ? `${appUrl}/business/${businessId}/redes`
       : `${appUrl}/business`;
 
     if (authError) {
@@ -186,7 +186,7 @@ export async function GET(request: Request) {
     const errorMessage =
       error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.redirect(
-      `${appUrl}/business/${businessId ?? ""}/settings?fb_error=${encodeURIComponent(errorMessage.slice(0, 400))}`,
+      `${appUrl}/business/${businessId ?? ""}/redes?fb_error=${encodeURIComponent(errorMessage.slice(0, 400))}`,
     );
   }
 }

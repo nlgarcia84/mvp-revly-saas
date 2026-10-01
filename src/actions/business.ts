@@ -67,6 +67,27 @@ export const createBusiness = async (data: {
   });
 };
 
+// ── Campos seguros para el cliente ──────────────────────
+// La tabla Business guarda tokens de OAuth (Google, Instagram, Facebook)
+// y cachés JSON que NUNCA deben salir del servidor. Cualquier acción
+// que devuelva un negocio a un componente "use client" debe usar este
+// select explícito en lugar de findMany/findUnique sin select.
+// ─────────────────────────────────────────────────────────
+const businessPublicSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  image: true,
+  googleLink: true,
+  loyaltyEnabled: true,
+  address: true,
+  latitude: true,
+  longitude: true,
+  openingHours: true,
+  photos: true,
+  createdAt: true,
+} as const;
+
 // Devuelve todos los negocios del usuario, con el recuento de clientes.
 export const getBusinesses = async () => {
   const userId = await getUserId();
@@ -74,7 +95,22 @@ export const getBusinesses = async () => {
 
   return prisma.business.findMany({
     where: { userId },
-    include: { _count: { select: { customers: true } } },
+    select: { ...businessPublicSelect, _count: { select: { customers: true } } },
+  });
+};
+
+// Devuelve un solo negocio con los campos seguros para el dashboard.
+// Se usa en el layout de /business/[id] para no repetir el select.
+export const getBusinessForDashboard = async (id: string) => {
+  const userId = await getUserId();
+  if (!userId) return null;
+
+  return prisma.business.findFirst({
+    where: { id, userId },
+    select: {
+      ...businessPublicSelect,
+      _count: { select: { customers: true } },
+    },
   });
 };
 

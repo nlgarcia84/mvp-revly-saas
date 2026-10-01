@@ -12,6 +12,12 @@ const links = [
   { href: '/profile', label: 'Perfil' },
 ];
 
+// Un link está activo si la ruta actual es exactamente su href o está
+// debajo de él. Con igualdad exacta, /business/abc123 nunca marcaba
+// "Negocios" como activo.
+const isRouteActive = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
 // ──────────────────────────────────────────────
 // Sidebar
 // ──────────────────────────────────────────────
@@ -66,7 +72,7 @@ const Sidebar = ({
       >
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = isRouteActive(pathname, link.href);
             return (
               <Link key={link.href} href={link.href} onClick={onClose} className={linkClass(active)}>
                 {link.label}
@@ -82,7 +88,7 @@ const Sidebar = ({
       <aside className="hidden lg:block w-[220px] border-r border-neutral-200 dark:border-neutral-800 h-full p-4 pl-3 bg-neutral-100 dark:bg-neutral-950 shrink-0 transition-colors">
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active = isRouteActive(pathname, link.href);
             return (
               <Link key={link.href} href={link.href} className={linkClass(active)}>
                 {link.label}

@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     if (!clientId) {
       console.error("[Facebook/Connect] Falta META_CLIENT_ID en .env.local");
       return NextResponse.redirect(
-        `${appUrl}/business/${businessId}/settings?fb_error=${encodeURIComponent("La conexión con Facebook no está configurada (falta el App ID de Facebook)")}`,
+        `${appUrl}/business/${businessId}/redes?fb_error=${encodeURIComponent("La conexión con Facebook no está configurada (falta el App ID de Facebook)")}`,
       );
     }
 
