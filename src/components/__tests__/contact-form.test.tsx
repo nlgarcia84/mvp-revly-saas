@@ -8,10 +8,7 @@ describe('ContactForm', () => {
   });
 
   it('envía el formulario y muestra el mensaje de confirmación', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ ok: true, message: 'Mensaje enviado correctamente' }),
-    });
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true });
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<ContactForm />);
@@ -23,7 +20,7 @@ describe('ContactForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /enviar mensaje/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/mensaje enviado correctamente/i)).toBeInTheDocument();
+      expect(screen.getByText(/tu mensaje se ha enviado correctamente/i)).toBeInTheDocument();
     });
 
     expect(fetchMock).toHaveBeenCalledWith('/api/contact', expect.objectContaining({ method: 'POST' }));
