@@ -12,7 +12,8 @@
 //   mode: "hours" | "variable" | "always",
 //   days: [{ day: 0, closed: boolean, slots: [{ open, close }] }]
 // }
-//   day: 0 = lunes … 6 = domingo (getDay() de JS).
+//   day: 0 = lunes … 6 = domingo (NO es getDay() de JS, que empieza en
+//   domingo; para traducir usa jsDayToWeekDay).
 // ──────────────────────────────────────────────
 
 export type OpeningHoursMode = "hours" | "variable" | "always";
