@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getSmartAnalytics } from '@/actions/review-analytics';
 import type { ReviewCategory, SmartAnalyticsResult } from '@/actions/review-analytics';
 import AnalyticsProposalsCard from '@/components/analytics-proposals-card';
+import AnalyticsSummary from '@/components/analytics-summary';
 
 const sentimentLabel: Record<string, string> = {
   positive: 'Positivas',
@@ -268,6 +269,8 @@ const SmartAnalyticsSection = ({
           initialProposals={g.conclusions.proposals}
         />
       </div>
+
+      <AnalyticsSummary global={g} />
     </div>
   );
 };
