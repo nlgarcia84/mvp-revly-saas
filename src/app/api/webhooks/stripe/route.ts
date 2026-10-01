@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import stripe from '@/lib/stripe';
+import { getStripe } from '@/lib/stripe';
 
 const PRICE_TO_PLAN: Record<string, string> = {
   price_1U1WfmR8J40peD82mTLBUosR: 'avanzado',
@@ -12,6 +12,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get('stripe-signature') || '';
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+  const stripe = getStripe();
 
   let event: any;
   try {

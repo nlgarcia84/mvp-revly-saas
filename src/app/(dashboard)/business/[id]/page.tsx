@@ -24,6 +24,7 @@ import ScanCustomer from "@/components/scan-customer";
 import GoogleReviewsSection from "@/components/google-reviews-section";
 import SocialInbox from "@/components/social-inbox";
 import SocialConnectionsSection from "@/components/social-connections-section";
+import StoreLocatorSection from "@/components/store-locator-section";
 import Button from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -1033,6 +1034,28 @@ const CustomersPage = ({ params }: { params: Promise<{ id: string }> }) => {
       )}
 
       {/* Secciones inferiores */}
+
+      {/* Mi local (dirección, mapa, fotos y horarios) */}
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-neutral-950 dark:bg-neutral-100 px-6 py-2.5">
+          <h2 className="text-xs font-semibold text-white dark:text-neutral-950 uppercase tracking-wider">
+            Mi local
+          </h2>
+        </div>
+        <div className="p-6">
+          <StoreLocatorSection
+            businessId={id}
+            initial={{
+              address: business?.address,
+              latitude: business?.latitude,
+              longitude: business?.longitude,
+              openingHours: business?.openingHours,
+              photos: business?.photos,
+            }}
+            onSaved={load}
+          />
+        </div>
+      </section>
 
       {/* Conexiones sociales */}
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden">

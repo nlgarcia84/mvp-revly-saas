@@ -132,6 +132,26 @@ model Business {
   loyaltyEnabled Boolean @default(true)
   // ─────────────────────────────────────────────────
 
+  // ── Store Locator ─────────────────────────────
+  // Información del local que el negocio publica para que
+  // sus clientes lo encuentren: dirección, coordenadas
+  // (para el mapa), fotos y horarios de apertura.
+  // Todos los campos son opcionales: si no se rellenan,
+  // el bloque público no se muestra.
+  address      String?   // dirección completa ("Carrer de Mallorca 1, Barcelona")
+  latitude     Float?    // latitud del local (-90..90)
+  longitude    Float?    // longitud del local (-180..180)
+  // Horarios de apertura estructurados por día (0=lunes … 6=domingo).
+  // {
+  //   mode: "hours" | "variable" | "always",
+  //   days: [{ day: 0, closed: false, slots: [{ open: "09:00", close: "14:00" }] }]
+  // }
+  openingHours Json?
+  // Fotos del local subida por el negocio (bucket "business-photos").
+  // [{ url: "...", path: "<businessId>/<timestamp>.jpg" }] — máximo 8.
+  photos       Json?
+  // ─────────────────────────────────────────────────
+
   @@unique([name, userId])
 }
 

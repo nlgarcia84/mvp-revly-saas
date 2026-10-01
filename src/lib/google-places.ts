@@ -84,7 +84,9 @@ export function extractPlaceId(url: string): string | null {
 }
 
 // Extrae las coordenadas (@lat,lng) de una URL de Google Maps.
-function extractLatLng(url: string): { lat: number; lng: number } | null {
+// Se usa para resolver el placeId y, en el store locator, para
+// que el negocio pegue directamente un enlace de Maps.
+export function extractLatLng(url: string): { lat: number; lng: number } | null {
   const match = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (match) return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
   return null;
