@@ -1,22 +1,19 @@
-'use client';
+"use client";
 
 // "Asistente de Revly" (V1 sin IA): botón flotante que abre un panel de chat.
 // El visitante elige preguntas predefinidas y recibe respuestas estáticas.
 // No hay llamadas al backend, ni a Groq, ni a Prisma.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, MessageCircle, X } from 'lucide-react';
-import {
-  helpVideoUrl,
-  type LandingHelpTopic,
-} from '@/lib/landing-help';
-import ChatMessage from './ChatMessage';
-import ChatOptions from './ChatOptions';
-import VideoHelp from './VideoHelp';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, MessageCircle, X } from "lucide-react";
+import { helpVideoUrl, type LandingHelpTopic } from "@/lib/landing-help";
+import ChatMessage from "./ChatMessage";
+import ChatOptions from "./ChatOptions";
+import VideoHelp from "./VideoHelp";
 
 type Message = {
   id: number;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   text: string;
   videoUrl?: string;
   linkUrl?: string;
@@ -25,8 +22,8 @@ type Message = {
 
 const WELCOME_MESSAGE: Message = {
   id: 0,
-  role: 'assistant',
-  text: '¡Hola! 👋 Soy el asistente de Revly. Elige una pregunta y te explico cómo funciona.',
+  role: "assistant",
+  text: "¡Hola! 👋 Soy el asistente de Revly. Elige una pregunta y te explico cómo funciona.",
 };
 
 const LandingChat = () => {
@@ -44,22 +41,24 @@ const LandingChat = () => {
     if (container) container.scrollTop = container.scrollHeight;
   }, []);
 
-  // Al abrir, lleva el foco al botón de cerrar y posiciona el scroll al final.
+  // Al abrir, lleva el foco al botón de cerrar y muestra el mensaje de
+  // bienvenida desde arriba (las preguntas viven en la misma zona con scroll).
   useEffect(() => {
     if (open) {
       closeButtonRef.current?.focus();
-      scrollMessagesToBottom();
+      const container = messagesContainerRef.current;
+      if (container) container.scrollTop = 0;
     }
-  }, [open, scrollMessagesToBottom]);
+  }, [open]);
 
   // Cierra con la tecla Escape.
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
+      if (event.key === "Escape") setOpen(false);
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   // Al añadir una respuesta, hace scroll del contenedor interno de mensajes
@@ -68,7 +67,7 @@ const LandingChat = () => {
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
     }
   }, [messages]);
 
@@ -82,10 +81,10 @@ const LandingChat = () => {
     const assistantMessageId = nextIdRef.current++;
     setMessages((prev) => [
       ...prev,
-      { id: userMessageId, role: 'user', text: topic.title },
+      { id: userMessageId, role: "user", text: topic.title },
       {
         id: assistantMessageId,
-        role: 'assistant',
+        role: "assistant",
         text: topic.answer,
         videoUrl,
         linkUrl: topic.linkUrl,
@@ -105,7 +104,7 @@ const LandingChat = () => {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        aria-label={open ? 'Cerrar asistente' : 'Abrir asistente de ayuda'}
+        aria-label={open ? "Cerrar asistente" : "Abrir asistente de ayuda"}
         className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] right-4 z-50 inline-flex max-w-[calc(100vw-32px)] items-center gap-2 rounded-full border border-stone-200 bg-neutral-950 px-5 py-3 text-sm font-medium text-white shadow-lg transition-all min-h-[52px] hover:bg-neutral-800 dark:border-neutral-700 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-300 sm:bottom-[calc(1.5rem+env(safe-area-inset-bottom))] sm:right-6"
       >
         <MessageCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -149,8 +148,10 @@ const LandingChat = () => {
           >
             {messages.map((message) => (
               <ChatMessage key={message.id} role={message.role}>
-                <span className="whitespace-pre-line break-words">{message.text}</span>
-                {message.role === 'assistant' && message.linkUrl && (
+                <span className="whitespace-pre-line break-words">
+                  {message.text}
+                </span>
+                {message.role === "assistant" && message.linkUrl && (
                   <a
                     href={message.linkUrl}
                     className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-neutral-950 underline underline-offset-2 transition-colors hover:text-neutral-600 dark:text-neutral-100 dark:hover:text-neutral-300"
@@ -158,35 +159,36 @@ const LandingChat = () => {
                     {message.linkLabel ?? message.linkUrl}
                   </a>
                 )}
-                {message.role === 'assistant' && message.videoUrl && (
-                  <VideoHelp
-                    videoUrl={message.videoUrl}
-                    title={message.text}
-                  />
+                {message.role === "assistant" && message.videoUrl && (
+                  <VideoHelp videoUrl={message.videoUrl} title={message.text} />
                 )}
               </ChatMessage>
             ))}
-          </div>
 
-          {/* Opciones / volver a preguntas frecuentes */}
-          <div className="shrink-0 border-t border-stone-200 bg-stone-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-            {selectedTopicId === null ? (
-              <>
-                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                  Preguntas frecuentes
-                </p>
-                <ChatOptions onSelect={handleSelect} />
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={handleBackToOptions}
-                className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:border-neutral-950 hover:bg-stone-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-500 dark:hover:bg-neutral-700"
-              >
-                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-                Volver a preguntas frecuentes
-              </button>
-            )}
+            {/* Opciones / volver a preguntas frecuentes */}
+            <div
+              className={
+                selectedTopicId === null ? "mt-auto pt-2" : "pt-2"
+              }
+            >
+              {selectedTopicId === null ? (
+                <>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Preguntas frecuentes
+                  </p>
+                  <ChatOptions onSelect={handleSelect} />
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleBackToOptions}
+                  className="inline-flex items-center gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:border-neutral-950 hover:bg-stone-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-500 dark:hover:bg-neutral-700"
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  Volver a preguntas frecuentes
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
