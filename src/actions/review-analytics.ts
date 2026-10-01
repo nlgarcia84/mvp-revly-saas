@@ -291,3 +291,53 @@ export const getSmartAnalytics = async (
     reviewCategories,
   };
 };
+
+// Regenera solo las propuestas de mejora con IA, reutilizando el análisis ya
+// persistido en ReviewAnalysis. No vuelve a llamar a Groq por cada reseña: solo
+// hace la llamada global de propuestas, por eso es mucho más rápido que
+// getSmartAnalytics. Si la IA falla, devuelve el fallback determinista.
+export const regenerateAnalyticsProposals = async (
+  businessId: string,
+): Promise<{ ok: boolean; proposals: string[]; usedFallback: boolean }> => {
+  const userId = await requireUserId();
+
+  const business = await prisma.business.findFirst({
+    where: { id: businessId, userId },
+    select: { id: true, name: true },
+  });
+  if (!business) throw new Error('Negocio no encontrado');
+
+  const rows = await prisma.reviewAnalysis.findMany({
+    where: { businessId },
+    select: {
+      sentiment: true,
+      categories: true,
+      positiveAspects: true,
+      negativeAspects: true,
+      summary: true,
+      source: true,
+    },
+  });
+
+  if (rows.length === 0) {
+    return { ok: true, proposals: [], usedFallback: false };
+  }
+
+  // computeGlobalAnalytics necesita las reseñas normalizadas solo para la
+  // distribución de estrellas; sin ellas se degrada a cero, que no afecta a
+  // las propuestas (se basan en fortalezas, problemas y categorías).
+  const analyses = rows.map(toAnalysisResult);
+  const global = computeGlobalAnalytics(analyses, []);
+
+  const generated = await generateAiProposals(
+    business.name,
+    analyses,
+    global,
+  );
+  const usedFallback = !generated || generated.length === 0;
+  const proposals = usedFallback ? global.conclusions.proposals : generated;
+
+  await persistAnalyticsProposals(business.id, proposals);
+
+  return { ok: true, proposals, usedFallback };
+};

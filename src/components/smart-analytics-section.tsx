@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getSmartAnalytics } from '@/actions/review-analytics';
 import type { ReviewCategory, SmartAnalyticsResult } from '@/actions/review-analytics';
+import AnalyticsProposalsCard from '@/components/analytics-proposals-card';
 
 const sentimentLabel: Record<string, string> = {
   positive: 'Positivas',
@@ -56,7 +57,11 @@ const SmartAnalyticsSection = ({
 
   if (loading) {
     return (
-      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
+      <div
+        className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 flex items-center gap-3"
+        aria-live="polite"
+      >
+        <span className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin shrink-0" />
         <p className="text-sm text-neutral-400">Analizando reseñas con IA...</p>
       </div>
     );
@@ -203,19 +208,20 @@ const SmartAnalyticsSection = ({
         );
       })()}
 
-      {/* Conclusiones y propuestas */}
-      <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5 flex flex-col gap-4">
-        <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider">
-          Conclusiones y propuestas
-        </p>
-
-        {g.conclusions.general && (
+      {/* Conclusiones, fortalezas/debilidades y propuestas en card propia */}
+      {g.conclusions.general && (
+        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
+          <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+            Conclusión general
+          </p>
           <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
             {g.conclusions.general}
           </p>
-        )}
+        </div>
+      )}
 
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
           <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
             Fortalezas
           </p>
@@ -235,7 +241,7 @@ const SmartAnalyticsSection = ({
           )}
         </div>
 
-        <div>
+        <div className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-5">
           <p className="text-[10px] font-semibold text-red-500 uppercase tracking-wider mb-2">
             Aspectos a mejorar
           </p>
@@ -257,27 +263,10 @@ const SmartAnalyticsSection = ({
           )}
         </div>
 
-        <div>
-          <p className="text-[10px] font-semibold text-violet-600 dark:text-violet-400 uppercase tracking-wider mb-2">
-            💡 Propuestas
-          </p>
-          {g.conclusions.proposals.length > 0 ? (
-            <ul className="flex flex-col gap-1.5">
-              {g.conclusions.proposals.map((p) => (
-                <li
-                  key={p}
-                  className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed"
-                >
-                  • {p}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-xs text-neutral-400">
-              No se detectaron problemas que requieran propuestas.
-            </p>
-          )}
-        </div>
+        <AnalyticsProposalsCard
+          businessId={businessId}
+          initialProposals={g.conclusions.proposals}
+        />
       </div>
     </div>
   );
