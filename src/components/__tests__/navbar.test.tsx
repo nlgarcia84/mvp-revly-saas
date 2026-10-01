@@ -14,7 +14,7 @@
 //   - Efectos secundarios (intervalo, limpieza)
 // ──────────────────────────────────────────────
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import Navbar from '../navbar';
 
 // Mock de la Server Action signOut para evitar que intente conectarse a Supabase
@@ -82,10 +82,19 @@ describe('Navbar', () => {
   // ─── Efectos secundarios ────────────────────
 
   it('updates the clock every 30 seconds', () => {
-    // El reloj debe actualizarse después de 30 segundos
+    // El reloj se refresca cada 30s. Hay que avanzar 60s, no 30s: el reloj
+    // solo formatea hora y minutos, así que a los 30s todavía marca 14:30 y
+    // el test pasaría aunque el setInterval no existiera.
     render(<Navbar onMenuToggle={jest.fn()} />);
-    jest.advanceTimersByTime(30_000);
     expect(screen.getByText(/14:30/i)).toBeInTheDocument();
+
+    // 60s: el intervalo de 30s dispara dos veces y el minuto cambia a 14:31
+    // act() es necesario: el intervalo dispara un setState que debe
+    // volcarse antes de asertar.
+    act(() => {
+      jest.advanceTimersByTime(60_000);
+    });
+    expect(screen.getByText(/14:31/i)).toBeInTheDocument();
   });
 
   it('cleans up the interval on unmount', () => {
