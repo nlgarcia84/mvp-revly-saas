@@ -9,6 +9,14 @@ import LandingCard, {
   LandingCardTitle,
 } from "@/components/ui/landing-card";
 import { Sparkles, Star, TrendingUp } from "lucide-react";
+import dynamic from "next/dynamic";
+
+// El asistente de ayuda se carga de forma lazy (chunk separado) para no
+// penalizar el render inicial de la landing. El panel solo se monta al pulsar
+// el botón flotante y los vídeos solo cuando el usuario los solicita.
+const LandingChat = dynamic(
+  () => import("@/components/landing-chat/LandingChat"),
+);
 
 // ──────────────────────────────────────────────
 // HomePage (Landing)
@@ -297,6 +305,7 @@ const HomePage = () => {
             className="flex items-center gap-2.5"
             aria-label="Métodos de pago"
           >
+
             <svg viewBox="0 0 468 222.5" className="h-7 w-auto">
               <path
                 fill="#635BFF"
@@ -333,6 +342,8 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+
+      <LandingChat />
     </div>
   );
 };
