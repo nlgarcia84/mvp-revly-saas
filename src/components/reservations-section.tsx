@@ -104,7 +104,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
     setUpdatingId('');
   };
 
-  const publicUrl = business?.slug ? `/${business.slug}#reservar` : null;
+  const publicUrl = business?.slug ? `/${business.slug}/reservas` : null;
   const filtered =
     statusFilter === 'all'
       ? reservations
@@ -122,7 +122,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
     setConfig((prev) => ({ ...prev, ...patch }));
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 stagger">
       {/* ── Configuración ─────────────────────── */}
       <div>
         <h3 className="text-sm font-semibold mb-1">Configuración de reservas</h3>

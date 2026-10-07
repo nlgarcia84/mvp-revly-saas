@@ -2,16 +2,13 @@ import { getBusinessBySlug, addPublicCustomer } from '@/actions/business';
 import { findPublicCustomerByEmail } from '@/actions/customers';
 import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
-import PublicStoreInfo from '@/components/public-store-info';
-import ReservationForm from '@/components/reservation-form';
 import { parseReservationConfig } from '@/lib/reservations';
 
 // ──────────────────────────────────────────────
 // PublicBusinessPage (Server Component)
-// ──────────────────────────────────────────────
-// Página pública visitada por los clientes del negocio
-// (revly.es/{slug}). Muestra un formulario para unirse
-// al programa de puntos y obtener descuentos.
+// Página pública de fidelización (revly.es/{slug}).
+// Muestra el programa de puntos: registro y consulta.
+// Las reservas tienen su propia página: revly.es/{slug}/reservas.
 //
 // Flujo:
 //   1. Sin ?success ni ?find → muestra formulario.
@@ -237,23 +234,12 @@ const PublicBusinessPage = async ({
         </form>
       </div>
 
-      {/* ── Card: reservas ──────────────────────── */}
+      {/* ── CTA: reservas ───────────────────────── */}
       {parseReservationConfig(business.reservationConfig).enabled && (
-        <ReservationForm
-          slug={slug}
-          reservationConfig={business.reservationConfig}
-        />
+        <Button as="link" variant="secondary" href={`/${slug}/reservas`} className="w-full max-w-md mt-4">
+          Reservar mesa
+        </Button>
       )}
-
-      {/* ── Card: información del local ─────────── */}
-      <PublicStoreInfo
-        businessName={business.name}
-        address={business.address}
-        latitude={business.latitude}
-        longitude={business.longitude}
-        openingHours={business.openingHours}
-        photos={business.photos}
-      />
     </div>
   );
 };

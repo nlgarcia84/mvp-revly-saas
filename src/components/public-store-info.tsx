@@ -10,10 +10,10 @@ import {
 // PublicStoreInfo
 // ──────────────────────────────────────────────
 // Bloque "Dónde encontrarnos" de la página pública
-// /{slug}. Es un Server Component (no necesita JS):
+// /{slug}/reservas. Es un Server Component (no necesita JS):
 //   - fotos del local (primera = portada)
 //   - dirección + mapa de Google (iframe embed)
-//   - horarios de apertura con "Abierto ahora"
+//   - horario de apertura solo si showHours=true (opcional)
 // Solo se renderiza si el negocio ha rellenado algo.
 // ──────────────────────────────────────────────
 
@@ -24,6 +24,7 @@ type PublicStoreInfoProps = {
   longitude?: number | null;
   openingHours?: unknown;
   photos?: unknown;
+  showHours?: boolean;
 };
 
 const parsePhotos = (value: unknown): StorePhoto[] =>
@@ -43,9 +44,10 @@ export default function PublicStoreInfo({
   longitude,
   openingHours,
   photos,
+  showHours = false,
 }: PublicStoreInfoProps) {
   const photoList = parsePhotos(photos);
-  const hours = parseOpeningHours(openingHours);
+  const hours = showHours ? parseOpeningHours(openingHours) : null;
   const cleanAddress = (address ?? "").trim();
 
   const mapUrl =
