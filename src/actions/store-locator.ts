@@ -13,11 +13,17 @@
 import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { extractLatLng } from '@/lib/google-places';
+import {
+  extractLatLng,
+  extractPlaceId,
+  resolveShortUrl,
+  resolveWithTextSearch,
+} from '@/lib/google-places';
 import {
   MAX_PHOTOS,
   type OpeningHours,
   type StorePhoto,
+  googlePeriodsToOpeningHours,
   parseOpeningHoursOrDefault,
   validateOpeningHours,
 } from '@/lib/store-hours';
@@ -191,6 +197,70 @@ export async function geocodeAddress(address: string): Promise<GeocodeResult> {
     };
   } catch {
     return { success: false, error: 'No se pudo buscar la dirección' };
+  }
+}
+
+// ─── Importación desde Google ───────────────────────
+
+export type GoogleStoreData = {
+  success: boolean;
+  error?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  openingHours?: OpeningHours | null;
+};
+
+// Trae los datos del local que ya figuran en Google (dirección,
+// coordenadas y horarios) y los devuelve para pre-rellenar el
+// formulario. NO guarda: el usuario revisa y pulsa Guardar.
+export async function fetchGoogleStoreData(
+  businessId: string,
+): Promise<GoogleStoreData> {
+  try {
+    const business = await requireOwnedBusiness(businessId);
+    if (!business.googleLink) {
+      return { success: false, error: 'El negocio no tiene enlace de Google' };
+    }
+
+    const resolvedUrl = await resolveShortUrl(business.googleLink);
+    let placeId = extractPlaceId(resolvedUrl);
+    if (!placeId) {
+      placeId = (await resolveWithTextSearch(business.name, resolvedUrl)) ?? '';
+    }
+    if (!placeId) {
+      return { success: false, error: 'No se pudo encontrar el lugar en Google' };
+    }
+
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+    if (!apiKey) {
+      return { success: false, error: 'Falta GOOGLE_MAPS_API_KEY' };
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=formatted_address,geometry,opening_hours&language=es&key=${apiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return { success: false, error: 'Error al conectar con Google Maps' };
+    }
+
+    const payload = await response.json();
+    if (payload.status !== 'OK' || !payload.result) {
+      return { success: false, error: 'No se encontraron datos en Google' };
+    }
+
+    const result = payload.result;
+    const address = result.formatted_address ?? '';
+    const latitude = result.geometry?.location?.lat ?? null;
+    const longitude = result.geometry?.location?.lng ?? null;
+    const periods = result.opening_hours?.periods;
+    const openingHours = periods ? googlePeriodsToOpeningHours(periods) : null;
+
+    return { success: true, address, latitude, longitude, openingHours };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'No se pudieron importar los datos',
+    };
   }
 }
 

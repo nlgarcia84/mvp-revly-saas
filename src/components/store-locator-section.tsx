@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@/components/ui/button";
 import {
   deleteBusinessPhoto,
+  fetchGoogleStoreData,
   geocodeAddress,
   updateStoreInfo,
   uploadBusinessPhoto,
@@ -111,8 +112,37 @@ const StoreLocatorSection = ({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
+
+  // ─── Importación desde Google ──────────────────
+  const importFromGoogle = async () => {
+    setImporting(true);
+    setError("");
+    setMsg("");
+    const result = await fetchGoogleStoreData(businessId);
+    if (result.success) {
+      if (result.address) setAddress(result.address);
+      if (result.latitude !== undefined && result.latitude !== null) {
+        setLatitude(result.latitude);
+      }
+      if (result.longitude !== undefined && result.longitude !== null) {
+        setLongitude(result.longitude);
+      }
+      if (result.openingHours) setHours(result.openingHours);
+      setMsg("Datos importados desde Google. Revisa y pulsa Guardar.");
+    } else {
+      setError(result.error);
+    }
+    setImporting(false);
+  };
+
+  // Importa automáticamente al cargar la sección.
+  useEffect(() => {
+    importFromGoogle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessId]);
 
   const mapUrl = buildMapUrl(address.trim(), latitude, longitude);
   const directionsUrl = buildDirectionsUrl(
@@ -327,6 +357,14 @@ const StoreLocatorSection = ({
               disabled={locating}
             >
               Mi ubicación
+            </Button>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={importFromGoogle}
+              disabled={importing}
+            >
+              {importing ? "Importando..." : "Importar desde Google"}
             </Button>
           </div>
           <p className="text-xs text-neutral-400">

@@ -270,6 +270,53 @@ export function isCurrentlyOpen(
   return false;
 }
 
+// ─── Conversión desde Google Places API ─────────────
+
+type GooglePeriod = {
+  open: { day: number; time: string };
+  close: { day: number; time: string };
+};
+
+// Google: day 0 = domingo. App: day 0 = lunes.
+const googleDayToWeekDay = (googleDay: number): number => (googleDay + 6) % 7;
+
+// "0900" → "09:00"
+const formatGoogleTime = (time: string): string => {
+  if (time.length === 4) return `${time.slice(0, 2)}:${time.slice(2)}`;
+  return time;
+};
+
+// Convierte los periodos de opening_hours de Google Places API al
+// formato OpeningHours de la app. Los periodos que cruzan medianoche
+// (close.day != open.day) se mapean al día de apertura con la hora de
+// cierre: la app los interpreta como franja overnight (close <= open).
+export function googlePeriodsToOpeningHours(periods: GooglePeriod[]): OpeningHours {
+  const days: DayHours[] = WEEK_DAYS.map((day) => ({ day, closed: true, slots: [] }));
+
+  const byDay = new Map<number, TimeSlot[]>();
+  for (const period of periods) {
+    const appDay = googleDayToWeekDay(period.open.day);
+    const slot: TimeSlot = {
+      open: formatGoogleTime(period.open.time),
+      close: formatGoogleTime(period.close.time),
+    };
+    const existing = byDay.get(appDay) ?? [];
+    existing.push(slot);
+    byDay.set(appDay, existing);
+  }
+
+  for (const [day, slots] of byDay) {
+    slots.sort((a, b) => timeToMinutes(a.open) - timeToMinutes(b.open));
+    const dayHours = days.find((d) => d.day === day);
+    if (dayHours) {
+      dayHours.closed = false;
+      dayHours.slots = slots.slice(0, MAX_SLOTS_PER_DAY);
+    }
+  }
+
+  return { mode: "hours", days };
+}
+
 // Comprueba si el local tiene algún dato publicable.
 export function hasStoreInfo(data: {
   address?: string | null;

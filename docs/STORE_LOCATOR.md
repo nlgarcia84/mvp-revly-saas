@@ -1,60 +1,31 @@
-# Store Locator — información del local
+# Store Locator — Arquitectura
 
-Rama: `store-locator` · Commits: `e3c98cf` (feature), `fd0cb6b` (fix de Stripe)
-
-Permite que un negocio gestione la información de su local (dirección, mapa, fotos
-y horarios) y que los clientes la vean en su página pública `/{slug}`.
+> Última actualización: 2026-10-07.
+> Ámbito: gestión de la información del local (dirección, mapa, fotos y horarios) desde el dashboard y su publicación en la página pública `/{slug}`.
 
 ---
 
-## 1. Qué puede hacer el negocio
+## 1. Qué es
 
-Desde la sección **"Mi local"** del dashboard (`/business/[id]`):
+El Store Locator permite que un negocio gestione la información de su local desde la sección **"Mi local"** del dashboard y que los clientes la vean en su página pública.
 
-- **Dirección**: escribirla a mano, pulsar **"Geocodificar"** (usa la Geocoding API
-  de Google con `GOOGLE_MAPS_API_KEY`) o **"Mi ubicación"** (geolocation del
-  navegador). También se puede pegar un enlace de Google Maps, del que se extraen
-  las coordenadas con `extractLatLng`.
-- **Mapa**: preview por iframe de Google Maps. Sin SDK ni facturación extra.
-- **Fotos**: hasta **8** imágenes subidas por el propio negocio (PNG/JPEG/WebP,
-  máx. 5 MB cada una).
-- **Horarios**: por día, hasta **2 franjas** (`09:00–14:00` y `17:00–20:00`),
-  con opción de marcar el día cerrado. Tres modos:
-  - `hours` — el horario guardado.
-  - `variable` — "varía según el día": no se calcula nada, solo informativo.
-  - `always` — "siempre abierto": se muestra como badge, sin cálculo.
+**Principios de diseño:**
 
-En la página pública `/{slug}` el bloque **"Dónde encontrarnos"** aparece **solo si
-el negocio ha rellenado algo** (`hasStoreInfo`), con la galería de fotos, la
-dirección, el mapa y los horarios. Marca el día actual y si está abierto ahora.
+- **Google es la fuente de verdad de las reseñas**, pero **no** de los datos del local. La dirección, fotos y horarios los define el dueño en Revly.
+- **Un negocio = un local.** No hay tabla separada de locales; los campos viven en `Business`.
+- **JSON en vez de tabla relacional** para horarios y fotos: un negocio tiene un solo local, así que 7 filas por negocio serían ruido. El JSON se normaliza y valida en `src/lib/store-hours.ts` antes de usarse.
+- **Lectura de Google, escritura en local.** Hoy no hay write-back a Google (ver §11).
 
 ---
 
-## 2. Modelo de datos
+## 2. Datos que gestiona
 
-Campos nuevos en `Business` (`prisma/schema.prisma`):
-
-| Campo | Tipo | Para qué |
-|---|---|---|
-| `address` | `String?` | Dirección en texto |
-| `latitude` | `Float?` | Latitud para el mapa |
-| `longitude` | `Float?` | Longitud para el mapa |
-| `openingHours` | `Json?` | Horarios estructurados |
-| `photos` | `Json?` | Lista de fotos `{ url, path }` |
-
-Migración: `prisma/migrations/20261001000000_add_store_locator/migration.sql`
-
-```sql
-ALTER TABLE "Business" ADD COLUMN     "address" TEXT,
-ADD COLUMN     "latitude" DOUBLE PRECISION,
-ADD COLUMN     "longitude" DOUBLE PRECISION,
-ADD COLUMN     "openingHours" JSONB,
-ADD COLUMN     "photos" JSONB;
-```
-
-**Por qué JSON y no una tabla `BusinessHours`**: un negocio tiene un solo local, así
-que una tabla con 7 filas por negocio sería ruido. El JSON se normaliza y valida en
-`src/lib/store-hours.ts` antes de usarse.
+| Dato | Tipo | Dónde | Quién lo escribe |
+|---|---|---|---|
+| Dirección | texto | `Business.address` | Dueño (dashboard) |
+| Coordenadas | `lat`/`lng` | `Business.latitude` / `longitude` | Geocodificación o geolocalización |
+| Horarios | JSON estructurado | `Business.openingHours` | Dueño (dashboard) |
+| Fotos | JSON de `{ url, path }` | `Business.photos` | Dueño (subida a Storage) |
 
 ### Estructura de `openingHours`
 
@@ -68,162 +39,196 @@ que una tabla con 7 filas por negocio sería ruido. El JSON se normaliza y valid
 }
 ```
 
-> **`day: 0 = lunes … 6 = domingo`.** Ojo: `Date.getDay()` de JavaScript empieza en
-> **domingo** (0 = domingo). Para convertir usa siempre `jsDayToWeekDay(jsDay)`,
-> que devuelve `(jsDay + 6) % 7`. Este despiste ya costó dos bugs: el "día actual"
-> resaltado salía desplazado, y el cálculo de "abierto ahora" daba falso los lunes.
+- `mode`: `"hours"` (horario guardado) | `"variable"` (informativo, sin cálculo) | `"always"` (siempre abierto).
+- `day`: **0 = lunes … 6 = domingo**. No es `Date.getDay()` de JS (que empieza en domingo). Traducir con `jsDayToWeekDay(jsDay) = (jsDay + 6) % 7`.
+- `slots`: hasta 2 franjas por día. Una franja con `close <= open` se interpreta como cierre al día siguiente (bar de copas).
+
+### Estructura de `photos`
+
+```json
+[
+  { "url": "https://.../business-photos/<id>/123.jpg", "path": "<businessId>/123.jpg" }
+]
+```
+
+Máximo 8 fotos. `path` es la clave de borrado en Storage.
 
 ---
 
-## 3. Archivos
+## 3. Arquitectura
 
-| Archivo | Rol |
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Dashboard /business/[id]                                    │
+│                                                             │
+│  StoreLocatorSection (cliente)                              │
+│    ├── address, lat/lng, hours, photos  ← useState local    │
+│    ├── handleSearchAddress()  ──► geocodeAddress()          │
+│    ├── handleUseMyLocation()  ──► navigator.geolocation     │
+│    ├── handleUpload/Delete()  ──► upload/deleteBusinessPhoto│
+│    └── handleSave()           ──► updateStoreInfo()         │
+│                                                             │
+│  PublicStoreInfo (cliente, /{slug})                         │
+│    └── lee Business.address/latitude/longitude/openingHours │
+│        y photos vía getBusinessBySlug()                    │
+└─────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Server actions (src/actions/store-locator.ts)               │
+│   • requireOwnedBusiness() — auth + ownership               │
+│   • updateStoreInfo()     — valida y escribe en Business    │
+│   • geocodeAddress()      — Geocoding API de Google         │
+│   • uploadBusinessPhoto() — sube a Storage + actualiza JSON │
+│   • deleteBusinessPhoto() — borra de Storage + actualiza    │
+└─────────────────────────────────────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Persistencia                                                │
+│   • Supabase PostgreSQL (Prisma) — Business                 │
+│   • Supabase Storage — bucket "business-photos" (público)   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Flujo de guardado
+
+1. El usuario rellena el formulario (estado local del componente).
+2. Pulsa **Guardar** → `updateStoreInfo(businessId, { address, latitude, longitude, openingHours })`.
+3. La action valida ownership, rangos de coordenadas y horarios.
+4. Escribe en `Business` con `prisma.business.update`.
+5. Devuelve `{ success, error, datos actualizados }`.
+6. El componente muestra mensaje de éxito o error.
+
+### Flujo de geocodificación
+
+1. El usuario escribe una dirección (o pega un enlace de Maps) y pulsa **"Buscar en Google"**.
+2. `geocodeAddress()`:
+   - Si el texto contiene `@lat,lng` → `extractLatLng()` lo extrae sin llamar a la API.
+   - Si no → Geocoding API de Google con `GOOGLE_MAPS_API_KEY`.
+3. Devuelve `{ success, latitude, longitude, address }`.
+4. El componente actualiza `address`, `latitude`, `longitude` en su estado local.
+5. El usuario pulsa **Guardar** para persistir.
+
+### Flujo de fotos
+
+1. El usuario selecciona un archivo → `uploadBusinessPhoto(businessId, formData)`.
+2. La action valida tipo (PNG/JPEG/WebP) y tamaño (máx. 5 MB).
+3. Sube al bucket `business-photos` con path `<businessId>/<timestamp>.<ext>`.
+4. Añade `{ url, path }` al array `Business.photos` (máx. 8).
+5. Para borrar: `deleteBusinessPhoto(businessId, path)` quita del array y de Storage.
+
+---
+
+## 4. Archivos
+
+| Archivo | Responsabilidad |
 |---|---|
 | `src/lib/store-hours.ts` | Tipos, validación, parseo defensivo y cálculo de horarios |
 | `src/actions/store-locator.ts` | Server actions: guardar, geocodificar, subir/borrar fotos |
 | `src/components/store-locator-section.tsx` | Panel "Mi local" del dashboard |
-| `src/components/public-store-info.tsx` | Bloque público de `/{slug}` |
-| `src/lib/__tests__/store-hours.test.ts` | 32 tests de la lógica de horarios |
+| `src/components/public-store-info.tsx` | Bloque público "Dónde encontrarnos" en `/{slug}` |
+| `src/lib/__tests__/store-hours.test.ts` | Tests de la lógica de horarios |
 | `scripts/setup-storage.ts` | Crea el bucket `business-photos` |
 
-### Server actions (`src/actions/store-locator.ts`)
+### Responsabilidades de `store-hours.ts`
 
-- `updateStoreInfo` — guarda dirección, coordenadas y horarios. Valida ownership
-  con Supabase Auth + `business.userId`.
-- `geocodeAddress` — Geocoding API. Acepta texto o URL de Maps.
-- `uploadBusinessPhoto` / `deleteBusinessPhoto` — bucket `business-photos`.
+| Función | Para qué |
+|---|---|
+| `parseOpeningHours(value)` | Normaliza JSON de BD o formulario a `OpeningHours` (null si no es usable) |
+| `parseOpeningHoursOrDefault(value)` | Idem, con horario por defecto si no hay datos |
+| `validateOpeningHours(value)` | Valida el horario del formulario → array de errores |
+| `isCurrentlyOpen(hours, date?)` | ¿Está abierto ahora? (solo con `mode: "hours"`) |
+| `hasStoreInfo(data)` | ¿Tiene algo publicable? (dirección, fotos u horarios) |
+| `jsDayToWeekDay(jsDay)` | Convierte `getDay()` de JS (0=domingo) a la convención de la app (0=lunes) |
+| `formatSlot` / `formatDay` | Formateo para la página pública |
 
 ---
 
-## 4. Storage
+## 5. Seguridad
 
-Bucket de Supabase **`business-photos`** (público), creado con:
+- **Autenticación**: todas las actions exigen sesión (`createClient()` + `auth.getUser()`).
+- **Ownership**: `requireOwnedBusiness()` valida que el `businessId` pertenece al `userId` actual (`business.findFirst({ where: { id, userId } })`).
+- **Validación de coordenadas**: rangos latitud (-90..90) y longitud (-180..180). Ambas deben ir juntas.
+- **Validación de horarios**: `validateOpeningHours()` comprueba 7 días, formato `HH:MM`, máx. 2 franjas y solapamientos.
+- **Validación de fotos**: tipo MIME y tamaño en servidor (no confiar en el cliente).
+- **Borrado de fotos**: el `path` debe empezar por `<businessId>/` (evita borrar fotos de otros negocios).
+
+---
+
+## 6. Storage
+
+Bucket **`business-photos`** (público), creado con:
 
 ```bash
 npx tsx --env-file=.env.local scripts/setup-storage.ts business-photos
 ```
 
-Configurado en el script: `public: true`, límite de 5 MB, y solo `image/png`,
-`image/jpeg`, `image/webp`.
+Configuración: `public: true`, límite 5 MB, solo `image/png`, `image/jpeg`, `image-webp`.
 
 ---
 
-## 5. Despliegue
+## 7. Página pública `/{slug}`
 
-La migración **ya está aplicada** en la BD de producción: las tres variables
-`DATABASE_URL` (`.env.local`, `.env.vercel`, `.env.vercel.prod`) apuntan al mismo
-Supabase (`aws-1-eu-north-1.pooler.supabase.com`), y ahí `prisma migrate status`
-responde "Database schema is up to date" con las 16 migraciones.
+`PublicStoreInfo` muestra el bloque **"Dónde encontrarnos"** solo si `hasStoreInfo()` es true. Incluye:
 
-> **Ojo:** `vercel-build` solo ejecuta `prisma generate && next build`. **No**
-> despliega migraciones. Si algún día se crea una BD nueva, hay que correr
-> `npx prisma migrate deploy` a mano.
-
-### Previews de Vercel
-
-**Preview de esta rama:**
-`https://mi-saas-mvp-git-store-locator-nleyvagarciagmailcoms-projects.vercel.app`
-
-> El proyecto tiene **Deployment Protection** activado: al abrir la URL hay un
-> redirect a `vercel.com/sso-api`. Funciona con la sesión de Vercel del owner, pero
-> no es compartible con terceros. Para desactivarlo: Project → Settings →
-> Deployment Protection.
+- Galería de fotos (hasta 8).
+- Dirección y mapa (iframe de Google Maps, sin SDK).
+- Horarios con el día actual resaltado.
+- Badge de "Abierto ahora" / "Cerrado" (solo con `mode: "hours"`).
 
 ---
 
-## 6. Dos cosas que costaron tiempo (no repetir)
-
-### a) Los previews de Vercel fallaban todos
-
-Los dos previews que existían estaban en **Error**:
-
-```
-Collecting page data → Failed to collect page data for /api/stripe/checkout
-Error: Neither apiKey nor config.authenticator provided
-```
-
-Causa: `src/lib/stripe.ts` hacía
-
-```ts
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-```
-
-**al importar el módulo**. Stripe lanza error si la clave viene vacía, y
-"Collecting page data" importa las rutas de API durante el build → el build
-reventaba.
-
-Además, la causa de fondo era que **en Vercel las 20 variables de entorno estaban
-solo en el scope `Production`; en `Preview` no había ninguna**. Por eso ningún
-preview de ninguna rama había compilado jamás.
-
-Arreglo (commit `fd0cb6b`): cliente perezoso.
-
-```ts
-export function getStripe(): Stripe {
-  if (!stripeClient) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) throw new Error('Falta la variable de entorno STRIPE_SECRET_KEY');
-    stripeClient = new Stripe(secretKey);
-  }
-  return stripeClient;
-}
-```
-
-Actualizadas las 3 rutas que lo usan: `api/stripe/checkout`, `api/stripe/portal` y
-`api/webhooks/stripe`.
-
-**Regla general: nada que dependa de una variable de entorno debe ejecutarse al
-importar un módulo.** Que se cree en el primer uso.
-
-### b) Cómo copiar las variables de Production a Preview
-
-`vercel env pull` descarga los valores descifrados; `vercel env add` los vuelve a
-subir. Dos detalles que costaron intentos:
-
-- **Hay que pasar la rama explícitamente como cadena vacía.** Si no, `vercel env
-  add NAME preview` pregunta *"¿a qué rama Git?"* y sin TTY **aborta con exit 0 sin
-  añadir nada** (parece que funciona, pero no añade la variable).
-- **Hay que ejecutar desde la raíz del repo**, si no Vercel no encuentra el proyecto
-  enlazado (`.vercel/`) y falla con *"Your codebase isn't linked to a project"*.
-
-Script usado (`/tmp/copy-env-preview.mjs`):
-
-```js
-execFileSync("vercel",
-  ["env", "add", name, "preview", "", "--value", value, "--force", "--yes"]);
-```
-
-Se excluyen del volcado las variables que inyecta Vercel/Turbopack solas: `NX_*`,
-`TURBO_*`, `VERCEL_*`, `VERCEL_OIDC_TOKEN`.
-
----
-
-## 7. Notas de implementación
-
-- **Server actions y `"use server"`**: en estos archivos solo se pueden exportar
-  funciones async. Por eso `BUSINESS_PHOTOS_BUCKET` es una constante **local** sin
-  `export` (si se exporta, el build falla).
-- **`tsconfig.json` tiene `strict: false`**, así que las uniones discriminadas no se
-  estrechan bien y los tipos de retorno de las actions usan
-  `{ success: boolean; ...campos opcionales }` en lugar de un `throw`.
-- **Migraciones**: `npx prisma migrate dev` **no funciona** en este repo. Falla al
-  recrear la shadow DB porque la migración histórica
-  `20260616223001_drift_catchup` usa SQL inválido para PostgreSQL
-  (`ALTER TABLE ... ADD CONSTRAINT IF NOT EXISTS` → `syntax error at or near "NOT"`).
-  El rodeo que se usó fue generar el SQL con `prisma migrate diff` y aplicarlo con
-  `migrate deploy`. No hay que arreglar la migración vieja para continuar.
-- **Tests**: `npx jest`. El único fallo es
-  `src/components/__tests__/contact-form.test.tsx`, **preexistente y ajeno a este
-  feature** (verificado con `git stash`).
-
----
-
-## 8. Verificación hecha
+## 8. Tests
 
 ```bash
-npx tsc --noEmit          # limpio
-npx jest                  # 75/76 (el 1 fallo es preexistente)
-npm run build             # OK
-env -u STRIPE_SECRET_KEY -u DATABASE_URL -u NEXT_PUBLIC_SUPABASE_URL npm run build
-                          # OK — prueba de que el build ya no depende del entorno
+npx jest src/lib/__tests__/store-hours.test.ts
 ```
+
+Cubre: parseo defensivo, validación, `isCurrentlyOpen` (franjas normales y overnight), `jsDayToWeekDay` y `hasStoreInfo`.
+
+---
+
+## 9. Despliegue
+
+- La migración `20261001000000_add_store_locator` **ya está aplicada** en producción.
+- `vercel-build` solo ejecuta `prisma generate && next build`. **No** despliega migraciones.
+- Si se añaden campos nuevos en el futuro: `prisma migrate diff` + `migrate deploy` (nunca `migrate dev`, que está roto en este repo).
+
+---
+
+## 10. Decisiones de diseño
+
+| Decisión | Por qué |
+|---|---|
+| JSON en vez de tabla `BusinessHours` | Un negocio tiene un solo local; 7 filas por negocio serían ruido |
+| Coordenadas obligatoriamente juntas | El mapa necesita ambas; una sola no tiene sentido |
+| `mode` separado de `days` | Permite "siempre abierto" y "horario variable" sin calcular |
+| Fotos en JSON, no en tabla | El array es pequeño (máx. 8) y se lee/escribe de una vez |
+| Validación en servidor | El cliente puede manipular el JSON; la BD siempre recibe datos válidos |
+
+---
+
+## 11. Limitaciones conocidas y futuras mejoras
+
+**Limitaciones actuales:**
+
+- **No hay write-back a Google.** Guardar en el dashboard solo escribe en la BD local. Los cambios no se reflejan en Google Business Profile.
+- **No hay importación desde Google.** Los datos se introducen manualmente. No se pueden traer automáticamente desde el perfil de Google.
+- **El mapa es un iframe estático.** No usa el SDK de Maps (evita facturación extra), pero no es interactivo más allá del embed.
+
+**Mejoras futuras (NO implementadas):**
+
+- Botón **"Importar desde Google"**: traer dirección, coordenadas y horarios desde Places/GBP API y pre-rellenar el formulario (sin guardar automáticamente).
+- **Write-back a GBP**: `PATCH /v4/accounts/{accountId}/locations/{locationId}` con `writeMask=openingHours`. Requiere OAuth de Business Profile y ubicación verificada.
+- Sincronización bidireccional con Google.
+- Mapa interactivo con el SDK de Maps JavaScript.
+
+---
+
+## 12. Notas de implementación
+
+- **Server actions y `"use server"`**: en estos archivos solo se pueden exportar funciones async. Por eso `BUSINESS_PHOTOS_BUCKET` es una constante **local** sin `export`.
+- **`tsconfig.json` tiene `strict: false`**, así que los tipos de retorno de las actions usan `{ success: boolean; ...campos opcionales }` en lugar de un `throw`.
+- **Migraciones**: `npx prisma migrate dev` **no funciona** en este repo (la shadow DB falla con la migración histórica `20260616223001_drift_catchup`). Usar `prisma migrate diff` + `migrate deploy`.
+- **Convención de días**: `0 = lunes` en la app, `0 = domingo` en JS y en Google. Traducir siempre con `jsDayToWeekDay`.
