@@ -99,6 +99,8 @@ function nameMatches(resultName: string, queryName: string): boolean {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
+      // Los apóstrofos unen palabras ("Levi's" → "levis"), no las separan.
+      .replace(/['’]/g, '')
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
