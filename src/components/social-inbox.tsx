@@ -88,7 +88,7 @@ const SocialInbox = ({
   ];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 stagger">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider">

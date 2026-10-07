@@ -21,7 +21,7 @@ const ClientesPage = () => {
   const [showCsv, setShowCsv] = useState(false);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 stagger">
       <div>
         <h1 className="text-xl sm:text-2xl font-semibold">Clientes</h1>
         <p className="text-xs sm:text-sm text-neutral-500 mt-1">

@@ -321,7 +321,7 @@ const StoreLocatorSection = ({
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 stagger">
       {/* ── Dirección y mapa ───────────────────── */}
       <div>
         <h3 className="text-sm font-semibold mb-1">Dirección y ubicación</h3>

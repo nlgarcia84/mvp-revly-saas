@@ -365,7 +365,7 @@ const GoogleReviewsSection = ({ businessId, googleLink, features }: { businessId
       {alerts.map((r, i) => (
         <ReviewToast key={i} review={r} onClose={() => setAlerts((prev) => prev.filter((_, j) => j !== i))} />
       ))}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 stagger">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <svg viewBox="0 0 48 48" className="w-5 h-5">

@@ -219,7 +219,7 @@ const CustomersTable = ({
   const rangeEnd = Math.min(data.total, data.page * data.pageSize);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 stagger">
       {/* Toolbar: búsqueda, filtros y acciones */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <input

@@ -153,7 +153,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 stagger">
       <div>
         <BackButton label="Volver a clientes" href={`/business/${id}`} />
         <h1 className="text-xl sm:text-2xl font-semibold mb-1">
@@ -162,7 +162,7 @@ const SettingsPage = ({ params }: { params: Promise<{ id: string }> }) => {
         <p className="text-xs sm:text-sm text-neutral-500">{business?.name}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 stagger">
         <div className={`${nCard} p-6 flex flex-col gap-5`}>
           <h2 className="text-sm font-semibold">Información del negocio</h2>
 

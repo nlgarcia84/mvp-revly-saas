@@ -114,7 +114,7 @@ const SocialConnectionsSection = ({
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 stagger">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold text-blue-600 uppercase tracking-wider flex items-center gap-2">
