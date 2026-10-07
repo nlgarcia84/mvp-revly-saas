@@ -85,6 +85,7 @@ const businessPublicSelect = {
   longitude: true,
   openingHours: true,
   photos: true,
+  reservationConfig: true,
   createdAt: true,
 } as const;
 

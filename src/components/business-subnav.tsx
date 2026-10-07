@@ -17,6 +17,7 @@ export const BUSINESS_TABS = [
   { href: '', label: 'Resumen' },
   { href: '/clientes', label: 'Clientes' },
   { href: '/reputacion', label: 'Reputación' },
+  { href: '/reservas', label: 'Reservas' },
   { href: '/redes', label: 'Redes sociales' },
   { href: '/local', label: 'Mi local' },
   { href: '/settings', label: 'Ajustes' },

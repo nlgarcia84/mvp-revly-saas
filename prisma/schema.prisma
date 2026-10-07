@@ -152,7 +152,46 @@ model Business {
   photos       Json?
   // ─────────────────────────────────────────────────
 
+  // ── Reservas de mesa ───────────────────────
+  // Configuración del sistema de reservas de la página pública:
+  // {
+  //   enabled: boolean,
+  //   slotIntervalMinutes: 15 | 30 | 60,
+  //   capacityPerSlot: comensales máximos por franja,
+  //   maxPartySize: comensales máximos por reserva,
+  //   maxAdvanceDays: días máximos de antelación
+  // }
+  // null = reservas nunca configuradas (no se muestran).
+  reservationConfig Json?
+  reservations      Reservation[]
+  // ─────────────────────────────────────────────────
+
   @@unique([name, userId])
+}
+
+// ──────────────────────────────────────────────
+// Reservation: reserva de mesa creada desde la página
+// pública /{slug}. "date" (YYYY-MM-DD) y "time" (HH:MM)
+// son texto para poder comprobar la capacidad por franja
+// sin funciones de fecha de la base de datos.
+// status: "confirmed" | "completed" | "cancelled".
+// ──────────────────────────────────────────────
+model Reservation {
+  id         String   @id @default(uuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  email      String
+  phone      String?
+  partySize  Int
+  date       String   // "YYYY-MM-DD"
+  time       String   // "HH:MM"
+  status     String   @default("confirmed")
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  @@index([businessId, date])
+  @@index([businessId, status, date])
 }
 
 // ──────────────────────────────────────────────

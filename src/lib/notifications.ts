@@ -4,6 +4,7 @@
 
 import { sendEmail } from '@/lib/email';
 import { buildReviewEmail } from '@/lib/review-email';
+import { formatReservationDate } from '@/lib/reservations';
 import {
   sendWhatsAppTemplate,
   WHATSAPP_TEMPLATE_DISCOUNT,
@@ -161,4 +162,80 @@ export async function scheduleReviewRequest({
     html,
     scheduledAt: new Date(Date.now() + REVIEW_DELAY_MS).toISOString(),
   });
+}
+
+// Confirma al cliente su reserva de mesa. Lanza un error si el email no
+// pudo enviarse (el llamador decide si rompe o no el flujo).
+export async function notifyReservationConfirmed({
+  name,
+  email,
+  businessName,
+  date,
+  time,
+  partySize,
+}: {
+  name: string;
+  email: string;
+  businessName: string;
+  date: string;
+  time: string;
+  partySize: number;
+}) {
+  const sent = await sendEmail({
+    to: email,
+    subject: `Reserva confirmada en ${businessName}`,
+    html: emailLayout(
+      `¡Reserva confirmada, ${name}!`,
+      `<p>Tu mesa en <strong>${businessName}</strong> está reservada:</p>
+        <p style="font-family:monospace;font-size:15px;font-weight:bold;margin:8px 0;">
+          ${formatReservationDate(date)} · ${time}
+        </p>
+        <p>${partySize} comensal${partySize !== 1 ? 'es' : ''}</p>
+        <p>Si no puedes asistir, avísales al negocio para liberar la mesa.</p>`,
+    ),
+  });
+
+  if (!sent) {
+    throw new Error('No se pudo enviar el email de confirmación de reserva.');
+  }
+}
+
+// Avisa al negocio de que ha entrado una reserva nueva desde la web.
+export async function notifyOwnerNewReservation({
+  ownerEmail,
+  businessName,
+  customerName,
+  customerEmail,
+  customerPhone,
+  date,
+  time,
+  partySize,
+}: {
+  ownerEmail: string;
+  businessName: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  date: string;
+  time: string;
+  partySize: number;
+}) {
+  const sent = await sendEmail({
+    to: ownerEmail,
+    subject: `Nueva reserva en ${businessName}`,
+    html: emailLayout(
+      'Nueva reserva de mesa',
+      `<p><strong>${customerName}</strong> ha reservado en <strong>${businessName}</strong>:</p>
+        <p style="font-family:monospace;font-size:15px;font-weight:bold;margin:8px 0;">
+          ${formatReservationDate(date)} · ${time}
+        </p>
+        <p>${partySize} comensal${partySize !== 1 ? 'es' : ''}</p>
+        <p>Email: ${customerEmail}${customerPhone ? `<br>Teléfono: ${customerPhone}` : ''}</p>
+        <p>Gestión de reservas: pestaña Reservas en tu panel.</p>`,
+    ),
+  });
+
+  if (!sent) {
+    throw new Error('No se pudo enviar el aviso de reserva al negocio.');
+  }
 }

@@ -3,6 +3,8 @@ import { findPublicCustomerByEmail } from '@/actions/customers';
 import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
 import PublicStoreInfo from '@/components/public-store-info';
+import ReservationForm from '@/components/reservation-form';
+import { parseReservationConfig } from '@/lib/reservations';
 
 // ──────────────────────────────────────────────
 // PublicBusinessPage (Server Component)
@@ -234,6 +236,14 @@ const PublicBusinessPage = async ({
           </Button>
         </form>
       </div>
+
+      {/* ── Card: reservas ──────────────────────── */}
+      {parseReservationConfig(business.reservationConfig).enabled && (
+        <ReservationForm
+          slug={slug}
+          reservationConfig={business.reservationConfig}
+        />
+      )}
 
       {/* ── Card: información del local ─────────── */}
       <PublicStoreInfo
