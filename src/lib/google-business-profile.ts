@@ -152,7 +152,9 @@ export async function getBusinessReviews(
   let totalReviewCount = 0;
 
   do {
-    let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50&readMask=reviewer,starRating,comment,createTime,name&sortOrder=NEWEST`;
+    // orderBy es el único parámetro de orden válido (rating | rating desc |
+    // updateTime desc); "sortOrder=NEWEST" no existe y Google lo rechaza/ignora.
+    let url = `https://mybusiness.googleapis.com/v4/${locationId}/reviews?pageSize=50&readMask=reviewer,starRating,comment,createTime,name&orderBy=updateTime%20desc`;
     if (pageToken) url += `&pageToken=${pageToken}`;
 
     const response = await fetch(url, {

@@ -232,7 +232,10 @@ export async function fetchPlaceDetails(
     return null;
   }
 
-  const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&reviews_sort=most_recent&language=es&key=${apiKey}`;
+  // reviews_sort solo acepta "most_relevant" (default) o "newest".
+  // "most_recent" es inválido y Google lo ignora silenciosamente, devolviendo
+  // las reseñas por relevancia (no las últimas).
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&reviews_sort=newest&language=es&key=${apiKey}`;
 
   const response = await fetch(apiUrl);
   if (!response.ok) {
