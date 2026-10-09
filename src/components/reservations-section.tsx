@@ -265,7 +265,12 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
 
         {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
-        {filtered.length === 0 ? (
+        {loadingList ? (
+          <div className="flex flex-col gap-2 animate-pulse" aria-label="Cargando reservas">
+            <div className="h-16 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+            <div className="h-16 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800" />
+          </div>
+        ) : filtered.length === 0 ? (
           <p className="text-xs text-neutral-400">No hay reservas en ese periodo.</p>
         ) : (
           <div className="flex flex-col gap-5">

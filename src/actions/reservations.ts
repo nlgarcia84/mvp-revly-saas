@@ -289,30 +289,40 @@ export async function getReservations(
   fromDate: string,
 ): Promise<{ success: boolean; error?: string; reservations?: ReservationListItem[] }> {
   try {
-    await requireOwnedBusiness(businessId);
+    // La sesión se comprueba una vez y la consulta de reservas solo devuelve
+    // filas si el negocio pertenece a ese usuario. Así evitamos la consulta
+    // de ownership separada sin relajar la autorización.
+    const userId = await getUserId();
+    if (!userId) throw new Error('No autenticado');
     if (!isValidDate(fromDate)) {
       return { success: false, error: 'Fecha no válida' };
     }
 
-    const reservations = await prisma.reservation.findMany({
-      where: { businessId, date: { gte: fromDate } },
-      orderBy: [{ date: 'asc' }, { time: 'asc' }],
-      take: 300,
+    const business = await prisma.business.findFirst({
+      where: { id: businessId, userId },
       select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        partySize: true,
-        date: true,
-        time: true,
-        status: true,
-        notes: true,
-        createdAt: true,
+        reservations: {
+          where: { date: { gte: fromDate } },
+          orderBy: [{ date: 'asc' }, { time: 'asc' }],
+          take: 300,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            partySize: true,
+            date: true,
+            time: true,
+            status: true,
+            notes: true,
+            createdAt: true,
+          },
+        },
       },
     });
+    if (!business) throw new Error('Negocio no encontrado');
 
-    return { success: true, reservations };
+    return { success: true, reservations: business.reservations };
   } catch (error) {
     return {
       success: false,

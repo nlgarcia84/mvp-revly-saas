@@ -15,13 +15,14 @@ import {
   useMemo,
   useState,
 } from 'react';
-import {
-  getBusinessForDashboard,
-  getUserFeatures,
-} from '@/actions/business';
+import { getDashboardBusinessData } from '@/actions/business';
 
 export type DashboardBusiness = Awaited<
-  ReturnType<typeof getBusinessForDashboard>
+  ReturnType<typeof getDashboardBusinessData>
+>['business'];
+
+type DashboardData = Awaited<
+  ReturnType<typeof getDashboardBusinessData>
 >;
 
 type BusinessContextValue = {
@@ -46,13 +47,13 @@ export const BusinessProvider = ({
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
-    const [b, f] = await Promise.all([
-      getBusinessForDashboard(id),
-      getUserFeatures(),
-    ]);
-    setBusiness(b);
-    setFeatures(f);
-    setLoading(false);
+    try {
+      const data: DashboardData = await getDashboardBusinessData(id);
+      setBusiness(data.business);
+      setFeatures(data.features);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
   useEffect(() => {

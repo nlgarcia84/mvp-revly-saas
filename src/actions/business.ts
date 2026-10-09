@@ -115,6 +115,28 @@ export const getBusinessForDashboard = async (id: string) => {
   });
 };
 
+// Carga el estado compartido del dashboard con una sola comprobación de
+// sesión. Las features siguen calculándose en servidor y el negocio mantiene
+// el filtro por userId, por lo que el cliente no puede elegir otro negocio ni
+// otro plan.
+export const getDashboardBusinessData = async (id: string) => {
+  const userId = await getUserId();
+  if (!userId) return { business: null, features: [] as string[] };
+
+  const [business, plan] = await Promise.all([
+    prisma.business.findFirst({
+      where: { id, userId },
+      select: {
+        ...businessPublicSelect,
+        _count: { select: { customers: true } },
+      },
+    }),
+    getPlan(userId),
+  ]);
+
+  return { business, features: [...plan.features] };
+};
+
 // Busca un negocio por su slug (página pública, sin autenticación).
 export const getBusinessBySlug = async (slug: string) => {
   return prisma.business.findUnique({ where: { slug } });
