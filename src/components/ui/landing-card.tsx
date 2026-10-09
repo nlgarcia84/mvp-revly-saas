@@ -5,7 +5,7 @@ type LandingCardProps = {
 
 export const LandingCard = ({ children, className = "" }: LandingCardProps) => (
   <div
-    className={`rounded-2xl border border-neutral-200 bg-white p-6 shadow-[0_12px_40px_rgba(0,0,0,0.08)] transition-colors duration-200 hover:border-sky-400/50 dark:border-white/[0.08] dark:bg-[#151922] dark:shadow-[0_12px_40px_rgba(0,0,0,0.16)] dark:hover:border-sky-400/25 ${className}`}
+    className={`rounded-3xl border border-stone-200/70 bg-stone-50/80 p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_40px_rgba(0,0,0,0.08)] transition-all duration-200 hover:-translate-y-0.5 hover:border-stone-300/80 hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_18px_50px_rgba(0,0,0,0.10)] dark:border-neutral-800/80 dark:bg-neutral-950/70 dark:shadow-[0_1px_2px_rgba(255,255,255,0.02),0_12px_40px_rgba(0,0,0,0.35)] dark:hover:border-neutral-700/80 ${className}`}
   >
     {children}
   </div>
@@ -14,14 +14,14 @@ export const LandingCard = ({ children, className = "" }: LandingCardProps) => (
 export const LandingCardHeader = ({
   children,
   className = "",
-}: LandingCardProps) => <div className={`mb-6 ${className}`}>{children}</div>;
+}: LandingCardProps) => <div className={`mb-5 ${className}`}>{children}</div>;
 
 export const LandingCardTitle = ({
   children,
   className = "",
 }: LandingCardProps) => (
   <h3
-    className={`text-lg font-semibold tracking-tight text-neutral-950 dark:text-white ${className}`}
+    className={`text-lg font-semibold tracking-tight text-stone-900 dark:text-neutral-100 ${className}`}
   >
     {children}
   </h3>
@@ -32,7 +32,7 @@ export const LandingCardDescription = ({
   className = "",
 }: LandingCardProps) => (
   <p
-    className={`mt-1.5 text-sm leading-6 text-neutral-600 dark:text-slate-400 ${className}`}
+    className={`mt-1.5 text-sm leading-6 text-stone-500 dark:text-neutral-400 ${className}`}
   >
     {children}
   </p>

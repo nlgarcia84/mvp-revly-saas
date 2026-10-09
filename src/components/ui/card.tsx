@@ -1,5 +1,5 @@
 export const nCard =
-  'bg-white dark:bg-[#151922] rounded-xl border border-neutral-200 dark:border-[#1B202B] shadow-sm dark:shadow-none';
+  'rounded-2xl border border-white/60 bg-neutral-100 shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#d4d4d4] dark:border-[#252B38] dark:bg-[#151922] dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)]';
 
 type CardProps = {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ export const Card = ({ children, className = '', neumorphic }: CardProps) => (
     className={`${
       neumorphic
         ? nCard
-        : 'bg-white dark:bg-[#151922] border border-neutral-200 dark:border-[#1B202B] rounded-xl shadow-sm dark:shadow-none'
+        : 'rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-[#252B38] dark:bg-[#151922]'
     } ${className}`}
   >
     {children}

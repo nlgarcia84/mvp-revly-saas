@@ -19,7 +19,7 @@ html {
 
 html.dark {
   color-scheme: dark;
-  background: #09090b;
+  background: #0b0d12;
 }
 
 body {
@@ -43,12 +43,8 @@ body {
     );
 }
 
-body {
-  letter-spacing: -0.01em;
-}
-
 html.dark body {
-  background-color: #09090b;
+  background-color: #0b0d12;
   background-image: none;
 }
 
