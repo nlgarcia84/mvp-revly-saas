@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import prisma from '@/lib/db';
 import { ChartLine } from '@/components/ui/chart';
@@ -19,7 +20,12 @@ const iconColor: Record<string, string> = {
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user: authUser } } = await supabase.auth.getUser();
-  const userId = authUser?.id ?? '';
+  // El proxy protege esta ruta, pero el guard también debe existir aquí:
+  // los Server Components pueden invocarse sin pasar por el proxy durante
+  // una navegación/renderizado. Evita consultar Prisma con un id vacío.
+  if (!authUser) redirect('/sign-in');
+
+  const userId = authUser.id;
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { subscription: true },
@@ -57,14 +63,16 @@ export default async function DashboardPage() {
   let googleData: Awaited<ReturnType<typeof getAllGoogleReviews>> = [];
   try {
     googleData = await getAllGoogleReviews();
-    if (googleData && googleData.length > 0) {
+    if (googleData.length > 0) {
       const ratings = googleData.map((g) => g.rating).filter((r) => r > 0);
       if (ratings.length > 0) {
         googleAvg = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
         googleTotal = googleData.reduce((s, g) => s + g.userRatingsTotal, 0);
       }
     }
-  } catch {}
+  } catch (error) {
+    console.error('No se pudieron cargar las reseñas de Google para el dashboard:', error);
+  }
   const avgRating = googleAvg ?? '—';
 
   const ratingDist = googleAvg
