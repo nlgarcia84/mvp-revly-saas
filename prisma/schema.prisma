@@ -157,10 +157,10 @@ model Business {
   // {
   //   enabled: boolean,
   //   slotIntervalMinutes: 15 | 30 | 60,
-  //   capacityPerSlot: comensales máximos por franja,
   //   maxPartySize: comensales máximos por reserva,
   //   maxAdvanceDays: días máximos de antelación
   // }
+  // Cada franja admite una sola reserva activa (no se solapan por horario).
   // null = reservas nunca configuradas (no se muestran).
   reservationConfig Json?
   reservations      Reservation[]

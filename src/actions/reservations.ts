@@ -98,7 +98,7 @@ export async function getPublicAvailability(
 
     const reservations = await prisma.reservation.findMany({
       where: { businessId: business.id, date },
-      select: { time: true, partySize: true, status: true },
+      select: { time: true, status: true },
     });
 
     const { slots, reason } = computeAvailableSlots({
@@ -106,7 +106,6 @@ export async function getPublicAvailability(
       config,
       date,
       reservations,
-      partySize,
       tzOffsetMinutes,
     });
 
@@ -188,7 +187,7 @@ export async function createPublicReservation(
     const attempt = async (tx: Prisma.TransactionClient) => {
       const reservations = await tx.reservation.findMany({
         where: { businessId: business.id, date: input.date },
-        select: { time: true, partySize: true, status: true },
+        select: { time: true, status: true },
       });
 
       const { slots, reason } = computeAvailableSlots({
@@ -196,7 +195,6 @@ export async function createPublicReservation(
         config,
         date: input.date,
         reservations,
-        partySize: input.partySize,
         tzOffsetMinutes,
       });
 

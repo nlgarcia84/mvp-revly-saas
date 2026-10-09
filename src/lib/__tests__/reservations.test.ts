@@ -30,14 +30,12 @@ describe('parseReservationConfig', () => {
     const parsed = parseReservationConfig({
       enabled: true,
       slotIntervalMinutes: 17,
-      capacityPerSlot: 0,
       maxPartySize: 999,
       maxAdvanceDays: -5,
     });
 
     expect(parsed.enabled).toBe(true);
     expect(parsed.slotIntervalMinutes).toBe(DEFAULT_RESERVATION_CONFIG.slotIntervalMinutes);
-    expect(parsed.capacityPerSlot).toBe(1);
     expect(parsed.maxPartySize).toBe(100);
     expect(parsed.maxAdvanceDays).toBe(1);
   });
@@ -56,11 +54,10 @@ describe('validateReservationConfig', () => {
     expect(validateReservationConfig({ ...DEFAULT_RESERVATION_CONFIG, enabled: true })).toEqual([]);
   });
 
-  it('rechaza un máximo por reserva mayor que la capacidad', () => {
-    const errors = validateReservationConfig(
-      config({ capacityPerSlot: 4, maxPartySize: 10 }),
-    );
-    expect(errors.length).toBeGreaterThan(0);
+  it('rechaza un máximo por reserva fuera de rango', () => {
+    expect(validateReservationConfig(config({ maxPartySize: 0 })).length).toBeGreaterThan(0);
+    expect(validateReservationConfig(config({ maxPartySize: 101 })).length).toBeGreaterThan(0);
+    expect(validateReservationConfig(config({ maxPartySize: 10 }))).toEqual([]);
   });
 });
 
@@ -183,44 +180,42 @@ describe('computeAvailableSlots', () => {
     expect(result.slots).toContain('17:00');
   });
 
-  it('descuenta la ocupación de las franjas', () => {
+  it('bloquea las franjas que ya tienen una reserva activa', () => {
     const result = computeAvailableSlots({
       hours,
-      config: config({ slotIntervalMinutes: 60, capacityPerSlot: 4 }),
+      config: config({ slotIntervalMinutes: 60 }),
       date: '2026-10-07',
       reservations: [
-        { time: '13:00', partySize: 2, status: 'confirmed' },
-        { time: '13:00', partySize: 2, status: 'completed' },
+        { time: '12:00', status: 'confirmed' },
+        { time: '13:00', status: 'completed' },
       ],
       now,
-      partySize: 1,
     });
 
+    expect(result.slots).not.toContain('12:00');
     expect(result.slots).not.toContain('13:00');
-    expect(result.slots).toContain('12:00');
+    expect(result.slots).toContain('17:00');
   });
 
-  it('una reserva cancelada no ocupa capacidad', () => {
+  it('una reserva cancelada libera la franja', () => {
     const result = computeAvailableSlots({
       hours,
-      config: config({ slotIntervalMinutes: 60, capacityPerSlot: 4 }),
+      config: config({ slotIntervalMinutes: 60 }),
       date: '2026-10-07',
-      reservations: [{ time: '13:00', partySize: 4, status: 'cancelled' }],
+      reservations: [{ time: '13:00', status: 'cancelled' }],
       now,
-      partySize: 4,
     });
 
     expect(result.slots).toContain('13:00');
   });
 
-  it('filtra franjas donde no cabe el grupo completo', () => {
+  it('no permite dos reservas en la misma franja', () => {
     const result = computeAvailableSlots({
       hours,
-      config: config({ slotIntervalMinutes: 60, capacityPerSlot: 4 }),
+      config: config({ slotIntervalMinutes: 60 }),
       date: '2026-10-07',
-      reservations: [{ time: '13:00', partySize: 3, status: 'confirmed' }],
+      reservations: [{ time: '13:00', status: 'confirmed' }],
       now,
-      partySize: 2,
     });
 
     expect(result.slots).not.toContain('13:00');

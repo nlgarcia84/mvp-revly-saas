@@ -7,7 +7,6 @@ import {
 export type ReservationConfig = {
   enabled: boolean;
   slotIntervalMinutes: number;
-  capacityPerSlot: number;
   maxPartySize: number;
   maxAdvanceDays: number;
 };
@@ -15,7 +14,6 @@ export type ReservationConfig = {
 export const DEFAULT_RESERVATION_CONFIG: ReservationConfig = {
   enabled: false,
   slotIntervalMinutes: 30,
-  capacityPerSlot: 20,
   maxPartySize: 8,
   maxAdvanceDays: 30,
 };
@@ -86,12 +84,6 @@ export function parseReservationConfig(value: unknown): ReservationConfig {
     slotIntervalMinutes: SLOT_INTERVAL_OPTIONS.includes(interval)
       ? interval
       : DEFAULT_RESERVATION_CONFIG.slotIntervalMinutes,
-    capacityPerSlot: toBoundedInt(
-      raw.capacityPerSlot,
-      1,
-      500,
-      DEFAULT_RESERVATION_CONFIG.capacityPerSlot,
-    ),
     maxPartySize: toBoundedInt(
       raw.maxPartySize,
       1,
@@ -113,14 +105,8 @@ export function validateReservationConfig(value: ReservationConfig): string[] {
   if (!SLOT_INTERVAL_OPTIONS.includes(value.slotIntervalMinutes)) {
     errors.push('El intervalo entre franjas no es válido');
   }
-  if (value.capacityPerSlot < 1 || value.capacityPerSlot > 500) {
-    errors.push('La capacidad por franja debe estar entre 1 y 500');
-  }
   if (value.maxPartySize < 1 || value.maxPartySize > 100) {
     errors.push('El máximo de comensales por reserva debe estar entre 1 y 100');
-  }
-  if (value.maxPartySize > value.capacityPerSlot) {
-    errors.push('El máximo por reserva no puede superar la capacidad por franja');
   }
   if (value.maxAdvanceDays < 1 || value.maxAdvanceDays > 365) {
     errors.push('Los días de antelación deben estar entre 1 y 365');
@@ -197,7 +183,6 @@ function daysBetween(from: string, to: string): number {
 
 export type ReservationSlotRecord = {
   time: string;
-  partySize: number;
   status: string;
 };
 
@@ -210,7 +195,6 @@ export function computeAvailableSlots({
   reservations,
   now,
   tzOffsetMinutes = 0,
-  partySize = 1,
 }: {
   hours: OpeningHours | null;
   config: ReservationConfig;
@@ -218,7 +202,6 @@ export function computeAvailableSlots({
   reservations: ReservationSlotRecord[];
   now?: Date;
   tzOffsetMinutes?: number;
-  partySize?: number;
 }): { slots: string[]; reason?: AvailabilityReason } {
   if (!config.enabled) return { slots: [], reason: 'disabled' };
   if (!isValidDate(date)) return { slots: [], reason: 'invalid-date' };
@@ -231,21 +214,17 @@ export function computeAvailableSlots({
     return { slots: [], reason: 'too-far' };
   }
 
-  const takenByTime = new Map<string, number>();
+  const takenTimes = new Set<string>();
   for (const reservation of reservations) {
     if (reservation.status === 'cancelled') continue;
-    takenByTime.set(
-      reservation.time,
-      (takenByTime.get(reservation.time) ?? 0) + reservation.partySize,
-    );
+    takenTimes.add(reservation.time);
   }
 
   const earliest = ref.getTime() + MIN_NOTICE_MINUTES * 60 * 1000;
   const candidates = getSlotTimes(hours, date, config.slotIntervalMinutes);
 
   const slots = candidates.filter((time) => {
-    const taken = takenByTime.get(time) ?? 0;
-    if (taken + partySize > config.capacityPerSlot) return false;
+    if (takenTimes.has(time)) return false;
     const start = Date.parse(`${date}T${time}:00Z`);
     return start >= earliest;
   });

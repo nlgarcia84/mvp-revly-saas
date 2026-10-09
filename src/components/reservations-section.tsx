@@ -127,8 +127,8 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
       <div>
         <h3 className="text-sm font-semibold mb-1">Configuración de reservas</h3>
         <p className="text-xs text-neutral-400 mb-3">
-          Los clientes reservan desde tu página pública. La capacidad se calcula
-          por franja según tus horarios de apertura.
+          Los clientes reservan desde tu página pública. Cada franja admite una
+          sola reserva, según tus horarios de apertura.
         </p>
 
         <div className="flex flex-col gap-3">
@@ -144,7 +144,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
             </span>
           </label>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             <div>
               <label className={labelClass} htmlFor="res-interval">
                 Intervalo entre franjas
@@ -163,23 +163,6 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className={labelClass} htmlFor="res-capacity">
-                Comensales por franja
-              </label>
-              <input
-                id="res-capacity"
-                type="number"
-                min={1}
-                max={500}
-                value={config.capacityPerSlot}
-                onChange={(event) =>
-                  patchConfig({ capacityPerSlot: Number(event.target.value) })
-                }
-                className={inputClass}
-              />
             </div>
 
             <div>
