@@ -8,7 +8,11 @@ import prisma from '@/lib/db';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const nextPath = searchParams.get('next') ?? '/dashboard';
+  const requestedNextPath = searchParams.get('next');
+  const nextPath =
+    requestedNextPath?.startsWith('/') && !requestedNextPath.startsWith('//')
+      ? requestedNextPath
+      : '/dashboard';
 
   // Redirigimos al mismo host de la petición (www vs sin www) para que las
   // cookies de sesión viajen y el proxy no pierda la sesión.

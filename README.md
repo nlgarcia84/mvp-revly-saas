@@ -223,6 +223,19 @@ WHATSAPP_ACCESS_TOKEN=        # Token de acceso de la app de Meta con WhatsApp
 WHATSAPP_TEMPLATE_DISCOUNT=   # (opcional) nombre de la plantilla de descuento
 ```
 
+### Google OAuth con Supabase
+
+En Supabase, en **Authentication → URL Configuration**, registra como
+`Redirect URL` las URLs exactas de cada entorno:
+
+- `http://localhost:3000/api/auth/callback`
+- `https://www.revly.es/api/auth/callback`
+
+Configura también `Site URL` con `https://www.revly.es` en producción y define
+`NEXT_PUBLIC_APP_URL=https://www.revly.es`. Para desarrollo usa
+`NEXT_PUBLIC_APP_URL=http://localhost:3000`. Si el dominio de producción cambia,
+actualiza tanto esta variable como la `Redirect URL` permitida en Supabase.
+
 ## Meta (Facebook + Instagram)
 
 La integración permite leer publicaciones y comentarios, responderlos con IA y publicar en la Página.

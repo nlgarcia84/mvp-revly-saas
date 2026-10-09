@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, type ActionResult } from "@/actions/auth";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/client";
 import Link from "next/link";
 import Button from "@/components/ui/button";
@@ -32,12 +32,21 @@ const GoogleIcon = () => (
 const SignInPage = () => {
   const [state, action, pending] = useActionState(signIn, null as ActionResult);
   const [googlePending, setGooglePending] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
+    if (error) setOauthError(error);
+  }, []);
 
   const handleGoogle = async () => {
     setGooglePending(true);
     try {
       const supabase = createBrowserSupabase();
-      const redirectTo = `${window.location.origin}/api/auth/callback`;
+      const appUrl =
+        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+        window.location.origin;
+      const redirectTo = `${appUrl}/api/auth/callback`;
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
@@ -98,6 +107,9 @@ const SignInPage = () => {
 
               {state && "error" in state && state.error && (
                 <p className="text-sm text-red-400">{state.error}</p>
+              )}
+              {oauthError && (
+                <p className="text-sm text-red-400">{oauthError}</p>
               )}
 
               <Button type="submit" variant="secondary" disabled={pending}>
