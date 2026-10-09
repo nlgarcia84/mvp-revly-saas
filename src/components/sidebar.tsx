@@ -63,8 +63,8 @@ const Sidebar = ({
   const linkClass = (active: boolean) =>
     `flex items-center rounded-md border px-3 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 ${
       active
-        ? 'border-neutral-200 bg-white font-medium text-neutral-950 hover:bg-neutral-50 dark:border-[#303847] dark:bg-[#151922] dark:text-neutral-100 dark:hover:bg-[#1B202B]'
-        : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200/50 hover:bg-white/60 hover:text-neutral-950 dark:text-neutral-400 dark:hover:border-[#252B38] dark:hover:bg-[#151922]/70 dark:hover:text-neutral-100'
+      ? 'border-neutral-200 bg-white font-medium text-neutral-950 hover:bg-neutral-50 dark:border-white/10 dark:bg-white/[0.08] dark:text-neutral-100 dark:hover:bg-white/[0.12]'
+      : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200/50 hover:bg-white/60 hover:text-neutral-950 dark:text-neutral-400 dark:hover:border-white/10 dark:hover:bg-white/[0.04] dark:hover:text-neutral-100'
     }`;
 
   return (
@@ -90,7 +90,7 @@ const Sidebar = ({
         aria-label="Navegación principal"
         aria-modal={mobileOpen || undefined}
         role={mobileOpen ? 'dialog' : undefined}
-        className={`fixed bottom-0 left-0 top-16 z-50 flex h-[calc(100dvh-4rem)] w-[min(85vw,280px)] flex-col overflow-hidden border-r border-neutral-200 bg-neutral-100 pb-[env(safe-area-inset-bottom)] pl-3 pr-4 pt-4 shadow-[8px_0_18px_rgba(0,0,0,0.08)] transition-transform duration-200 motion-reduce:transition-none dark:border-[#252B38] dark:bg-[#10131A] dark:shadow-[8px_0_18px_rgba(0,0,0,0.3)] lg:hidden ${
+        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100dvh-3.5rem)] w-[min(85vw,280px)] flex-col overflow-hidden border-r border-neutral-200 bg-neutral-50 pb-[env(safe-area-inset-bottom)] pl-3 pr-4 pt-4 shadow-lg transition-transform duration-200 motion-reduce:transition-none dark:border-white/10 dark:bg-[#080808] dark:shadow-2xl lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -111,7 +111,7 @@ const Sidebar = ({
       {/* Sidebar desktop: fijo a la izquierda, siempre visible.
           hidden lg:block → oculto en mobile, visible en desktop.
           No tiene overlay ni animación. */}
-      <aside className="hidden h-full w-[220px] shrink-0 border-r border-neutral-200 bg-neutral-100 p-4 pl-3 shadow-[4px_0_12px_rgba(0,0,0,0.025)] transition-colors dark:border-[#252B38] dark:bg-[#10131A] dark:shadow-[4px_0_14px_rgba(0,0,0,0.16)] lg:block">
+      <aside className="hidden h-full w-52 shrink-0 border-r border-neutral-200 bg-neutral-50 p-3 pl-3 transition-colors dark:border-white/10 dark:bg-[#080808] lg:block">
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);

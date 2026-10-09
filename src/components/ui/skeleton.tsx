@@ -1,9 +1,9 @@
 const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-neutral-200/80 shadow-[inset_1px_1px_3px_rgba(163,163,163,0.18)] dark:bg-[#202632] dark:shadow-none ${className}`} />
+  <div className={`skeleton-shimmer rounded-md bg-neutral-200/80 dark:bg-white/[0.08] ${className}`} />
 );
 
 export const SkeletonCard = () => (
-  <div className="rounded-2xl bg-neutral-100 p-5 shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#d4d4d4] dark:border dark:border-[#252B38] dark:bg-[#151922] dark:shadow-[0_8px_24px_rgba(0,0,0,0.18)] sm:p-6">
+  <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0b0b0c] dark:shadow-none sm:p-6">
     <div className="flex flex-col gap-4">
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-8 w-16" />

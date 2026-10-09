@@ -136,8 +136,8 @@ export default async function DashboardPage() {
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 sm:gap-6">
-      <div className={`${nCard} p-4 sm:p-6 lg:p-7`}>
+    <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-5 sm:gap-6">
+      <div className={`${nCard} p-5 sm:p-6 lg:p-7`}>
         <h1 className="mb-2 flex flex-wrap items-center gap-2.5 text-2xl font-semibold tracking-tight sm:text-3xl">
           {name ? `Hola, ${name}` : 'Hola'}
           {trialDaysLeft > 0 ? (
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
           { label: 'Invitados', value: invited, color: 'amber', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
           { label: 'Completados', value: completed, color: 'emerald', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
         ].map((s) => (
-          <div key={s.label} className={`${nCard} flex min-h-[104px] flex-col justify-between gap-3 p-4 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:border-[#3B4658] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.28)] sm:p-5`}>
+          <div key={s.label} className={`${nCard} flex min-h-[104px] flex-col justify-between gap-3 p-4 hover:-translate-y-0.5 dark:hover:border-white/20 sm:p-5`}>
             <div className="flex items-center gap-2">
               <svg className={`w-4 h-4 ${iconColor[s.color]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d={s.icon} />

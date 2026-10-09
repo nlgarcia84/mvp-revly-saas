@@ -8,9 +8,9 @@ type Variant = 'primary' | 'secondary';
 
 const variantClass: Record<Variant, string> = {
   primary:
-    'border-neutral-950 bg-neutral-950 text-white shadow-[3px_3px_7px_rgba(0,0,0,0.22),-2px_-2px_5px_rgba(255,255,255,0.08)] hover:border-neutral-800 hover:bg-neutral-800 hover:shadow-[4px_4px_10px_rgba(0,0,0,0.26),-2px_-2px_5px_rgba(255,255,255,0.1)] active:translate-y-px active:shadow-[inset_2px_2px_5px_rgba(0,0,0,0.28)] dark:border-[#303847] dark:bg-[#151922] dark:text-neutral-100 dark:shadow-[3px_3px_8px_rgba(0,0,0,0.32)] dark:hover:border-[#3B4658] dark:hover:bg-[#1B202B]',
+    'border-neutral-950 bg-neutral-950 text-white hover:border-neutral-700 hover:bg-neutral-800 active:translate-y-px dark:border-white dark:bg-white dark:text-black dark:hover:border-neutral-200 dark:hover:bg-neutral-200',
   secondary:
-    'border-neutral-200 bg-white text-neutral-950 shadow-[3px_3px_7px_rgba(163,163,163,0.3),-2px_-2px_5px_rgba(255,255,255,0.9)] hover:bg-neutral-50 hover:border-neutral-300 active:translate-y-px active:shadow-[inset_2px_2px_4px_rgba(163,163,163,0.22)] dark:border-[#303847] dark:bg-[#151922] dark:text-neutral-100 dark:shadow-[3px_3px_8px_rgba(0,0,0,0.28)] dark:hover:bg-[#1B202B]',
+    'border-neutral-200 bg-white text-neutral-950 hover:bg-neutral-50 hover:border-neutral-300 active:translate-y-px dark:border-white/15 dark:bg-white/[0.05] dark:text-neutral-100 dark:hover:bg-white/[0.1]',
 };
 
 // ─── Clases base comunes a todas las variantes ───
