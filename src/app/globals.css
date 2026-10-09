@@ -43,6 +43,10 @@ body {
     );
 }
 
+body {
+  letter-spacing: -0.01em;
+}
+
 html.dark body {
   background-color: #09090b;
   background-image: none;

@@ -37,7 +37,7 @@ const DarkToggle = () => {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-md text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:text-neutral-400 dark:hover:bg-[#1B202B] dark:hover:text-neutral-100"
       aria-label="Cambiar modo"
     >
       {dark ? (

@@ -8,15 +8,15 @@
 // ──────────────────────────────────────────────
 const DashboardLoading = () => {
   return (
-    <div className="flex flex-col gap-6 animate-pulse">
-      <div className="h-6 w-28 bg-neutral-200 rounded" />
-      <div className="h-4 w-52 bg-neutral-200 rounded" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="h-28 bg-neutral-200 rounded-xl" />
-        <div className="h-28 bg-neutral-200 rounded-xl" />
-        <div className="h-28 bg-neutral-200 rounded-xl" />
+    <div className="flex flex-col gap-6" aria-label="Cargando dashboard" role="status">
+      <div className="h-28 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        <div className="h-28 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
+        <div className="h-28 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
+        <div className="h-28 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
+        <div className="h-28 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
       </div>
-      <div className="h-48 bg-neutral-200 rounded-xl" />
+      <div className="h-64 rounded-xl border border-neutral-200 bg-white dark:border-[#1B202B] dark:bg-[#151922]" />
     </div>
   );
 };

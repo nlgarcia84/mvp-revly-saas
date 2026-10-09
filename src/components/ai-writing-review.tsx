@@ -206,8 +206,8 @@ const AiWritingReview = () => {
           transform: showCard ? "scale(1)" : "scale(0.96)",
         }}
       >
-        <div className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-5">
-            <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40 p-4 mb-4">
+        <div className="w-full rounded-2xl border border-white/[0.1] bg-[#151922] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+            <div className="mb-4 rounded-xl border border-red-400/15 bg-red-400/[0.08] p-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center text-xs shrink-0">
                   ☹️
@@ -258,7 +258,7 @@ const AiWritingReview = () => {
 
             {/* Reply box: siempre presente con altura fija para que la card no cambie de alto */}
             <div
-              className={`rounded-xl bg-neutral-50 dark:bg-neutral-800/50 p-4 min-h-[172px] max-h-[172px] overflow-hidden transition-opacity duration-300 ${
+              className={`min-h-[172px] max-h-[172px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#1B202B] p-4 transition-opacity duration-300 ${
                 typingPhase !== "typing-review" && phase === "animating"
                   ? "opacity-100"
                   : "opacity-0"

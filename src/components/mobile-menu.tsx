@@ -23,7 +23,9 @@ const MobileMenu = () => {
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="sm:hidden p-1.5 rounded-md text-white hover:bg-white/10 transition-colors"
+        aria-expanded={open}
+        aria-controls="mobile-navigation"
+        className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:hidden"
         aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
       >
         <div className="relative w-5 h-4">
@@ -41,10 +43,11 @@ const MobileMenu = () => {
       </button>
 
       <div
-        className={`fixed left-0 right-0 z-50 flex flex-col bg-white dark:bg-neutral-950 transition-all duration-300 ease-out ${
+        id="mobile-navigation"
+        className={`fixed left-0 right-0 z-50 flex flex-col border-b border-white/[0.08] bg-[#0B0D12] transition-all duration-300 ease-out ${
           open
-            ? 'visible opacity-100 bottom-0 top-[72px]'
-            : 'invisible opacity-0 bottom-0 top-[72px]'
+            ? 'visible opacity-100 bottom-0 top-[61px]'
+            : 'invisible opacity-0 bottom-0 top-[61px]'
         }`}
       >
         <nav className="flex-1 overflow-y-auto px-6 pt-8">
@@ -62,7 +65,7 @@ const MobileMenu = () => {
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block py-3 text-xl font-medium text-neutral-900 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors"
+                  className="block py-3 text-xl font-medium text-white transition-colors hover:text-sky-300"
                 >
                   {link.label}
                 </Link>
@@ -71,7 +74,7 @@ const MobileMenu = () => {
           </ul>
 
           <hr
-            className={`my-6 border-neutral-100 dark:border-neutral-800 transition-all duration-300 ${
+            className={`my-6 border-white/[0.08] transition-all duration-300 ${
               open ? 'opacity-100' : 'opacity-0'
             }`}
             style={{ transitionDelay: open ? `${links.length * 70}ms` : '0ms' }}
@@ -88,14 +91,14 @@ const MobileMenu = () => {
             <Link
               href="/sign-in"
               onClick={() => setOpen(false)}
-              className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 transition-colors"
+              className="text-sm text-slate-400 transition-colors hover:text-white"
             >
               Iniciar sesión
             </Link>
             <Link
               href="/sign-up"
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-neutral-950 dark:text-neutral-100 hover:text-neutral-400 dark:hover:text-neutral-500 transition-colors"
+              className="text-sm font-medium text-sky-300 transition-colors hover:text-sky-200"
             >
               Empieza prueba gratuita
             </Link>
@@ -103,7 +106,7 @@ const MobileMenu = () => {
         </nav>
 
         <div
-          className={`border-t border-neutral-100 dark:border-neutral-800 px-6 py-5 transition-all duration-300 ease-out ${
+          className={`border-t border-white/[0.08] px-6 py-5 transition-all duration-300 ease-out ${
             open
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-3'
@@ -120,11 +123,11 @@ const MobileMenu = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               required
-              className="flex-1 min-w-0 px-3.5 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-transparent text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 placeholder:text-neutral-400"
+              className="min-w-0 flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-slate-500 focus:border-sky-400"
             />
             <button
               type="submit"
-              className="shrink-0 px-4 py-2.5 rounded-md text-sm font-medium bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors"
+              className="shrink-0 rounded-lg bg-sky-400 px-4 py-2.5 text-sm font-medium text-slate-950 transition-colors hover:bg-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
             >
               Empieza prueba gratuita
             </button>

@@ -61,10 +61,10 @@ const Sidebar = ({
   // active = true → estilo "seleccionado" (fondo blanco, borde, texto oscuro)
   // active = false → estilo "inactivo" (transparente, texto gris)
   const linkClass = (active: boolean) =>
-    `px-3 py-2 rounded-md text-sm transition-all duration-150 ${
+    `flex min-h-11 items-center rounded-lg border px-3 text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
       active
-        ? 'font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-800'
-        : 'bg-transparent border border-transparent text-neutral-500 dark:text-neutral-400 hover:bg-white/60 dark:hover:bg-neutral-800/60 hover:border-neutral-200/50 dark:hover:border-neutral-700/50 hover:text-neutral-950 dark:hover:text-neutral-100'
+        ? 'border-neutral-200 bg-white font-medium text-neutral-950 dark:border-[#2A3240] dark:bg-[#1B202B] dark:text-neutral-100'
+        : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200/70 hover:bg-white/70 hover:text-neutral-950 dark:text-neutral-400 dark:hover:border-[#2A3240] dark:hover:bg-[#151922] dark:hover:text-neutral-100'
     }`;
 
   return (
@@ -90,7 +90,7 @@ const Sidebar = ({
         aria-label="Navegación principal"
         aria-modal={mobileOpen || undefined}
         role={mobileOpen ? 'dialog' : undefined}
-        className={`fixed top-20 lg:top-[72px] left-0 bottom-0 w-[250px] z-50 bg-neutral-100 dark:bg-neutral-950 p-4 pl-3 border-r border-neutral-200 dark:border-neutral-800 transition-transform duration-200 lg:hidden ${
+        className={`fixed bottom-0 left-0 top-16 z-50 w-[min(85vw,280px)] border-r border-neutral-200 bg-[#F5F7FA] p-4 pl-3 transition-transform duration-200 dark:border-[#1B202B] dark:bg-[#10131A] lg:top-[72px] lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -109,7 +109,7 @@ const Sidebar = ({
       {/* Sidebar desktop: fijo a la izquierda, siempre visible.
           hidden lg:block → oculto en mobile, visible en desktop.
           No tiene overlay ni animación. */}
-      <aside className="hidden lg:block w-[220px] border-r border-neutral-200 dark:border-neutral-800 h-full p-4 pl-3 bg-neutral-100 dark:bg-neutral-950 shrink-0 transition-colors">
+      <aside className="hidden h-full w-[232px] shrink-0 border-r border-neutral-200 bg-[#F5F7FA] p-4 pl-3 transition-colors dark:border-[#1B202B] dark:bg-[#10131A] lg:block">
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);

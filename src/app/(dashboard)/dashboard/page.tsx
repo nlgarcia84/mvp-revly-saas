@@ -136,8 +136,9 @@ export default async function DashboardPage() {
   const ratingColors = ['#10b981', '#22c55e', '#eab308', '#f97316', '#ef4444'];
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <div className={`${nCard} bg-gradient-to-br from-white to-neutral-50 p-5 dark:from-neutral-900 dark:to-neutral-950 sm:p-7`}>
+    <div className="flex min-w-0 flex-col gap-6 sm:gap-8">
+      <div className={`${nCard} p-5 sm:p-7`}>
+        <p className="mb-2 text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">Resumen general</p>
         <h1 className="mb-2 flex flex-wrap items-center gap-2.5 text-2xl font-semibold tracking-tight sm:text-3xl">
           {name ? `Hola, ${name}` : 'Hola'}
           {trialDaysLeft > 0 ? (
@@ -154,7 +155,9 @@ export default async function DashboardPage() {
             </span>
           )}
         </h1>
-        <p className="text-sm text-neutral-500">Aquí tienes el resumen de tu actividad</p>
+        <p className="text-sm leading-6 text-neutral-500 dark:text-neutral-400">
+          Aquí tienes el resumen de la actividad de tus negocios.
+        </p>
       </div>
 
       <Suspense fallback={null}>
@@ -164,19 +167,20 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
         {[
-          { label: 'Negocios', value: totalBusinesses, color: 'blue', icon: 'M3 21h18M3 7v14h18V7M3 7l9-5 9 5' },
-          { label: 'Clientes', value: totalCustomers, color: 'violet', icon: 'M12 4a4 4 0 100 8 4 4 0 000-8zM4 20c0-4 3.58-8 8-8s8 4 8 8' },
-          { label: 'Invitados', value: invited, color: 'amber', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
-          { label: 'Completados', value: completed, color: 'emerald', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+          { label: 'Negocios', description: 'Activos en Revly', value: totalBusinesses, color: 'blue', icon: 'M3 21h18M3 7v14h18V7M3 7l9-5 9 5' },
+          { label: 'Clientes', description: 'En todos tus negocios', value: totalCustomers, color: 'violet', icon: 'M12 4a4 4 0 100 8 4 4 0 000-8zM4 20c0-4 3.58-8 8-8s8 4 8 8' },
+          { label: 'Invitados', description: 'Solicitudes enviadas', value: invited, color: 'amber', icon: 'M22 12h-4l-3 9L9 3l-3 9H2' },
+          { label: 'Completados', description: 'Reseñas recibidas', value: completed, color: 'emerald', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
         ].map((s) => (
-          <div key={s.label} className={`${nCard} flex min-h-[104px] flex-col justify-between gap-3 p-4 transition-shadow hover:shadow-[-5px_-5px_10px_#ffffff,5px_5px_10px_#c0c0c0] dark:hover:shadow-[-5px_-5px_10px_#2a2a2a,5px_5px_10px_#0a0a0a] sm:p-5`}>
+          <div key={s.label} className={`${nCard} flex min-h-[124px] flex-col justify-between gap-2 p-4 sm:p-5`}>
             <div className="flex items-center gap-2">
               <svg className={`w-4 h-4 ${iconColor[s.color]}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d={s.icon} />
               </svg>
-              <span className="text-[11px] sm:text-xs text-neutral-500 font-medium">{s.label}</span>
+              <span className="text-xs font-medium text-neutral-500">{s.label}</span>
             </div>
-            <span className="text-2xl sm:text-3xl font-bold"><AnimatedCounter value={s.value} /></span>
+            <p className="text-[11px] text-neutral-400">{s.description}</p>
+            <span className="text-2xl font-bold sm:text-3xl"><AnimatedCounter  value={s.value} /></span>
           </div>
         ))}
       </div>

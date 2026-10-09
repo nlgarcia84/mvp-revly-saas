@@ -117,10 +117,20 @@ export const signIn = async (
   const password = formData.get("password") as string;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    return { error: error.message };
+    return { error: translateAuthError(error) };
+  }
+
+  if (!data.session) {
+    return {
+      error:
+        "No se pudo crear la sesión. Comprueba tu email o contacta con soporte.",
+    };
   }
 
   redirect("/dashboard");

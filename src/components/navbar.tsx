@@ -51,11 +51,11 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="h-20 lg:h-[72px] border-b border-neutral-200 dark:border-neutral-800 flex items-center px-6 sm:px-8 bg-white dark:bg-neutral-950 shrink-0 transition-colors">
+    <header className="h-16 shrink-0 border-b border-neutral-200 bg-white px-4 transition-colors dark:border-[#1B202B] dark:bg-[#10131A] sm:px-6 lg:h-[72px] lg:px-8">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
-        className="lg:hidden mr-3 p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:text-neutral-400 dark:hover:bg-[#1B202B] dark:hover:text-neutral-100 lg:hidden"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-mobile-navigation"
@@ -76,7 +76,7 @@ const Navbar = ({
       </button>
 
       {/* Logo de la aplicación */}
-      <span className="font-semibold text-xl sm:text-2xl">Revly</span>
+      <span className="text-xl font-semibold tracking-tight sm:text-2xl">Revly</span>
 
       {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-3">
@@ -102,7 +102,7 @@ const Navbar = ({
         <form action={signOut}>
           <button
             type="submit"
-            className="text-xs px-3 py-1.5 rounded-md border border-neutral-200 dark:border-neutral-700 text-neutral-500 hover:text-neutral-950 dark:hover:text-neutral-100 hover:border-neutral-950 dark:hover:border-neutral-100 transition-colors cursor-pointer"
+            className="min-h-10 rounded-lg border border-neutral-200 px-3 text-xs text-neutral-500 transition-colors hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-[#2A3240] dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
             Cerrar sesión
           </button>
