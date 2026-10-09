@@ -35,7 +35,7 @@ const BusinessSubnav = ({ businessId }: { businessId: string }) => {
   return (
     <nav
       aria-label="Secciones del negocio"
-      className="sticky top-0 z-30 -mx-5 sm:-mx-6 lg:-mx-8 px-5 sm:px-6 lg:px-8 bg-neutral-100/90 dark:bg-neutral-900/90 backdrop-blur border-b border-neutral-200 dark:border-neutral-800"
+      className="sticky top-0 z-30 -mx-4 border-b border-[#1b1b1b] bg-[#0A0A0A]/95 px-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
     >
       <div className="flex gap-1 overflow-x-auto py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {BUSINESS_TABS.map((tab) => {
@@ -47,8 +47,8 @@ const BusinessSubnav = ({ businessId }: { businessId: string }) => {
               aria-current={active ? 'page' : undefined}
               className={`whitespace-nowrap text-xs sm:text-sm px-3 py-2 rounded-md border transition-colors ${
                 active
-                  ? 'font-medium border-neutral-950 dark:border-neutral-100 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950'
-                  : 'border-transparent text-neutral-500 dark:text-neutral-400 hover:bg-white/60 dark:hover:bg-neutral-800/60 hover:text-neutral-950 dark:hover:text-neutral-100'
+                  ? 'border-[#2a2a2a] bg-[#151515] font-medium text-white shadow-[inset_2px_2px_5px_#000]'
+                  : 'border-transparent text-neutral-500 hover:bg-[#111] hover:text-white'
               }`}
             >
               {tab.label}

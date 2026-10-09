@@ -227,7 +227,7 @@ const CustomersTable = ({
           onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Buscar por nombre, email o teléfono…"
           aria-label="Buscar clientes"
-          className="w-full sm:max-w-xs px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm bg-white dark:bg-neutral-800 text-neutral-950 dark:text-neutral-100 outline-none focus:border-neutral-950 dark:focus:border-neutral-400"
+          className="dashboard-inset w-full rounded-lg border border-[#202020] bg-[#0A0A0A] px-3 py-2 text-sm text-neutral-100 outline-none focus:border-[#444] focus:ring-2 focus:ring-white/10 sm:max-w-xs"
         />
         <div className="flex items-center gap-2 flex-wrap">
           {['all', 'pending', 'invited', 'completed'].map((f) => (

@@ -35,7 +35,7 @@ type ChecklistItem = {
 const ChecklistRow = ({ item }: { item: ChecklistItem }) => (
   <Link
     href={item.href}
-    className="flex items-start gap-3 px-4 py-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+    className="flex items-start gap-3 rounded-lg px-4 py-3 transition-colors hover:bg-[#111]"
   >
     <span
       className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[11px] ${
@@ -144,9 +144,9 @@ const BusinessSummary = () => {
       {/* Checklist de puesta en marcha */}
       <section
         aria-label="Puesta en marcha"
-        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm overflow-hidden"
+        className="dashboard-card overflow-hidden rounded-xl"
       >
-        <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="border-b border-[#1b1b1b] px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
           <h2 className="text-sm font-semibold">Pon en marcha tu negocio</h2>
           <p className="text-xs text-neutral-400 mt-0.5">
             {pendingCount === 0
@@ -190,7 +190,7 @@ const BusinessSummary = () => {
             <Link
               key={s.href}
               href={s.href}
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-4 sm:p-5 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+              className="dashboard-card rounded-xl p-4 transition-transform hover:-translate-y-0.5 sm:p-5"
             >
               <h3 className="text-sm font-semibold">{s.title}</h3>
               <p className="text-xs text-neutral-400 mt-1 leading-relaxed">

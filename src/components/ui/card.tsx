@@ -1,5 +1,5 @@
 export const nCard =
-  'rounded-xl border border-neutral-200/80 bg-white shadow-[6px_6px_14px_rgba(163,163,163,0.2),-6px_-6px_14px_rgba(255,255,255,0.9)] transition-[background-color,border-color,box-shadow,transform] duration-200 dark:border-white/12 dark:bg-[#191a1d] dark:shadow-[7px_7px_14px_rgba(0,0,0,0.38),-5px_-5px_12px_rgba(255,255,255,0.035)]';
+  'dashboard-card rounded-xl bg-[#0A0A0A] text-neutral-100 transition-[box-shadow,transform] duration-200';
 
 type CardProps = {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ export const CardHeader = ({ children, className = '' }: CardProps) => (
 );
 
 export const CardTitle = ({ children, className = '' }: CardProps) => (
-  <h3 className={`text-sm font-medium text-neutral-500 uppercase tracking-wider ${className}`}>
+  <h3 className={`text-sm font-medium uppercase tracking-wider text-neutral-400 ${className}`}>
     {children}
   </h3>
 );

@@ -55,7 +55,7 @@ const BusinessList = ({ businesses: initial }: { businesses: Business[] }) => {
         </div>
       </div>
       {businesses.map((b) => (
-        <div key={b.id} className={`${nCard} group flex items-center justify-between gap-3 px-4 py-4`}>
+        <div key={b.id} className={`${nCard} group flex min-w-0 items-center justify-between gap-3 px-4 py-4`}>
           <Link href={`/business/${b.id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1 outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 sm:px-1">
             <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-neutral-950 dark:bg-neutral-100" aria-hidden="true" />
             <span className="min-w-0 truncate font-medium text-neutral-900 dark:text-neutral-100">{b.name}</span>

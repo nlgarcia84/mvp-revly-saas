@@ -51,11 +51,11 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="relative z-30 flex h-14 shrink-0 items-center border-b border-neutral-200/80 bg-white px-3 transition-colors dark:border-white/10 dark:bg-[#080808] sm:px-5 lg:px-6">
+    <header className="relative z-30 flex h-14 shrink-0 items-center border-b border-[#171717] bg-[#0A0A0A] px-3 shadow-[0_4px_12px_#000] sm:px-5 lg:px-6">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
-        className="mr-2 flex min-h-10 min-w-10 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:text-neutral-400 dark:hover:bg-white/[0.06] lg:hidden"
+        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-[#151515] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 lg:hidden"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-mobile-navigation"
@@ -76,7 +76,7 @@ const Navbar = ({
       </button>
 
       {/* Logo de la aplicación */}
-      <span className="text-lg font-semibold tracking-[-0.04em] text-neutral-950 sm:text-xl dark:text-white">Revly</span>
+      <span className="text-lg font-semibold tracking-[-0.04em] text-white sm:text-xl">Revly</span>
 
       {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
@@ -102,7 +102,7 @@ const Navbar = ({
         <form action={signOut}>
           <button
             type="submit"
-            className="min-h-9 cursor-pointer whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2.5 text-xs text-neutral-500 transition-all hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:border-white/10 dark:bg-white/[0.04] dark:hover:border-white/30 dark:hover:text-neutral-100 sm:px-3"
+            className="min-h-10 cursor-pointer whitespace-nowrap rounded-lg border border-[#202020] bg-[#0B0B0B] px-3 text-xs text-neutral-300 shadow-[3px_3px_8px_#000,-2px_-2px_6px_#151515] transition-all hover:text-white active:shadow-[inset_2px_2px_5px_#000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
           >
             Cerrar sesión
           </button>

@@ -75,7 +75,7 @@ const BusinessLayout = ({
 
   return (
     <BusinessProvider id={id}>
-      <div className="flex flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-7">
         <BusinessHeader />
         <BusinessSubnav businessId={id} />
         {children}

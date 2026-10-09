@@ -29,7 +29,7 @@ type ReservationsSectionProps = {
 };
 
 const inputClass =
-  'w-full px-3 py-2.5 border border-neutral-200 dark:border-neutral-700 rounded-md text-sm text-neutral-950 dark:text-neutral-100 bg-white dark:bg-neutral-800 outline-none focus:border-neutral-950 dark:focus:border-neutral-400 focus:shadow-[0_0_0_2px_rgba(0,0,0,0.05)]';
+  'dashboard-inset w-full rounded-lg border border-[#202020] bg-[#0A0A0A] px-3 py-2.5 text-sm text-neutral-100 outline-none focus:border-[#444] focus:ring-2 focus:ring-white/10';
 
 const labelClass = 'block text-xs font-medium mb-[6px] text-neutral-500';
 
@@ -124,7 +124,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
   return (
     <div className="flex flex-col gap-8 stagger">
       {/* ── Configuración ─────────────────────── */}
-      <div>
+      <div className="dashboard-card rounded-xl p-5 sm:p-6">
         <h3 className="text-sm font-semibold mb-1">Configuración de reservas</h3>
         <p className="text-xs text-neutral-400 mb-3">
           Los clientes reservan desde tu página pública. Cada franja admite una
@@ -235,7 +235,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
       </div>
 
       {/* ── Agenda ────────────────────────────── */}
-      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800">
+      <div className="dashboard-card rounded-xl border-t border-[#202020] p-5 sm:p-6">
         <h3 className="text-sm font-semibold mb-1">Reservas</h3>
         <p className="text-xs text-neutral-400 mb-3">
           Próximas reservas desde la fecha elegida.
@@ -283,7 +283,7 @@ const ReservationsSection = ({ businessId }: ReservationsSectionProps) => {
                   {items.map((reservation) => (
                     <li
                       key={reservation.id}
-                      className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3"
+                      className="dashboard-raised flex flex-col gap-2 rounded-lg border border-[#1b1b1b] bg-[#0B0B0B] p-3 sm:flex-row sm:items-center sm:gap-4"
                     >
                       <span className="text-sm font-medium sm:w-16 shrink-0">
                         {reservation.time}

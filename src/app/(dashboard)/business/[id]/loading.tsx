@@ -12,7 +12,7 @@ const BusinessLoading = () => (
       </div>
     </div>
     <div className="h-9 w-full rounded-md bg-neutral-200 dark:bg-neutral-800" />
-    <div className="h-40 w-full rounded-xl bg-neutral-200 dark:bg-neutral-800" />
+    <div className="dashboard-card h-40 w-full rounded-xl skeleton-shimmer" />
   </div>
 );
 

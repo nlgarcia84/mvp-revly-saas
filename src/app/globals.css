@@ -65,11 +65,12 @@ html.dark body {
    spacing instead of decoration. */
 .dashboard-surface {
   --dash-bg: #050505;
-  --dash-panel: #0b0b0c;
-  --dash-panel-raised: #111112;
-  --dash-border: rgba(255, 255, 255, 0.1);
+  --dash-panel: #0a0a0a;
+  --dash-panel-raised: #0b0b0b;
+  --dash-border: #181818;
   --dash-muted: #8b8b91;
   background-color: var(--dash-bg);
+  color: #f5f5f5;
 }
 
 .dashboard-surface input:not([type='file']),
@@ -78,14 +79,56 @@ html.dark body {
   border-color: var(--dash-border);
   color: #f5f5f5;
   background-color: var(--dash-panel);
-  box-shadow: none;
+  box-shadow: inset 3px 3px 7px #000, inset -2px -2px 5px #171717;
 }
 
 .dashboard-surface input:not([type='file']):focus,
 .dashboard-surface textarea:focus,
 .dashboard-surface select:focus {
-  border-color: rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+  border-color: #3a3a3a;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+/* Shared dashboard surfaces. Keeping these tokens here prevents each panel
+   from inventing a subtly different dark grey or shadow. */
+.dashboard-card {
+  background: #0a0a0a;
+  border: 1px solid #171717;
+  box-shadow: 7px 7px 16px #000, -4px -4px 12px #151515;
+}
+
+/* Legacy utility names remain on shared components for compatibility with
+   existing consumers/tests; dashboard scope gives them the dark treatment. */
+.dashboard-shell .bg-white {
+  background-color: #111;
+}
+
+.dashboard-surface .bg-neutral-950 {
+  background-color: #f5f5f5;
+  color: #0a0a0a;
+}
+
+.dashboard-surface .bg-white {
+  background-color: #0b0b0b;
+  color: #e5e5e5;
+}
+
+.dashboard-surface .text-neutral-950 {
+  color: #f5f5f5;
+}
+
+.dashboard-raised {
+  box-shadow: 4px 4px 10px #000, -3px -3px 8px #151515;
+}
+
+.dashboard-inset {
+  box-shadow: inset 3px 3px 7px #000, inset -2px -2px 5px #171717;
+}
+
+.dashboard-surface input:not([type='file']),
+.dashboard-surface textarea,
+.dashboard-surface select {
+  border-color: #202020;
 }
 
 ::selection {

@@ -8,14 +8,14 @@ type Variant = 'primary' | 'secondary';
 
 const variantClass: Record<Variant, string> = {
   primary:
-    'border-neutral-950 bg-neutral-950 text-white hover:border-neutral-700 hover:bg-neutral-800 active:translate-y-px dark:border-white dark:bg-white dark:text-black dark:hover:border-neutral-200 dark:hover:bg-neutral-200',
+    'border-[#202020] bg-neutral-950 text-white hover:bg-neutral-800 active:shadow-[inset_3px_3px_7px_#000,inset_-2px_-2px_5px_#333]',
   secondary:
-    'border-neutral-200 bg-white text-neutral-950 hover:bg-neutral-50 hover:border-neutral-300 active:translate-y-px dark:border-white/15 dark:bg-white/[0.05] dark:text-neutral-100 dark:hover:bg-white/[0.1]',
+    'border-[#202020] bg-white text-neutral-950 hover:bg-neutral-100 active:shadow-[inset_3px_3px_7px_#bbb,inset_-2px_-2px_5px_#fff]',
 };
 
 // ─── Clases base comunes a todas las variantes ───
 const baseClass =
-  'inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-[18px] py-2.5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-[18px] py-2.5 text-sm font-medium shadow-[4px_4px_10px_#000,-3px_-3px_8px_#151515] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer';
 
 // ─── Tipos para los tres modos de render ─────────
 // as="button" (default) → <button>

@@ -33,7 +33,7 @@ const ClientesPage = () => {
 
       <section
         aria-label="Base de clientes"
-        className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-sm p-4 sm:p-6"
+        className="dashboard-card rounded-xl p-4 sm:p-6"
       >
         <h2 className="text-sm font-semibold mb-4">Base de clientes</h2>
         <CustomersTable
