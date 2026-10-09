@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 
 // Definición centralizada de los links de navegación.
 // Agregar o quitar rutas aquí las actualiza en ambas versiones (móvil y desktop).
@@ -39,6 +40,23 @@ const Sidebar = ({
   // Sirve para determinar qué link está activo.
   const pathname = usePathname();
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileOpen, onClose]);
+
   // Función que genera las clases de Tailwind para cada link.
   // active = true → estilo "seleccionado" (fondo blanco, borde, texto oscuro)
   // active = false → estilo "inactivo" (transparente, texto gris)
@@ -55,7 +73,9 @@ const Sidebar = ({
           Solo se renderiza cuando mobileOpen es true.
           Al hacer clic se cierra el sidebar. */}
       {mobileOpen && (
-        <div
+        <button
+          type="button"
+          aria-label="Cerrar menú"
           className="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 lg:hidden"
           onClick={onClose}
         />
@@ -66,6 +86,10 @@ const Sidebar = ({
           translate-x-0 → visible. -translate-x-full → oculto.
           Los links tienen onClick={onClose} para cerrar al navegar. */}
       <aside
+        id="dashboard-mobile-navigation"
+        aria-label="Navegación principal"
+        aria-modal={mobileOpen || undefined}
+        role={mobileOpen ? 'dialog' : undefined}
         className={`fixed top-20 lg:top-[72px] left-0 bottom-0 w-[250px] z-50 bg-neutral-100 dark:bg-neutral-950 p-4 pl-3 border-r border-neutral-200 dark:border-neutral-800 transition-transform duration-200 lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}

@@ -15,7 +15,13 @@ import DarkToggle from '@/components/ui/dark-toggle';
 //   - Botón de cerrar sesión
 // ──────────────────────────────────────────────
 
-const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
+const Navbar = ({
+  mobileOpen,
+  onMenuToggle,
+}: {
+  mobileOpen?: boolean;
+  onMenuToggle: () => void;
+}) => {
   const [time, setTime] = useState('');
 
   // Reloj que se actualiza cada 30 segundos
@@ -50,7 +56,9 @@ const Navbar = ({ onMenuToggle }: { onMenuToggle: () => void }) => {
       <button
         onClick={onMenuToggle}
         className="lg:hidden mr-3 p-1.5 rounded-md text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-        aria-label="Abrir menú"
+        aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+        aria-expanded={mobileOpen}
+        aria-controls="dashboard-mobile-navigation"
       >
         <svg
           className="w-5 h-5"
