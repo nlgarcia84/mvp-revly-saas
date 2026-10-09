@@ -12,7 +12,7 @@ import {
 // Bloque "Dónde encontrarnos" de la página pública
 // /{slug}/reservas. Es un Server Component (no necesita JS):
 //   - fotos del local (primera = portada)
-//   - dirección + mapa de Google (iframe embed)
+//   - dirección + enlace "Cómo llegar"
 //   - horario de apertura solo si showHours=true (opcional)
 // Solo se renderiza si el negocio ha rellenado algo.
 // ──────────────────────────────────────────────
@@ -49,14 +49,6 @@ export default function PublicStoreInfo({
   const photoList = parsePhotos(photos);
   const hours = showHours ? parseOpeningHours(openingHours) : null;
   const cleanAddress = (address ?? "").trim();
-
-  const mapUrl =
-    latitude !== null && latitude !== undefined &&
-    longitude !== null && longitude !== undefined
-      ? `https://www.google.com/maps?q=${latitude},${longitude}&output=embed`
-      : cleanAddress
-        ? `https://www.google.com/maps?q=${encodeURIComponent(cleanAddress)}&output=embed`
-        : null;
 
   const directionsUrl =
     latitude !== null && latitude !== undefined &&
@@ -108,7 +100,7 @@ export default function PublicStoreInfo({
         </div>
       )}
 
-      {/* ── Dirección + mapa ────────────────────── */}
+      {/* ── Dirección ───────────────────────────── */}
       {cleanAddress && (
         <div className="flex flex-col gap-2 mb-4">
           <p className="text-sm text-neutral-800 dark:text-neutral-200">
@@ -124,18 +116,6 @@ export default function PublicStoreInfo({
               Cómo llegar
             </a>
           )}
-        </div>
-      )}
-
-      {mapUrl && (
-        <div className="w-full h-44 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 mb-4">
-          <iframe
-            src={mapUrl}
-            title={`Mapa de ${businessName}`}
-            className="w-full h-full"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
         </div>
       )}
 
