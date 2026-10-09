@@ -206,7 +206,7 @@ const AiWritingReview = () => {
           transform: showCard ? "scale(1)" : "scale(0.96)",
         }}
       >
-        <div className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-lg p-5">
+        <div className="w-full min-w-0 rounded-2xl border border-white bg-neutral-100 p-5 shadow-[-6px_-6px_14px_#ffffff,6px_6px_14px_#d4d4d4] dark:border-neutral-800 dark:bg-[#151922] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
             <div className="rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/40 p-4 mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center text-xs shrink-0">
@@ -238,7 +238,7 @@ const AiWritingReview = () => {
             </div>
 
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-xs shrink-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-xs font-semibold text-white dark:bg-neutral-100 dark:text-neutral-950">
                 IA
               </div>
               <div className="flex-1 min-w-0">

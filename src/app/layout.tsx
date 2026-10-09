@@ -39,7 +39,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       </head>
       <body
-        className="bg-slate-50 text-neutral-950 transition-colors dark:bg-[#0B0D12] dark:text-neutral-100"
+        className="min-w-0 bg-neutral-50 text-neutral-950 transition-colors dark:bg-[#0B0D12] dark:text-neutral-100"
         style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
       >
         {children}

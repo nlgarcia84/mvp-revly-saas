@@ -55,7 +55,7 @@ const Navbar = ({
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
-        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:text-neutral-400 dark:hover:bg-[#151922] lg:hidden"
+        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:text-neutral-400 dark:hover:bg-[#151922] lg:hidden"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-mobile-navigation"
@@ -102,7 +102,7 @@ const Navbar = ({
         <form action={signOut}>
           <button
             type="submit"
-            className="min-h-10 cursor-pointer whitespace-nowrap rounded-md border border-neutral-200 px-2.5 text-xs text-neutral-500 transition-colors hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 dark:border-[#252B38] dark:hover:border-neutral-100 dark:hover:text-neutral-100 sm:px-3"
+            className="min-h-10 cursor-pointer whitespace-nowrap rounded-md border border-neutral-200 px-2.5 text-xs text-neutral-500 transition-colors hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:border-[#252B38] dark:hover:border-neutral-100 dark:hover:text-neutral-100 sm:px-3"
           >
             Cerrar sesión
           </button>

@@ -10,10 +10,10 @@ import AnimatedCounter from '@/components/ui/animated-counter';
 import CheckoutSuccessBanner from '@/components/checkout-success-banner';
 
 const iconColor: Record<string, string> = {
-  blue: 'text-blue-500',
-  violet: 'text-violet-500',
-  amber: 'text-amber-500',
-  emerald: 'text-emerald-500',
+  blue: 'text-neutral-700 dark:text-neutral-300',
+  violet: 'text-neutral-700 dark:text-neutral-300',
+  amber: 'text-neutral-700 dark:text-neutral-300',
+  emerald: 'text-neutral-700 dark:text-neutral-300',
 };
 
 export default async function DashboardPage() {
@@ -137,7 +137,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl min-w-0 flex-col gap-5 sm:gap-6">
-      <div className={`${nCard} bg-gradient-to-br from-white to-neutral-50 p-4 dark:bg-[#151922] dark:bg-none sm:p-6 lg:p-7`}>
+      <div className={`${nCard} p-4 sm:p-6 lg:p-7`}>
         <h1 className="mb-2 flex flex-wrap items-center gap-2.5 text-2xl font-semibold tracking-tight sm:text-3xl">
           {name ? `Hola, ${name}` : 'Hola'}
           {trialDaysLeft > 0 ? (
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
           <ChartLine
             data={dailyData}
             height={180}
-            color="#6366f1"
+          color="#525252"
           />
         </div>
       </div>
@@ -292,7 +292,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Reseñas sin responder */}
-      <div className={`${nCard} p-5 sm:p-6 ${unrepliedByBusiness.size > 0 ? 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/30' : ''}`}>
+      <div className={`${nCard} p-5 sm:p-6`}>
         <h2 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3 flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />

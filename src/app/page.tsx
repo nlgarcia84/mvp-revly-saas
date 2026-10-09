@@ -59,23 +59,18 @@ const HomePage = () => {
         </div>
       </header>
 
-      <main className="px-4 sm:px-6 lg:px-8 pt-24 sm:pt-28 lg:pt-32 pb-20 relative overflow-hidden bg-stone-50 dark:bg-neutral-950">
+      <main className="relative overflow-hidden bg-neutral-50 px-4 pb-20 pt-24 sm:px-6 sm:pt-28 lg:px-8 lg:pt-32 dark:bg-neutral-950">
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <video
             autoPlay
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-25 dark:opacity-12"
+            className="h-full w-full object-cover grayscale opacity-20 dark:opacity-10"
           >
             <source src="/videos/mobilevideo.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-linear-to-b from-white/60 via-white/25 to-white/60 dark:from-neutral-950/55 dark:via-neutral-950/15 dark:to-neutral-950/50" />
-          <div className="pointer-events-none absolute -top-32 -left-32 h-[42rem] w-[42rem] rounded-full bg-emerald-400/20 dark:bg-emerald-500/15 blur-3xl animate-float-slow" />
-          <div
-            className="pointer-events-none absolute -bottom-40 -right-32 h-[38rem] w-[38rem] rounded-full bg-indigo-400/20 dark:bg-indigo-500/15 blur-3xl animate-float-slow"
-            style={{ animationDelay: "-4.5s" }}
-          />
         </div>
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:grid md:grid-cols-2 md:items-center md:gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:items-center lg:gap-12">
@@ -83,7 +78,7 @@ const HomePage = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.06] mb-4 text-neutral-950 dark:text-neutral-100 [text-shadow:0_1px_2px_rgba(255,255,255,0.65)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
               Consigue más reseñas de Google con IA
             </h1>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-stone-600 dark:text-neutral-300 leading-relaxed mb-8 max-w-2xl mx-auto md:mx-0 [text-shadow:0_1px_2px_rgba(255,255,255,0.45)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
+            <p className="mb-8 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300 sm:text-base md:mx-0 md:text-lg lg:text-xl">
               Automatiza solicitudes de reseña por QR y email. Responde
               con inteligencia artificial y construye una reputación online
               imparable.
@@ -120,7 +115,7 @@ const HomePage = () => {
             <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-100">
               Todo lo que necesitas para dominar tu reputación online
             </h2>
-            <p className="mt-3 text-sm sm:text-base leading-7 text-stone-500 dark:text-neutral-400">
+            <p className="mt-3 text-sm leading-7 text-neutral-500 dark:text-neutral-400 sm:text-base">
               Desde el primer código QR hasta el análisis de reseñas con IA. Una
               plataforma que convierte clientes satisfechos en reseñas de 5
               estrellas.

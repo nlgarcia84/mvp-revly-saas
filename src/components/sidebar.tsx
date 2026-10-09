@@ -61,7 +61,7 @@ const Sidebar = ({
   // active = true → estilo "seleccionado"
   // active = false → estilo "inactivo" (transparente, texto gris)
   const linkClass = (active: boolean) =>
-    `flex items-center rounded-md border px-3 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+    `flex items-center rounded-md border px-3 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 ${
       active
         ? 'border-neutral-200 bg-white font-medium text-neutral-950 hover:bg-neutral-50 dark:border-[#303847] dark:bg-[#151922] dark:text-neutral-100 dark:hover:bg-[#1B202B]'
         : 'border-transparent bg-transparent text-neutral-500 hover:border-neutral-200/50 hover:bg-white/60 hover:text-neutral-950 dark:text-neutral-400 dark:hover:border-[#252B38] dark:hover:bg-[#151922]/70 dark:hover:text-neutral-100'

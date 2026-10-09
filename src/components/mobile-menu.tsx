@@ -41,7 +41,7 @@ const MobileMenu = () => {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-navigation"
-        className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:hidden"
+        className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 sm:hidden"
         aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
       >
         <div className="relative w-5 h-4">

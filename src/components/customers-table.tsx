@@ -318,8 +318,8 @@ const CustomersTable = ({
         </Card>
       ) : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="min-w-0 overflow-x-auto rounded-xl">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-neutral-800">
                   <th className="pb-3 pr-2 w-8">

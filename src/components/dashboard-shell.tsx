@@ -26,7 +26,7 @@ const DashboardShell = ({ children }: { children: React.ReactNode }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-dvh flex-col">
+    <div className="flex h-dvh min-w-0 flex-col overflow-hidden">
       {/* Navbar: pasa el toggle para abrir/cerrar el sidebar móvil */}
       <Navbar
         mobileOpen={sidebarOpen}
@@ -39,7 +39,7 @@ const DashboardShell = ({ children }: { children: React.ReactNode }) => {
           onClose={() => setSidebarOpen(false)}
         />
         {/* Contenido principal de cada página */}
-        <main className="min-w-0 flex-1 overflow-y-auto bg-neutral-100 p-3 transition-colors dark:bg-[#0B0D12] sm:p-5 lg:p-6 xl:p-8">
+        <main className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-neutral-100 p-3 transition-colors dark:bg-[#0B0D12] sm:p-5 lg:p-6 xl:p-8">
           {children}
         </main>
       </div>
