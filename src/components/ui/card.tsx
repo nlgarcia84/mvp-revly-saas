@@ -1,5 +1,5 @@
 export const nCard =
-  'rounded-xl border border-neutral-200/80 bg-white shadow-sm transition-[background-color,border-color,box-shadow,transform] duration-200 dark:border-white/10 dark:bg-[#0b0b0c] dark:shadow-none';
+  'rounded-xl border border-neutral-200/80 bg-white shadow-[6px_6px_14px_rgba(163,163,163,0.2),-6px_-6px_14px_rgba(255,255,255,0.9)] transition-[background-color,border-color,box-shadow,transform] duration-200 dark:border-white/12 dark:bg-[#191a1d] dark:shadow-[7px_7px_14px_rgba(0,0,0,0.38),-5px_-5px_12px_rgba(255,255,255,0.035)]';
 
 type CardProps = {
   children: React.ReactNode;
@@ -9,11 +9,7 @@ type CardProps = {
 
 export const Card = ({ children, className = '', neumorphic }: CardProps) => (
   <div
-    className={`${
-      neumorphic
-        ? nCard
-        : 'rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-white/10 dark:bg-[#0b0b0c] dark:shadow-none'
-    } ${className}`}
+    className={`${nCard} ${className}`}
   >
     {children}
   </div>
