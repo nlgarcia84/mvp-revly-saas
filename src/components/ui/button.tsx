@@ -10,12 +10,12 @@ const variantClass: Record<Variant, string> = {
   primary:
     'border-neutral-950 bg-neutral-950 text-white border-sky-400 bg-sky-400 text-slate-950 shadow-sm shadow-sky-950/20 hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-300',
   secondary:
-    'border-neutral-200 bg-white text-neutral-950 border-white/15 bg-white/[0.04] text-slate-200 shadow-sm hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.08] hover:text-white',
+    'border-neutral-200 bg-white text-neutral-950 shadow-sm hover:-translate-y-0.5 hover:border-neutral-300 hover:bg-neutral-50 dark:border-white/15 dark:bg-white/[0.04] dark:text-slate-200 dark:hover:border-white/25 dark:hover:bg-white/[0.08] dark:hover:text-white',
 };
 
 // ─── Clases base comunes a todas las variantes ───
 const baseClass =
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0D12] disabled:cursor-not-allowed disabled:opacity-50';
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#0B0D12] disabled:cursor-not-allowed disabled:opacity-50';
 
 // ─── Tipos para los tres modos de render ─────────
 // as="button" (default) → <button>

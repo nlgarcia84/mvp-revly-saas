@@ -43,14 +43,17 @@ const SignInPage = () => {
     setGooglePending(true);
     try {
       const supabase = createBrowserSupabase();
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-        window.location.origin;
-      const redirectTo = `${appUrl}/api/auth/callback`;
-      await supabase.auth.signInWithOAuth({
+      // El origen real evita que una NEXT_PUBLIC_APP_URL antigua envíe el
+      // callback a otro dominio (y pierda las cookies de esta petición).
+      const redirectTo = `${window.location.origin}/api/auth/callback`;
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo },
       });
+      if (error) {
+        setOauthError("No se pudo iniciar sesión con Google. Inténtalo de nuevo.");
+        setGooglePending(false);
+      }
     } catch (e) {
       setGooglePending(false);
       alert(

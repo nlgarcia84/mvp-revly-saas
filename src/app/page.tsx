@@ -62,20 +62,20 @@ const footerGroups = [
 ];
 
 const HomePage = () => (
-  <div className="min-h-screen overflow-x-hidden bg-[#0B0D12] text-[#F5F7FA]">
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/[0.08] bg-[#0B0D12]/85 px-4 backdrop-blur-xl sm:px-6">
+  <div className="min-h-screen overflow-x-hidden bg-white text-neutral-950 dark:bg-[#0B0D12] dark:text-[#F5F7FA]">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-neutral-200/80 bg-white/85 px-4 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0B0D12]/85 sm:px-6">
       <div className="mx-auto flex h-[72px] w-full max-w-7xl items-center justify-between">
-        <a href="/" className="text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl" aria-label="Revly, inicio">
+        <a href="/" className="text-xl font-semibold tracking-[-0.04em] text-neutral-950 dark:text-white sm:text-2xl" aria-label="Revly, inicio">
           Revly<span className="text-sky-400">.</span>
         </a>
         <div className="flex items-center gap-1 sm:gap-3">
           <DarkToggle />
           <MobileMenu />
           <div className="hidden items-center gap-2 sm:flex">
-            <Button as="link" variant="secondary" href="/sign-in" className="border-white/10 bg-transparent px-4 py-2 text-sm text-slate-300 hover:border-white/20 hover:bg-white/[0.06] hover:text-white">
+            <Button as="link" variant="secondary" href="/sign-in" className="px-4 py-2 text-sm">
               Iniciar sesión
             </Button>
-            <Button as="link" variant="primary" href="/sign-up" className="border-sky-400 bg-sky-400 px-4 py-2 text-sm text-slate-950 hover:border-sky-300 hover:bg-sky-300">
+            <Button as="link" variant="primary" href="/sign-up" className="px-4 py-2 text-sm">
               Registrarse
             </Button>
           </div>
@@ -84,12 +84,12 @@ const HomePage = () => (
     </header>
 
     <main>
-      <section className="relative isolate overflow-hidden border-b border-white/[0.08] px-4 pb-20 pt-36 sm:px-6 sm:pb-28 sm:pt-44 lg:px-8">
+      <section className="relative isolate overflow-hidden border-b border-neutral-200 px-4 pb-20 pt-36 dark:border-white/[0.08] sm:px-6 sm:pb-28 sm:pt-44 lg:px-8">
         <div className="absolute inset-0 -z-10">
           <video autoPlay muted loop playsInline className="h-full w-full object-cover opacity-[0.16]" aria-hidden="true">
             <source src="/videos/mobilevideo.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-[linear-gradient(110deg,#0B0D12_10%,rgba(11,13,18,.86)_52%,#0B0D12_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,.98)_10%,rgba(255,255,255,.86)_52%,rgba(255,255,255,.98)_100%)] dark:bg-[linear-gradient(110deg,#0B0D12_10%,rgba(11,13,18,.86)_52%,#0B0D12_100%)]" />
           <div className="absolute -left-48 top-20 h-[28rem] w-[28rem] rounded-full bg-sky-500/[0.08] blur-3xl" />
           <div className="absolute -right-48 bottom-0 h-[24rem] w-[24rem] rounded-full bg-violet-500/[0.07] blur-3xl" />
         </div>
@@ -99,17 +99,17 @@ const HomePage = () => (
               <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
               Reputación que trabaja por ti
             </div>
-            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-white sm:text-6xl lg:text-[4.75rem]">
+            <h1 className="max-w-3xl text-4xl font-semibold leading-[1.04] tracking-[-0.055em] text-neutral-950 dark:text-white sm:text-6xl lg:text-[4.75rem]">
               Convierte cada reseña en una oportunidad de crecimiento.
             </h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-300 sm:text-lg">
+            <p className="mt-6 max-w-xl text-base leading-7 text-neutral-600 dark:text-slate-300 sm:text-lg">
               Automatiza solicitudes de reseña por QR y email. Responde con inteligencia artificial y construye una reputación online imparable.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Button as="link" variant="primary" href="/sign-up" className="w-full border-sky-400 bg-sky-400 py-3.5 text-slate-950 hover:border-sky-300 hover:bg-sky-300 sm:w-auto sm:px-7">
                 Comenzar gratis <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </Button>
-              <Button as="link" variant="secondary" href="/sign-in" className="w-full border-white/15 bg-white/[0.04] py-3.5 text-slate-200 hover:border-white/25 hover:bg-white/[0.08] hover:text-white sm:w-auto sm:px-7">
+              <Button as="link" variant="secondary" href="/sign-in" className="w-full py-3.5 sm:w-auto sm:px-7">
                 Iniciar sesión
               </Button>
             </div>
@@ -121,12 +121,12 @@ const HomePage = () => (
         </div>
       </section>
 
-      <section className="bg-[#10131A] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+      <section className="bg-neutral-50 px-4 py-20 dark:bg-[#10131A] sm:px-6 sm:py-28 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 max-w-2xl sm:mb-14">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-sky-400">Todo en un mismo lugar</p>
-            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.04em] text-white sm:text-5xl">La reputación de tu negocio, bajo control.</h2>
-            <p className="mt-5 text-base leading-7 text-slate-400">Desde el primer código QR hasta el análisis de reseñas con IA. Una plataforma que convierte clientes satisfechos en reseñas de 5 estrellas.</p>
+            <h2 className="text-3xl font-semibold leading-tight tracking-[-0.04em] text-neutral-950 dark:text-white sm:text-5xl">La reputación de tu negocio, bajo control.</h2>
+            <p className="mt-5 text-base leading-7 text-neutral-600 dark:text-slate-400">Desde el primer código QR hasta el análisis de reseñas con IA. Una plataforma que convierte clientes satisfechos en reseñas de 5 estrellas.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, description, body }) => (
@@ -145,12 +145,12 @@ const HomePage = () => (
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.08] bg-[#0B0D12]">
+      <footer className="border-t border-neutral-200 bg-white dark:border-white/[0.08] dark:bg-[#0B0D12]">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
           <div className="grid gap-12 lg:grid-cols-[1.2fr_2fr]">
             <div>
-              <a href="/" className="text-xl font-semibold tracking-[-0.04em] text-white">Revly<span className="text-sky-400">.</span></a>
-              <p className="mt-4 max-w-xs text-sm leading-6 text-slate-500">Gestiona tu reputación online con una experiencia más clara y eficiente.</p>
+              <a href="/" className="text-xl font-semibold tracking-[-0.04em] text-neutral-950 dark:text-white">Revly<span className="text-sky-400">.</span></a>
+              <p className="mt-4 max-w-xs text-sm leading-6 text-neutral-500 dark:text-slate-500">Gestiona tu reputación online con una experiencia más clara y eficiente.</p>
             </div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
               {footerGroups.map((group) => (
@@ -163,7 +163,7 @@ const HomePage = () => (
               ))}
             </div>
           </div>
-          <div className="mt-14 flex flex-col gap-3 border-t border-white/[0.08] pt-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-14 flex flex-col gap-3 border-t border-neutral-200 pt-6 text-xs text-neutral-500 dark:border-white/[0.08] dark:text-slate-500 sm:flex-row sm:items-center sm:justify-between">
             <span>&copy; {new Date().getFullYear()} Revly.</span>
             <span>Sitio web desarrollado por <a href="https://ndsoftlabs.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white">ND Soft Labs</a></span>
             <div className="flex items-center gap-2.5" aria-label="Métodos de pago">

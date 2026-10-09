@@ -1,15 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getSupabaseConfig } from './config';
 
 export async function createClient() {
   // Obtiene las cookies de la petición actual (Next.js Server Components/Server Actions)
   const cookieStore = await cookies();
+  const { url, anonKey } = getSupabaseConfig();
 
   // Crea un cliente de Supabase configurado para usar cookies HTTP
   // en lugar de localStorage (que es lo que usa en el navegador)
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!, // URL del proyecto Supabase
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // Clave anónima (pública) de Supabase
+    url,
+    anonKey,
     {
       cookies: {
         // Lee todas las cookies de la petición entrante

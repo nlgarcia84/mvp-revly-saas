@@ -76,7 +76,7 @@ const Sidebar = ({
         <button
           type="button"
           aria-label="Cerrar menú"
-          className="fixed inset-0 bg-black/40 dark:bg-black/60 z-40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 dark:bg-black/60 lg:hidden"
           onClick={onClose}
         />
       )}
@@ -90,11 +90,12 @@ const Sidebar = ({
         aria-label="Navegación principal"
         aria-modal={mobileOpen || undefined}
         role={mobileOpen ? 'dialog' : undefined}
-        className={`fixed bottom-0 left-0 top-16 z-50 w-[min(85vw,280px)] border-r border-neutral-200 bg-[#F5F7FA] p-4 pl-3 transition-transform duration-200 dark:border-[#1B202B] dark:bg-[#10131A] lg:top-[72px] lg:hidden ${
+        className={`fixed bottom-0 left-0 top-16 z-50 flex h-[calc(100dvh-4rem)] w-[min(85vw,280px)] flex-col overflow-hidden border-r border-neutral-200 bg-[#F5F7FA] pb-[env(safe-area-inset-bottom)] pl-3 pr-4 pt-4 transition-transform duration-200 motion-reduce:transition-none dark:border-[#1B202B] dark:bg-[#10131A] lg:top-[72px] lg:h-[calc(100dvh-4.5rem)] lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <nav className="flex flex-col gap-1">
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
+          <div className="flex flex-col gap-1">
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);
             return (
@@ -103,6 +104,7 @@ const Sidebar = ({
               </Link>
             );
           })}
+          </div>
         </nav>
       </aside>
 

@@ -24,6 +24,7 @@ function translateAuthError(error: { message: string; code?: string }): string {
     ) {
       return "La contraseña debe tener al menos 10 caracteres e incluir mayúsculas, minúsculas y números.";
     }
+
     return "La contraseña es demasiado débil. Usa mayúsculas, minúsculas, números y símbolos.";
   }
 
@@ -46,6 +47,20 @@ function translateAuthError(error: { message: string; code?: string }): string {
   return error.message;
 }
 
+type CredentialsResult =
+  | { email: string; password: string }
+  | { error: string };
+
+function readCredentials(formData: FormData): CredentialsResult {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Introduce un email válido." };
+  }
+  if (!password) return { error: "Introduce tu contraseña." };
+  return { email, password };
+}
+
 // Crea la cuenta en Supabase Auth y guarda el perfil en nuestra tabla User.
 // Si Supabase exige confirmar el email no habrá sesión, y el formulario
 // mostrará la pantalla "Revisa tu email".
@@ -53,8 +68,9 @@ export const signUp = async (
   _prevState: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const credentials = readCredentials(formData);
+  if ("error" in credentials) return credentials;
+  const { email, password } = credentials;
   const fullName = formData.get("name") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -75,27 +91,31 @@ export const signUp = async (
   }
 
   if (data.user) {
-    // Si ya existía un usuario con ese email (p. ej. de la época de Clerk),
-    // lo reemplazamos para evitar duplicados.
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      await prisma.user.delete({ where: { id: existingUser.id } });
+    if (existingUser && existingUser.id !== data.user.id) {
+      await supabase.auth.signOut();
+      return {
+        error:
+          "Ya existe un perfil para este email. Inicia sesión con el método original.",
+      };
     }
 
-    await prisma.user.create({
-      data: {
-        id: data.user.id,
-        email,
-        name: fullName,
-        subscription: {
-          create: {
-            plan: "free",
-            status: "active",
-            trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          id: data.user.id,
+          email,
+          name: fullName,
+          subscription: {
+            create: {
+              plan: "free",
+              status: "active",
+              trialEndsAt: new Date(Date.now() + TRIAL_DURATION_MS),
+            },
           },
         },
-      },
-    });
+      });
+    }
   }
 
   // Con la confirmación de email desactivada Supabase devuelve sesión;
@@ -113,8 +133,9 @@ export const signIn = async (
   _prevState: ActionResult,
   formData: FormData,
 ): Promise<ActionResult> => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const credentials = readCredentials(formData);
+  if ("error" in credentials) return credentials;
+  const { email, password } = credentials;
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({

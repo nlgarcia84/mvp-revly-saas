@@ -8,21 +8,18 @@ import prisma from '@/lib/db';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
+  const providerError = searchParams.get('error');
   const requestedNextPath = searchParams.get('next');
   const nextPath =
     requestedNextPath?.startsWith('/') && !requestedNextPath.startsWith('//')
       ? requestedNextPath
       : '/dashboard';
 
-  // Redirigimos al mismo host de la petición (www vs sin www) para que las
-  // cookies de sesión viajen y el proxy no pierda la sesión.
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const forwardedProto = request.headers.get('x-forwarded-proto') ?? 'https';
-  const requestOrigin = forwardedHost
-    ? `${forwardedProto}://${forwardedHost}`
-    : origin;
+  // No usamos x-forwarded-host directamente: es una cabecera controlada por
+  // el proxy y no debe convertirse en una redirección externa.
+  const requestOrigin = origin;
 
-  if (!code) {
+  if (providerError || !code) {
     return NextResponse.redirect(`${requestOrigin}/sign-in?error=oauth_missing_code`);
   }
 
@@ -33,7 +30,12 @@ export async function GET(request: Request) {
   } = await supabase.auth.exchangeCodeForSession(code);
   if (error) {
     return NextResponse.redirect(
-      `${requestOrigin}/sign-in?error=${encodeURIComponent(error.message)}`,
+      `${requestOrigin}/sign-in?error=oauth_exchange_failed`,
+    );
+  }
+  if (!user) {
+    return NextResponse.redirect(
+      `${requestOrigin}/sign-in?error=oauth_no_user`,
     );
   }
 
@@ -43,9 +45,12 @@ export async function GET(request: Request) {
       where: { email: user.email },
     });
 
-    // Usuario antiguo con otro id (época de Clerk): lo reemplazamos.
+    // Nunca borrar un perfil existente: podría tener negocios y suscripciones.
     if (existingUser && existingUser.id !== user.id) {
-      await prisma.user.delete({ where: { id: existingUser.id } });
+      await supabase.auth.signOut();
+      return NextResponse.redirect(
+        `${requestOrigin}/sign-in?error=oauth_account_conflict`,
+      );
     }
 
     const userAlreadyExists = existingUser?.id === user.id;

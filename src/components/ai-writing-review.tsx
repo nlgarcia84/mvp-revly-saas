@@ -42,7 +42,7 @@ const examples = [
 ];
 
 const DizzyFace = () => (
-  <div className="relative w-16 h-16 sm:w-20 sm:h-20 text-neutral-900 dark:text-white animate-face-sway">
+  <div className="relative h-16 w-16 text-neutral-900 dark:text-white sm:h-20 sm:w-20">
     {/* Cabeza */}
     <svg
       viewBox="0 0 100 100"
@@ -60,7 +60,7 @@ const DizzyFace = () => (
     </svg>
 
     {/* Ojo izquierdo: espiral dando vueltas */}
-    <div className="absolute left-[23%] top-[33%] w-[26%] h-[26%] animate-eye-spin">
+    <div className="absolute left-[23%] top-[33%] h-[26%] w-[26%]">
       <svg
         viewBox="0 0 32 32"
         className="w-full h-full"
@@ -75,7 +75,7 @@ const DizzyFace = () => (
     </div>
 
     {/* Ojo derecho: espiral en sentido contrario */}
-    <div className="absolute left-[51%] top-[33%] w-[26%] h-[26%] animate-eye-spin-back">
+    <div className="absolute left-[51%] top-[33%] h-[26%] w-[26%]">
       <svg
         viewBox="0 0 32 32"
         className="w-full h-full"
@@ -90,7 +90,7 @@ const DizzyFace = () => (
     </div>
 
     {/* Boca de "agobiado" respirando */}
-    <div className="absolute left-[41%] top-[64%] w-[18%] h-[13%] animate-mouth-breathe">
+    <div className="absolute left-[41%] top-[64%] h-[13%] w-[18%]">
       <svg
         viewBox="0 0 32 24"
         className="w-full h-full"
@@ -206,10 +206,10 @@ const AiWritingReview = () => {
           transform: showCard ? "scale(1)" : "scale(0.96)",
         }}
       >
-        <div className="w-full rounded-2xl border border-white/[0.1] bg-[#151922] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+        <div className="w-full rounded-2xl border border-neutral-200 bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:border-white/[0.1] dark:bg-[#151922] dark:shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
             <div className="mb-4 rounded-xl border border-red-400/15 bg-red-400/[0.08] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-full bg-red-200 dark:bg-red-800 flex items-center justify-center text-xs shrink-0">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-200 text-xs dark:bg-red-800">
                   ☹️
                 </div>
                 <span className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
@@ -258,7 +258,7 @@ const AiWritingReview = () => {
 
             {/* Reply box: siempre presente con altura fija para que la card no cambie de alto */}
             <div
-              className={`min-h-[172px] max-h-[172px] overflow-hidden rounded-xl border border-white/[0.06] bg-[#1B202B] p-4 transition-opacity duration-300 ${
+              className={`min-h-[172px] max-h-[172px] overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 p-4 transition-opacity duration-300 dark:border-white/[0.06] dark:bg-[#1B202B] ${
                 typingPhase !== "typing-review" && phase === "animating"
                   ? "opacity-100"
                   : "opacity-0"

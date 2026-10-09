@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSupabaseConfig } from '@/lib/supabase/config';
 
 // Rutas que solo pueden verse con la sesión iniciada.
 const PRIVATE_ROUTES = ['/dashboard', '/business', '/profile'];
@@ -10,12 +11,13 @@ const AUTH_ROUTES = ['/sign-in', '/sign-up'];
 // Middleware de Next: se ejecuta antes de cada petición que casa con `matcher`.
 // Su tarea es refrescar la sesión de Supabase y proteger las rutas privadas.
 export async function proxy(request: NextRequest) {
+  const { url, anonKey } = getSupabaseConfig();
   // Respuesta base; la iremos reemplazando cuando Supabase escriba cookies.
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         // Leemos las cookies de la petición entrante.
@@ -52,12 +54,20 @@ export async function proxy(request: NextRequest) {
 
   // Ruta privada sin sesión → al login.
   if (isPrivateRoute && !currentUser) {
-    return NextResponse.redirect(new URL('/sign-in', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    return redirectResponse;
   }
 
   // Login o registro con sesión activa → al dashboard.
   if (isAuthRoute && currentUser) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/dashboard', request.url));
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    return redirectResponse;
   }
 
   return response;

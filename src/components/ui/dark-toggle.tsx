@@ -12,8 +12,15 @@ import { useEffect, useState } from 'react';
 // ──────────────────────────────────────────────
 
 const DarkToggle = () => {
-  // Estado local: ¿está en modo oscuro? Por defecto true
-  const [dark, setDark] = useState(true);
+  // El script del layout aplica la clase antes de hidratar. Leerla aquí evita
+  // que el icono se renderice primero con un tema distinto al visible.
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = window.localStorage.getItem('theme');
+    return stored === 'light'
+      ? false
+      : stored === 'dark' || document.documentElement.classList.contains('dark');
+  });
 
   // Al montar, lee el tema guardado en localStorage y lo aplica
   useEffect(() => {
