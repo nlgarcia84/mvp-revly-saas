@@ -1,5 +1,5 @@
 const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-neutral-200 dark:bg-[#10131A] ${className}`} />
+  <div className={`animate-pulse rounded-md bg-neutral-200/80 shadow-[inset_1px_1px_3px_rgba(163,163,163,0.18)] dark:bg-[#202632] dark:shadow-none ${className}`} />
 );
 
 export const SkeletonCard = () => (

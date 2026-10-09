@@ -14,6 +14,26 @@ body {
   overflow-x: hidden;
 }
 
+/* Dashboard controls share the same raised/inset language as its cards.
+   Keeping this scoped avoids changing the public landing and auth surfaces. */
+.dashboard-surface input:not([type='file']),
+.dashboard-surface textarea,
+.dashboard-surface select {
+  background-color: #ffffff;
+  box-shadow:
+    inset 2px 2px 5px rgba(163, 163, 163, 0.16),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+}
+
+.dark .dashboard-surface input:not([type='file']),
+.dark .dashboard-surface textarea,
+.dark .dashboard-surface select {
+  background-color: #151922;
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.22),
+    inset -1px -1px 4px rgba(55, 65, 81, 0.12);
+}
+
 :focus-visible {
   outline: 2px solid #737373;
   outline-offset: 2px;

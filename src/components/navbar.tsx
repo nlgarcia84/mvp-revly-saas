@@ -51,7 +51,7 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="flex h-16 shrink-0 items-center border-b border-neutral-200 bg-white px-3 transition-colors dark:border-[#252B38] dark:bg-[#10131A] sm:px-5 lg:px-6">
+    <header className="relative z-30 flex h-16 shrink-0 items-center border-b border-neutral-200/80 bg-white px-3 shadow-[0_3px_10px_rgba(0,0,0,0.05)] transition-colors dark:border-[#252B38] dark:bg-[#10131A] dark:shadow-[0_4px_14px_rgba(0,0,0,0.2)] sm:px-5 lg:px-6">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
@@ -76,7 +76,7 @@ const Navbar = ({
       </button>
 
       {/* Logo de la aplicación */}
-      <span className="text-xl font-semibold sm:text-2xl">Revly</span>
+      <span className="text-xl font-semibold tracking-[-0.04em] text-neutral-950 sm:text-2xl dark:text-white">Revly</span>
 
       {/* Elementos alineados a la derecha */}
       <div className="ml-auto flex items-center gap-1.5 sm:gap-3">
@@ -102,7 +102,7 @@ const Navbar = ({
         <form action={signOut}>
           <button
             type="submit"
-            className="min-h-10 cursor-pointer whitespace-nowrap rounded-md border border-neutral-200 px-2.5 text-xs text-neutral-500 transition-colors hover:border-neutral-950 hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:border-[#252B38] dark:hover:border-neutral-100 dark:hover:text-neutral-100 sm:px-3"
+            className="min-h-10 cursor-pointer whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2.5 text-xs text-neutral-500 shadow-[2px_2px_5px_rgba(163,163,163,0.2),-1px_-1px_3px_rgba(255,255,255,0.9)] transition-all hover:border-neutral-950 hover:text-neutral-950 active:shadow-[inset_1px_1px_3px_rgba(163,163,163,0.22)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 dark:border-[#252B38] dark:bg-[#151922] dark:shadow-[2px_2px_6px_rgba(0,0,0,0.28)] dark:hover:border-neutral-100 dark:hover:text-neutral-100 sm:px-3"
           >
             Cerrar sesión
           </button>
