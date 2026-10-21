@@ -30,6 +30,7 @@ type BusinessContextValue = {
   business: DashboardBusiness;
   features: string[];
   loading: boolean;
+  error: string | null;
   reload: () => Promise<void>;
 };
 
@@ -45,12 +46,26 @@ export const BusinessProvider = ({
   const [business, setBusiness] = useState<DashboardBusiness>(null);
   const [features, setFeatures] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
       const data: DashboardData = await getDashboardBusinessData(id);
       setBusiness(data.business);
       setFeatures(data.features);
+      if (!data.business) {
+        setError('No se encontró el negocio o no tienes acceso.');
+      }
+    } catch (cause) {
+      // No dejamos que una excepción de la Server Action se convierta en un
+      // fallo de renderizado de todas las secciones hijas.
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'No se pudo cargar el negocio.',
+      );
     } finally {
       setLoading(false);
     }
@@ -61,8 +76,8 @@ export const BusinessProvider = ({
   }, [reload]);
 
   const value = useMemo(
-    () => ({ id, business, features, loading, reload }),
-    [id, business, features, loading, reload],
+    () => ({ id, business, features, loading, error, reload }),
+    [id, business, features, loading, error, reload],
   );
 
   return (
