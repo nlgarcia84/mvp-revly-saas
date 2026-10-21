@@ -6,6 +6,7 @@ import {
   getInstagramClientSecret,
   getInstagramUserProfile,
 } from "@/lib/instagram-graph";
+import { getMetaRedirectUri } from "@/lib/meta-oauth";
 import { NextResponse } from "next/server";
 
 // Instagram nos llama aquí tras autorizar (o denegar) el acceso.
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
 
     const clientId = getInstagramClientId();
     const clientSecret = getInstagramClientSecret();
-    const redirectUri = `${appUrl}/api/instagram/callback`;
+    const redirectUri = getMetaRedirectUri("instagram", request.url);
 
     if (!clientId || !clientSecret) {
       return NextResponse.redirect(

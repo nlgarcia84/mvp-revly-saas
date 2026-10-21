@@ -5,6 +5,7 @@ import {
   getUserFacebookPages,
   subscribePageToWebhooks,
 } from "@/lib/facebook-graph";
+import { getMetaRedirectUri } from "@/lib/meta-oauth";
 import { NextResponse } from "next/server";
 
 // Facebook nos llama aquí tras autorizar (o denegar) el acceso.
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
 
     const clientId = process.env.META_CLIENT_ID!;
     const clientSecret = process.env.META_CLIENT_SECRET!;
-    const redirectUri = `${appUrl}/api/facebook/callback`;
+    const redirectUri = getMetaRedirectUri("facebook", request.url);
 
     if (!clientId || !clientSecret) {
       return NextResponse.redirect(

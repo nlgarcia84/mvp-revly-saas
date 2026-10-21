@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getInstagramClientId } from "@/lib/instagram-graph";
+import { getMetaRedirectUri } from "@/lib/meta-oauth";
 import prisma from "@/lib/db";
 
 // Inicia la conexión con Instagram (Business Login). Verifica sesión y
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const redirectUri = `${appUrl}/api/instagram/callback`;
+    const redirectUri = getMetaRedirectUri("instagram", request.url);
 
     // Permisos: leer perfil/publicaciones y leer/responder comentarios.
     const oauthParams = new URLSearchParams({

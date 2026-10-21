@@ -206,6 +206,9 @@ EMAIL_FROM=                   # (opcional) remitente, ej: "Revly <hola@revly.es>
 
 # App
 NEXT_PUBLIC_APP_URL=          # http://localhost:3000 en desarrollo
+# Opcional: callback exacto registrado en Meta si no coincide con NEXT_PUBLIC_APP_URL
+META_FACEBOOK_REDIRECT_URI=
+META_INSTAGRAM_REDIRECT_URI=
 
 # IA
 GROQ_API_KEY=                 # Para generar respuestas a reseñas
@@ -248,6 +251,11 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
   El OAuth usa `NEXT_PUBLIC_APP_URL` como origen canónico; en producción debe
   ser `https://www.revly.es` y coincidir exactamente con el host registrado.
+  Si Meta tiene registrado un dominio distinto (por ejemplo, sin `www`) o se
+  accede mediante un alias de despliegue, define
+  `META_FACEBOOK_REDIRECT_URI` y/o `META_INSTAGRAM_REDIRECT_URI` con la URL
+  completa exacta, incluido el protocolo, la ruta y cualquier `/` final. La
+  misma URL se usa al iniciar OAuth y al canjear el código.
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
 ## Notificaciones al cliente

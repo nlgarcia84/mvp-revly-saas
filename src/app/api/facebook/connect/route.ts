@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import prisma from "@/lib/db";
+import { getMetaRedirectUri } from "@/lib/meta-oauth";
 
 // Inicia la conexión con una Página de Facebook (botón "Conectar con Facebook").
 // Verifica sesión y propiedad del negocio, y redirige al OAuth de Facebook.
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const redirectUri = `${appUrl}/api/facebook/callback`;
+    const redirectUri = getMetaRedirectUri("facebook", request.url);
 
     // Permisos: perfil, listar/leer/gestionar publicaciones y comentarios, y
     // business_management (para páginas de un portfolio empresarial).
