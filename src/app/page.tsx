@@ -1,14 +1,17 @@
-import AiWritingReview from "@/components/ai-writing-review";
 import MobileMenu from "@/components/mobile-menu";
 import Button from "@/components/ui/button";
 import DarkToggle from "@/components/ui/dark-toggle";
-import LandingCard, {
-  LandingCardContent,
-  LandingCardDescription,
-  LandingCardHeader,
-  LandingCardTitle,
-} from "@/components/ui/landing-card";
-import { Sparkles, Star, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  Check,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 
 // El asistente de ayuda se carga de forma lazy (chunk separado) para no
@@ -31,11 +34,19 @@ const LandingChat = dynamic(
 const HomePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-neutral-800 flex items-center justify-between px-6 py-5 sm:px-10 sm:py-6 bg-black transition-colors">
-        <span className="font-semibold text-xl sm:text-2xl text-white">
-          Revly
-        </span>
-        <div className="flex items-center gap-2 sm:gap-3">
+      <header className="fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-[#08080a]/85 px-5 py-4 backdrop-blur-xl sm:px-8">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <a href="/" className="flex items-center gap-2.5 text-white">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold text-black">R</span>
+            <span className="text-lg font-semibold tracking-tight">Revly</span>
+          </a>
+          <nav className="hidden items-center gap-7 text-sm text-neutral-400 lg:flex">
+            <a href="#producto" className="transition-colors hover:text-white">Producto</a>
+            <a href="#como-funciona" className="transition-colors hover:text-white">Cómo funciona</a>
+            <a href="/pricing" className="transition-colors hover:text-white">Precios</a>
+            <a href="/recursos" className="transition-colors hover:text-white">Recursos</a>
+          </nav>
+          <div className="flex items-center gap-2 sm:gap-3">
           <DarkToggle />
           <MobileMenu />
           <div className="hidden sm:flex items-center gap-2 sm:gap-3">
@@ -56,131 +67,125 @@ const HomePage = () => {
               Registrarse
             </Button>
           </div>
+          </div>
         </div>
       </header>
 
-      <main className="relative overflow-hidden bg-neutral-50 px-4 pb-20 pt-24 sm:px-6 sm:pt-28 lg:px-8 lg:pt-32 dark:bg-neutral-950">
-        <div className="absolute inset-0 -z-10 overflow-hidden">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="h-full w-full object-cover grayscale opacity-20 dark:opacity-10"
-          >
-            <source src="/videos/mobilevideo.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-linear-to-b from-white/60 via-white/25 to-white/60 dark:from-neutral-950/55 dark:via-neutral-950/15 dark:to-neutral-950/50" />
-        </div>
-
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-8 md:grid md:grid-cols-2 md:items-center md:gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)] lg:items-center lg:gap-12">
-          <div className="w-full max-w-[92%] sm:max-w-2xl text-center md:text-left md:max-w-none">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.06] mb-4 text-neutral-950 dark:text-neutral-100 [text-shadow:0_1px_2px_rgba(255,255,255,0.65)] dark:[text-shadow:0_1px_2px_rgba(0,0,0,0.45)]">
-              Consigue más reseñas de Google con IA
-            </h1>
-            <p className="mb-8 max-w-2xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-300 sm:text-base md:mx-0 md:text-lg lg:text-xl">
-              Automatiza solicitudes de reseña por QR y email. Responde
-              con inteligencia artificial y construye una reputación online
-              imparable.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-              <Button
-                as="link"
-                variant="primary"
-                href="/sign-up"
-                className="px-6 sm:px-7 py-3 text-sm sm:text-base"
-              >
-                Comenzar gratis
-              </Button>
-              <Button
-                as="link"
-                variant="secondary"
-                href="/sign-in"
-                className="px-6 sm:px-7 py-3 text-sm sm:text-base"
-              >
-                Iniciar sesión
-              </Button>
+      <main className="overflow-hidden bg-[#08080a] text-white">
+        <section className="relative px-5 pb-20 pt-32 sm:px-8 sm:pb-28 sm:pt-40">
+          <div className="pointer-events-none absolute left-1/2 top-0 h-[620px] w-[900px] -translate-x-1/2 rounded-full bg-violet-600/15 blur-[130px]" />
+          <div className="pointer-events-none absolute right-[-180px] top-40 h-96 w-96 rounded-full bg-cyan-500/10 blur-[110px]" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-14 lg:grid-cols-[1fr_0.9fr] lg:gap-20">
+            <div className="max-w-3xl">
+              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-violet-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#34d399]" />
+                La plataforma de crecimiento para negocios locales
+              </div>
+              <h1 className="max-w-3xl text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-8xl">
+                Convierte cada cliente en una historia que contar.
+              </h1>
+              <p className="mt-7 max-w-xl text-base leading-7 text-neutral-400 sm:text-lg">
+                Revly reúne reseñas, fidelización y respuestas con IA en un solo lugar para que tu negocio crezca con la confianza de tus clientes.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Button as="link" variant="primary" href="/sign-up" className="border-white bg-white px-6 py-3 text-black shadow-none hover:bg-violet-100">
+                  Empieza gratis <ArrowRight className="h-4 w-4" />
+                </Button>
+                <a href="#como-funciona" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10">
+                  Descubre cómo funciona
+                </a>
+              </div>
+              <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs text-neutral-500">
+                <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" />Sin tarjeta de crédito</span>
+                <span className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" />Configuración en 5 minutos</span>
+              </div>
+            </div>
+            <div className="relative mx-auto w-full max-w-md">
+              <div className="absolute -inset-5 rounded-[2rem] bg-gradient-to-br from-violet-500/20 to-cyan-400/10 blur-2xl" />
+              <div className="relative rounded-[1.5rem] border border-white/10 bg-[#111116] p-3 shadow-2xl shadow-black/50">
+                <div className="rounded-[1.1rem] border border-white/10 bg-[#0b0b0f] p-5">
+                  <div className="mb-8 flex items-center justify-between">
+                    <div><p className="text-xs text-neutral-500">Resumen de reputación</p><p className="mt-1 text-lg font-semibold">Tu negocio esta creciendo</p></div>
+                    <div className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs text-emerald-300">+24,8%</div>
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-6xl font-semibold tracking-tight">4.8</span><span className="mb-2 text-amber-300">★★★★★</span>
+                  </div>
+                  <p className="mt-2 text-xs text-neutral-500">Valoración media · últimos 30 días</p>
+                  <div className="mt-8 flex h-28 items-end gap-2">
+                    {[38, 52, 46, 68, 60, 79, 92, 84, 100].map((height, index) => (
+                      <div key={index} className="flex-1 rounded-t-md bg-gradient-to-t from-violet-600 to-cyan-300 opacity-90" style={{ height: `${height}%` }} />
+                    ))}
+                  </div>
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3"><p className="text-xs text-neutral-500">Nuevas reseñas</p><p className="mt-1 text-xl font-semibold">+128</p></div>
+                    <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3"><p className="text-xs text-neutral-500">Respondidas por IA</p><p className="mt-1 text-xl font-semibold">96%</p></div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -bottom-5 -left-6 hidden items-center gap-3 rounded-xl border border-white/10 bg-[#17171d] px-4 py-3 shadow-xl sm:flex">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/15 text-emerald-300"><TrendingUp className="h-4 w-4" /></span>
+                <span><span className="block text-xs text-neutral-500">Conversión</span><strong className="text-sm">+31% este mes</strong></span>
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-none mx-auto md:mx-0 md:justify-self-end">
-            <AiWritingReview />
+        <div className="border-y border-white/10 bg-white/[0.025] px-5 py-5 sm:px-8">
+          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
+            <span className="text-xs uppercase tracking-[0.18em] text-neutral-500">Todo lo que necesitas para crecer con confianza</span>
+            <div className="flex items-center gap-5 text-xs text-neutral-400"><span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-violet-300" />Datos seguros</span><span className="flex items-center gap-1.5"><Zap className="h-4 w-4 text-cyan-300" />Resultados accionables</span></div>
           </div>
         </div>
+
+        <section id="producto" className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-32">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-300">Una visión completa</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Tu reputación, por fin bajo control.</h2>
+            <p className="mt-5 text-base leading-7 text-neutral-400">Menos herramientas dispersas. Más claridad para saber qué está funcionando y qué puedes mejorar hoy.</p>
+          </div>
+          <div className="mt-12 grid gap-4 lg:grid-cols-12">
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/15 to-white/[0.03] p-6 lg:col-span-7 lg:p-8">
+              <Sparkles className="h-6 w-6 text-violet-300" /><h3 className="mt-12 text-2xl font-semibold">Respuestas que suenan a ti</h3><p className="mt-3 max-w-md text-sm leading-6 text-neutral-400">La IA entiende cada reseña, detecta el contexto y prepara una respuesta humana, cercana y lista para publicar.</p>
+              <div className="mt-8 rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-neutral-300">“Gracias por compartir tu experiencia. Hemos revisado lo ocurrido con el equipo y ya estamos trabajando para mejorar...”</div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 lg:col-span-5 lg:p-8">
+              <MessageCircle className="h-6 w-6 text-cyan-300" /><h3 className="mt-12 text-2xl font-semibold">Más conversaciones, menos trabajo</h3><p className="mt-3 text-sm leading-6 text-neutral-400">Automatiza solicitudes por QR y email en el momento de mayor satisfacción.</p>
+              <div className="mt-7 flex items-center gap-2 text-xs text-neutral-400"><span className="h-2 w-2 rounded-full bg-emerald-400" />Flujos activos 24/7</div>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 lg:col-span-5 lg:p-8">
+              <BarChart3 className="h-6 w-6 text-amber-300" /><h3 className="mt-12 text-2xl font-semibold">Decisiones con datos</h3><p className="mt-3 text-sm leading-6 text-neutral-400">Identifica patrones, problemas recurrentes y oportunidades antes que tu competencia.</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-white/[0.03] p-6 lg:col-span-7 lg:p-8">
+              <TrendingUp className="h-6 w-6 text-emerald-300" /><h3 className="mt-12 text-2xl font-semibold">Una relación que crece</h3><p className="mt-3 max-w-md text-sm leading-6 text-neutral-400">Conecta reseñas, clientes y fidelización para que cada visita abra la puerta a la siguiente.</p>
+              <div className="mt-8 flex flex-wrap gap-2 text-xs text-neutral-400"><span className="rounded-full border border-white/10 px-3 py-1.5">Reseñas</span><span className="rounded-full border border-white/10 px-3 py-1.5">Puntos</span><span className="rounded-full border border-white/10 px-3 py-1.5">Clientes</span><span className="rounded-full border border-white/10 px-3 py-1.5">Analítica</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="como-funciona" className="border-y border-white/10 bg-[#0d0d12] px-5 py-24 sm:px-8 lg:py-32">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Empieza hoy</p><h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">Simple para ti.<br />Notable para tus clientes.</h2></div>
+              <p className="max-w-sm text-sm leading-6 text-neutral-400">Una puesta en marcha sencilla para que puedas dedicar tu tiempo a tu negocio, no a perseguir herramientas.</p>
+            </div>
+            <div className="mt-14 grid gap-8 md:grid-cols-3">
+              {[["01", "Conecta tu negocio", "Importa tu ficha y reúne tus canales en un solo panel."], ["02", "Activa tus solicitudes", "Comparte tu QR o automatiza invitaciones por email."], ["03", "Mejora cada semana", "Lee los patrones, responde mejor y convierte más visitas."]].map(([number, title, description]) => (
+                <div key={number} className="border-t border-white/15 pt-5"><span className="text-sm text-violet-300">{number}</span><h3 className="mt-10 text-xl font-semibold">{title}</h3><p className="mt-3 text-sm leading-6 text-neutral-400">{description}</p></div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-32">
+          <div className="relative overflow-hidden rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-600/25 via-[#16131f] to-cyan-500/10 px-6 py-14 text-center sm:px-12">
+            <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-96 -translate-x-1/2 rounded-full bg-violet-400/20 blur-3xl" />
+            <div className="relative"><Star className="mx-auto h-6 w-6 fill-amber-300 text-amber-300" /><h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">Tu próxima gran reseña empieza hoy.</h2><p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-violet-100/70 sm:text-base">Únete a los negocios que convierten la confianza en crecimiento sostenible.</p><Button as="link" variant="primary" href="/sign-up" className="relative mt-8 border-white bg-white px-7 text-black shadow-none hover:bg-violet-100">Comenzar gratis <ArrowRight className="h-4 w-4" /></Button></div>
+          </div>
+        </section>
       </main>
 
-      <section className="border-t border-stone-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20">
-          <div className="max-w-2xl mb-8 sm:mb-10">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-100">
-              Todo lo que necesitas para dominar tu reputación online
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-neutral-500 dark:text-neutral-400 sm:text-base">
-              Desde el primer código QR hasta el análisis de reseñas con IA. Una
-              plataforma que convierte clientes satisfechos en reseñas de 5
-              estrellas.
-            </p>
-          </div>
-
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <LandingCard>
-              <LandingCardHeader>
-                <Sparkles className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>Solicitudes automatizadas</LandingCardTitle>
-                <LandingCardDescription>
-                  QR y email. Solicita reseñas en el momento justo sin
-                  esfuerzo manual.
-                </LandingCardDescription>
-              </LandingCardHeader>
-              <LandingCardContent>
-                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
-                  Cada interacción con tu cliente es una oportunidad para
-                  conseguir una nueva reseña en Google. Automatiza el proceso y
-                  multiplica tus valoraciones sin apenas esfuerzo.
-                </p>
-              </LandingCardContent>
-            </LandingCard>
-
-            <LandingCard>
-              <LandingCardHeader>
-                <Star className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>Respuestas con IA</LandingCardTitle>
-                <LandingCardDescription>
-                  Responde a cada reseña con contexto generado por inteligencia
-                  artificial en segundos.
-                </LandingCardDescription>
-              </LandingCardHeader>
-              <LandingCardContent>
-                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
-                  Mantén una comunicación activa con todos tus clientes sin
-                  invertir horas. La IA redacta respuestas coherentes,
-                  profesionales y personalizadas para cada reseña.
-                </p>
-              </LandingCardContent>
-            </LandingCard>
-
-            <LandingCard>
-              <LandingCardHeader>
-                <TrendingUp className="w-6 h-6 text-black dark:text-white mb-4" />
-                <LandingCardTitle>Analítica y crecimiento</LandingCardTitle>
-                <LandingCardDescription>
-                  Mide, aprende y mejora tu reputación digital con datos claros
-                  y accionables.
-                </LandingCardDescription>
-              </LandingCardHeader>
-              <LandingCardContent>
-                <p className="text-sm leading-7 text-stone-600 dark:text-neutral-400">
-                  Seguimiento de reseñas, tendencias de puntuación y alertas
-                  inteligentes para actuar antes de que un problema escale.
-                  Convierte la reputación en tu mejor canal de adquisición.
-                </p>
-              </LandingCardContent>
-            </LandingCard>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-stone-200 dark:border-neutral-800 bg-stone-100/50 dark:bg-neutral-900 transition-colors">
+      <footer className="border-t border-white/10 bg-[#08080a] text-white transition-colors">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-16">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 sm:gap-12">
             <div>
@@ -281,7 +286,7 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-        <div className="border-t border-neutral-200 dark:border-neutral-800 py-5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div className="border-t border-white/10 py-5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-center gap-4">
           <p className="text-xs text-neutral-400">
             &copy; {new Date().getFullYear()} Revly.
           </p>
