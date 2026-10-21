@@ -12,10 +12,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getCustomerSummary } from '@/actions/customers';
-import { getBusinessProfileStatus } from '@/actions/google-reviews';
+import { getBusinessGoogleReviews, getBusinessProfileStatus } from '@/actions/google-reviews';
 import { getFacebookConnectionStatus } from '@/actions/facebook';
 import { getInstagramConnectionStatus } from '@/actions/instagram';
 import { Card } from '@/components/ui/card';
+import { ChartPie } from '@/components/ui/chart';
 import { useBusiness } from '@/components/business-context';
 
 const Kpi = ({ value, label }: { value: number; label: string }) => (
@@ -69,18 +70,44 @@ const BusinessSummary = () => {
     address: false,
     hours: false,
   });
+  const [reviewState, setReviewState] = useState<{
+    loading: boolean;
+    total: number;
+    sentiments: { label: string; value: number; color: string }[];
+  }>({
+    loading: true,
+    total: 0,
+    sentiments: [],
+  });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [s, google, ig, fb] = await Promise.all([
+      const [s, google, ig, fb, reviewData] = await Promise.all([
         getCustomerSummary(id),
         getBusinessProfileStatus(id).catch(() => null),
         getInstagramConnectionStatus(id).catch(() => null),
         getFacebookConnectionStatus(id).catch(() => null),
+        getBusinessGoogleReviews(id).catch(() => null),
       ]);
       if (cancelled) return;
       setSummary(s);
+      const counts = { positive: 0, neutral: 0, negative: 0 };
+      for (const review of reviewData?.reviews ?? []) {
+        if (review.rating >= 4) counts.positive++;
+        else if (review.rating === 3) counts.neutral++;
+        else if (review.rating > 0) counts.negative++;
+      }
+      const total = counts.positive + counts.neutral + counts.negative;
+      setReviewState({
+        loading: false,
+        total,
+        sentiments: [
+          { label: 'Positivas', value: counts.positive, color: '#34d399' },
+          { label: 'Neutras', value: counts.neutral, color: '#fbbf24' },
+          { label: 'Negativas', value: counts.negative, color: '#fb7185' },
+        ],
+      });
       setSetup({
         google: google?.connected ?? false,
         instagram: ig?.connected ?? false,
@@ -139,6 +166,82 @@ const BusinessSummary = () => {
           <Kpi value={summary.completed} label="Reseñas completadas" />
           <Kpi value={summary.redeemedThisMonth} label="Descuentos canjeados (mes)" />
         </div>
+      </section>
+
+      <section
+        aria-label="Sentimiento de las reseñas"
+        className="dashboard-card overflow-hidden rounded-xl"
+      >
+        <div className="border-b border-[#1b1b1b] px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold">Sentimiento de tus reseñas</h2>
+              <p className="mt-0.5 text-xs text-neutral-400">
+                Distribución de las reseñas de Google de este negocio.
+              </p>
+            </div>
+            {reviewState.total > 0 && (
+              <span className="rounded-full bg-neutral-800 px-2.5 py-1 text-[11px] text-neutral-400">
+                {reviewState.total} total
+              </span>
+            )}
+          </div>
+        </div>
+        {reviewState.loading ? (
+          <div className="flex items-center gap-4 px-4 py-7 sm:px-5">
+            <div className="relative h-24 w-24 shrink-0">
+              <div className="h-24 w-24 animate-spin rounded-full border-4 border-neutral-800 border-t-violet-400" />
+              <div className="absolute inset-3 animate-pulse rounded-full bg-neutral-900" />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium animate-pulse">Trayendo reseñas de Google...</p>
+              <p className="text-xs text-neutral-500">
+                Estamos preparando el resumen de sentimiento.
+              </p>
+            </div>
+          </div>
+        ) : reviewState.total === 0 ? (
+          <p className="px-4 py-6 text-sm text-neutral-500 sm:px-5">
+            Todavía no hay reseñas de Google para analizar.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3 sm:p-5">
+            {reviewState.sentiments.map((sentiment) => {
+              const percentage = Math.round((sentiment.value / reviewState.total) * 100);
+              return (
+                <div
+                  key={sentiment.label}
+                  className="relative overflow-hidden rounded-xl border border-[#242424] bg-[#111] p-3 transition-transform duration-300 hover:-translate-y-0.5"
+                >
+                  <div
+                    className="absolute -right-8 -top-8 h-20 w-20 rounded-full opacity-10 blur-2xl"
+                    style={{ backgroundColor: sentiment.color }}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="relative h-20 w-20 shrink-0 animate-[fadeSlideIn_0.7s_ease-out]">
+                      <ChartPie
+                        data={[
+                          { name: sentiment.label, value: sentiment.value, color: sentiment.color },
+                          { name: 'Resto', value: reviewState.total - sentiment.value, color: '#292929' },
+                        ]}
+                        height={80}
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">
+                        {percentage}%
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{sentiment.label}</p>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        {sentiment.value} reseña{sentiment.value !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       {/* Checklist de puesta en marcha */}
