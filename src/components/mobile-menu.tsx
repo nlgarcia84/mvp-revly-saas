@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 
 const links = [
   { label: 'Producto', href: '/producto' },
@@ -12,6 +13,11 @@ const links = [
 const MobileMenu = () => {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -58,25 +64,26 @@ const MobileMenu = () => {
         </div>
       </button>
 
-      {open && (
-        <button
-          type="button"
-          aria-label="Cerrar menú"
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] sm:hidden"
-        />
-      )}
+      {mounted &&
+        createPortal(
+          <>
+            {open && (
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                onClick={() => setOpen(false)}
+                className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-[2px] sm:hidden"
+              />
+            )}
 
-      <div
-        id="mobile-navigation"
-        aria-hidden={!open}
-        className={`fixed inset-x-0 bottom-0 top-[72px] z-50 flex max-h-[calc(100dvh-4.5rem)] flex-col border-b border-white/10 bg-[#0d0d12] pb-[env(safe-area-inset-bottom)] text-white transition-[opacity,visibility] duration-300 ease-out sm:hidden ${
-          open
-            ? 'visible opacity-100'
-            : 'invisible opacity-0'
-        }`}
-      >
-        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-8">
+            <div
+              id="mobile-navigation"
+              aria-hidden={!open}
+              className={`fixed inset-x-0 bottom-0 top-[72px] z-[9999] flex max-h-[calc(100dvh-4.5rem)] flex-col border-b border-white/10 bg-[#0d0d12] pb-[env(safe-area-inset-bottom)] text-white transition-[opacity,visibility] duration-300 ease-out sm:hidden ${
+                open ? 'visible opacity-100' : 'invisible opacity-0'
+              }`}
+            >
+              <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-6 pt-8">
           <ul className="flex flex-col gap-1">
             {links.map((link, i) => (
               <li
@@ -129,16 +136,18 @@ const MobileMenu = () => {
               Empieza prueba gratuita
             </Link>
           </div>
-        </nav>
+              </nav>
 
-        <div
-          className={`border-t border-neutral-200 px-6 py-5 transition-all duration-300 ease-out dark:border-neutral-800 ${
-            open
-              ? 'opacity-100 translate-y-0'
-              : 'opacity-0 translate-y-3'
-          }`}
-          style={{ transitionDelay: open ? `${(links.length + 2) * 70}ms` : '0ms' }}
-        >
+              <div
+                className={`border-t border-neutral-200 px-6 py-5 transition-all duration-300 ease-out dark:border-neutral-800 ${
+                  open ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+                }`}
+                style={{
+                  transitionDelay: open
+                    ? `${(links.length + 2) * 70}ms`
+                    : '0ms',
+                }}
+              >
           <p className="text-xs text-neutral-400 mb-2.5">
             Empieza tu prueba gratuita
           </p>
@@ -158,8 +167,11 @@ const MobileMenu = () => {
               Empieza prueba gratuita
             </button>
           </form>
-        </div>
-      </div>
+              </div>
+            </div>
+          </>,
+          document.body,
+        )}
     </>
   );
 };
