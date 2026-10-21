@@ -237,7 +237,10 @@ export async function fetchPlaceDetails(
   // reviews_sort solo acepta "most_relevant" (default) o "newest".
   // "most_recent" es inválido y Google lo ignora silenciosamente, devolviendo
   // las reseñas por relevancia (no las últimas).
-  const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&reviews_sort=newest&language=es&key=${apiKey}`;
+  // No fijar language=es: Places puede devolver el texto de la reseña
+  // traducido al idioma solicitado, lo que hace imposible responder en el
+  // idioma original. El nombre y las reseñas deben conservar su idioma fuente.
+  const apiUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(resolved)}&fields=name,rating,user_ratings_total,reviews&reviews_sort=newest&key=${apiKey}`;
 
   const response = await fetch(apiUrl);
   if (!response.ok) {

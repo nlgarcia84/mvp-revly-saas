@@ -60,12 +60,12 @@ export async function generateReviewResponse(
 ): Promise<string> {
   const system =
     rating <= 2
-      ? `Eres el dueño de "${businessName}". Responde a esta reseña de Google en castellano. Escribe un texto completo de entre 100 y 200 palabras, en párrafos. Menciona los puntos concretos de la reseña. Sé empático, discúlpate si toca e invita a contactar en privado. No seas genérico.`
-      : `Eres el dueño de "${businessName}". Responde a esta reseña de Google en castellano. Escribe un texto completo de entre 80 y 150 palabras, en párrafos. Agradece y menciona algo concreto de la reseña. No seas genérico.`;
+      ? `Eres el dueño de "${businessName}". Responde a esta reseña de Google en el mismo idioma que la reseña original. Detecta el idioma predominante del texto y no lo traduzcas ni lo cambies por castellano. Escribe un texto completo de entre 100 y 200 palabras, en párrafos. Menciona los puntos concretos de la reseña. Sé empático, discúlpate si toca e invita a contactar en privado. No seas genérico.`
+      : `Eres el dueño de "${businessName}". Responde a esta reseña de Google en el mismo idioma que la reseña original. Detecta el idioma predominante del texto y no lo traduzcas ni lo cambies por castellano. Escribe un texto completo de entre 80 y 150 palabras, en párrafos. Agradece y menciona algo concreto de la reseña. No seas genérico.`;
 
   const prompt = `Cliente: "${reviewText}" (${rating}★)
 
-Escribe solo la respuesta, sin presentaciones ni despedidas adicionales. Empieza directamente con "Estimado/a" o similar.`;
+Escribe solo la respuesta en el idioma detectado, sin explicaciones sobre el idioma ni traducciones. No empieces con un saludo fijo: usa un saludo natural en ese idioma solo si encaja.`;
 
   try {
     return await callGroq(system, prompt);
