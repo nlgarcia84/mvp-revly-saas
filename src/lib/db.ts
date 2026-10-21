@@ -4,12 +4,30 @@ import pg from "pg";
 
 // Pool de conexiones PostgreSQL. DATABASE_URL indica a qué base de datos
 // conectarse; Supabase es el proveedor utilizado por este proyecto.
+function getDatabaseUrl(): string {
+  const value = process.env.DATABASE_URL;
+  if (!value) throw new Error('Falta DATABASE_URL.');
+
+  const url = new URL(value);
+  // Supabase session pooler (5432) keeps one backend connection per
+  // serverless instance. Use its transaction pooler for Vercel, where
+  // instances are short-lived and can otherwise exhaust the 15-connection
+  // session limit.
+  if (url.hostname.includes('pooler.supabase.com') && url.port === '5432') {
+    url.port = '6543';
+    url.searchParams.set('pgbouncer', 'true');
+  }
+  return url.toString();
+}
+
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: getDatabaseUrl(),
   // Vercel puede ejecutar varias instancias en paralelo. El pool por defecto
   // abre hasta 10 conexiones por instancia y agota el límite del pooler de
   // Supabase (15 conexiones en modo sesión).
   max: 1,
+  idleTimeoutMillis: 1_000,
+  connectionTimeoutMillis: 5_000,
   ssl: { rejectUnauthorized: false },
 });
 
