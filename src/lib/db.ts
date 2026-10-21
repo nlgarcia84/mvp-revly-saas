@@ -6,6 +6,10 @@ import pg from "pg";
 // conectarse; Supabase es el proveedor utilizado por este proyecto.
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL!,
+  // Vercel puede ejecutar varias instancias en paralelo. El pool por defecto
+  // abre hasta 10 conexiones por instancia y agota el límite del pooler de
+  // Supabase (15 conexiones en modo sesión).
+  max: 1,
   ssl: { rejectUnauthorized: false },
 });
 
