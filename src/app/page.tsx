@@ -86,7 +86,7 @@ const HomePage = () => {
                 Revly reúne reseñas, fidelización y respuestas con IA en un solo lugar para que tu negocio crezca con la confianza de tus clientes.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Button as="link" variant="primary" href="/sign-up" className="border-white bg-white px-6 py-3 !text-black shadow-none hover:bg-violet-100">
+                <Button as="link" variant="secondary" href="/sign-up" className="border-white bg-white px-6 py-3 !text-black shadow-none hover:bg-violet-100">
                   Empieza gratis <ArrowRight className="h-4 w-4" />
                 </Button>
                 <a href="#como-funciona" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10">
@@ -178,7 +178,7 @@ const HomePage = () => {
         <section className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:py-32">
           <div className="relative overflow-hidden rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-600/25 via-[#16131f] to-cyan-500/10 px-6 py-14 text-center sm:px-12">
             <div className="pointer-events-none absolute left-1/2 top-0 h-48 w-96 -translate-x-1/2 rounded-full bg-violet-400/20 blur-3xl" />
-            <div className="relative"><Star className="mx-auto h-6 w-6 fill-amber-300 text-amber-300" /><h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">Tu próxima gran reseña empieza hoy.</h2><p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-violet-100/70 sm:text-base">Únete a los negocios que convierten la confianza en crecimiento sostenible.</p><Button as="link" variant="primary" href="/sign-up" className="relative mt-8 border-white bg-white px-7 text-black shadow-none hover:bg-violet-100">Comenzar gratis <ArrowRight className="h-4 w-4" /></Button></div>
+            <div className="relative"><Star className="mx-auto h-6 w-6 fill-amber-300 text-amber-300" /><h2 className="mx-auto mt-5 max-w-2xl text-3xl font-semibold tracking-tight sm:text-5xl">Tu próxima gran reseña empieza hoy.</h2><p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-violet-100/70 sm:text-base">Únete a los negocios que convierten la confianza en crecimiento sostenible.</p><Button as="link" variant="secondary" href="/sign-up" className="relative mt-8 border-white bg-white px-7 !text-black shadow-none hover:bg-violet-100">Comenzar gratis <ArrowRight className="h-4 w-4" /></Button></div>
           </div>
         </section>
       </main>
