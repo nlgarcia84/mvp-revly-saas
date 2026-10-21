@@ -5,11 +5,10 @@
 //
 // Mockea:
 //   - @/actions/auth (signOut) — Server Action de cierre de sesión
-//   - @/components/ui/dark-toggle — componente hijo
 //   - Temporizadores (useFakeTimers) — para controlar el reloj
 //
 // Cobertura:
-//   - Render de elementos (brand, reloj, DarkToggle, cerrar sesión)
+//   - Render de elementos (brand, reloj, cerrar sesión)
 //   - Interacción (hamburger toggle)
 //   - Efectos secundarios (intervalo, limpieza)
 // ──────────────────────────────────────────────
@@ -20,13 +19,6 @@ import Navbar from '../navbar';
 // Mock de la Server Action signOut para evitar que intente conectarse a Supabase
 jest.mock('@/actions/auth', () => ({
   signOut: jest.fn(),
-}));
-
-// Mock del DarkToggle: reemplazamos el componente real por un botón simple
-// con data-testid para poder verificarlo en el test
-jest.mock('@/components/ui/dark-toggle', () => ({
-  __esModule: true,
-  default: () => <button data-testid="dark-toggle">Toggle</button>,
 }));
 
 describe('Navbar', () => {
@@ -54,12 +46,6 @@ describe('Navbar', () => {
     render(<Navbar onMenuToggle={jest.fn()} />);
     expect(screen.getByText(/ene/i)).toBeInTheDocument();
     expect(screen.getByText(/14:30/i)).toBeInTheDocument();
-  });
-
-  it('renders the DarkToggle component', () => {
-    // Verifica que el mock del DarkToggle se renderice dentro del Navbar
-    render(<Navbar onMenuToggle={jest.fn()} />);
-    expect(screen.getByTestId('dark-toggle')).toBeInTheDocument();
   });
 
   it('renders the sign out button', () => {

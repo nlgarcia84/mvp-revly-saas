@@ -41,17 +41,17 @@ const MobileMenu = () => {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-navigation"
-        className="rounded-lg p-2 text-slate-300 transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 sm:hidden"
+        className="flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-2 text-white transition-colors hover:bg-violet-500/15 hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:hidden"
         aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
       >
         <div className="relative w-5 h-4">
           <span
-            className={`absolute left-0 block w-5 h-0.5 bg-current rounded-full transition-all duration-300 origin-center ${
+            className={`absolute left-0 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 origin-center ${
               open ? 'top-[7px] rotate-45' : 'top-0'
             }`}
           />
           <span
-            className={`absolute left-0 block w-5 h-0.5 bg-current rounded-full transition-all duration-300 origin-center ${
+            className={`absolute left-0 block h-0.5 w-5 rounded-full bg-white transition-all duration-300 origin-center ${
               open ? 'top-[7px] -rotate-45' : 'top-[10px]'
             }`}
           />

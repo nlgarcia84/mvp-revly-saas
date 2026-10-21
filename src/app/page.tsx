@@ -1,6 +1,5 @@
 import MobileMenu from "@/components/mobile-menu";
 import Button from "@/components/ui/button";
-import DarkToggle from "@/components/ui/dark-toggle";
 import {
   ArrowRight,
   BarChart3,
@@ -47,7 +46,6 @@ const HomePage = () => {
             <a href="/recursos" className="transition-colors hover:text-white">Recursos</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
-          <DarkToggle />
           <MobileMenu />
           <div className="hidden sm:flex items-center gap-2 sm:gap-3">
             <Button

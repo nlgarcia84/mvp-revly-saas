@@ -23,7 +23,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.classList.toggle('dark',t!=='light')}catch(e){document.documentElement.classList.add('dark')}})()`,
+            __html: `document.documentElement.classList.add('dark')`,
           }}
         />
         <link rel="icon" href="/favicon/favicon.svg" type="image/svg+xml" />
@@ -39,7 +39,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         />
       </head>
       <body
-        className="min-w-0 bg-neutral-50 text-neutral-950 transition-colors dark:bg-[#0B0D12] dark:text-neutral-100"
+        className="min-w-0 bg-[#08080a] text-neutral-100"
         style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
       >
         {children}

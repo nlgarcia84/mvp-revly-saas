@@ -63,8 +63,8 @@ const Sidebar = ({
   const linkClass = (active: boolean) =>
     `flex items-center rounded-md border px-3 py-2 text-sm transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500 ${
       active
-      ? 'border-[#202020] bg-white font-medium text-white shadow-[inset_2px_2px_5px_#000,-2px_-2px_5px_#191919]'
-      : 'border-transparent bg-transparent text-neutral-500 hover:bg-[#111] hover:text-white'
+      ? 'border-violet-400/20 bg-violet-500/15 font-medium text-violet-100 shadow-[0_0_24px_rgba(139,92,246,0.08)]'
+      : 'border-transparent bg-transparent text-neutral-500 hover:bg-white/[0.04] hover:text-white'
     }`;
 
   return (
@@ -90,7 +90,7 @@ const Sidebar = ({
         aria-label="Navegación principal"
         aria-modal={mobileOpen || undefined}
         role={mobileOpen ? 'dialog' : undefined}
-        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100dvh-3.5rem)] w-[min(85vw,280px)] flex-col overflow-hidden border-r border-[#171717] bg-[#0A0A0A] pb-[env(safe-area-inset-bottom)] pl-3 pr-4 pt-4 shadow-2xl transition-transform duration-200 motion-reduce:transition-none lg:hidden ${
+        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100dvh-3.5rem)] w-[min(85vw,280px)] flex-col overflow-hidden border-r border-white/10 bg-[#0d0d12] pb-[env(safe-area-inset-bottom)] pl-3 pr-4 pt-4 shadow-2xl transition-transform duration-200 motion-reduce:transition-none lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -111,7 +111,7 @@ const Sidebar = ({
       {/* Sidebar desktop: fijo a la izquierda, siempre visible.
           hidden lg:block → oculto en mobile, visible en desktop.
           No tiene overlay ni animación. */}
-      <aside className="hidden h-full w-52 shrink-0 border-r border-[#171717] bg-[#0A0A0A] p-3 pl-3 transition-colors lg:block">
+      <aside className="hidden h-full w-52 shrink-0 border-r border-white/10 bg-[#0d0d12] p-3 pl-3 transition-colors lg:block">
         <nav className="flex flex-col gap-1">
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);

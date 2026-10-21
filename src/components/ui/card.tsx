@@ -1,5 +1,5 @@
 export const nCard =
-  'dashboard-card rounded-xl bg-[#0A0A0A] text-neutral-100 transition-[box-shadow,transform] duration-200';
+  'dashboard-card rounded-xl text-neutral-100 transition-[box-shadow,transform] duration-200';
 
 type CardProps = {
   children: React.ReactNode;

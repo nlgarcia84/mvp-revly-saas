@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { signOut } from '@/actions/auth';
-import DarkToggle from '@/components/ui/dark-toggle';
 
 // ──────────────────────────────────────────────
 // Navbar
@@ -51,11 +50,11 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="relative z-30 flex h-14 shrink-0 items-center border-b border-[#171717] bg-[#0A0A0A] px-3 shadow-[0_4px_12px_#000] sm:px-5 lg:px-6">
+    <header className="relative z-30 flex h-14 shrink-0 items-center border-b border-white/10 bg-[#0b0b0f]/95 px-3 shadow-[0_4px_20px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-5 lg:px-6">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
-        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-[#151515] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 lg:hidden"
+        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-violet-500/10 hover:text-violet-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-mobile-navigation"
@@ -95,14 +94,11 @@ const Navbar = ({
         >
           {time}
         </span>
-        {/* Toggle de modo oscuro */}
-        <DarkToggle />
-
         {/* Formulario de cierre de sesión usando Server Action de Next.js */}
         <form action={signOut}>
           <button
             type="submit"
-            className="min-h-10 cursor-pointer whitespace-nowrap rounded-lg border border-[#202020] bg-[#0B0B0B] px-3 text-xs text-neutral-300 shadow-[3px_3px_8px_#000,-2px_-2px_6px_#151515] transition-all hover:text-white active:shadow-[inset_2px_2px_5px_#000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+            className="min-h-10 cursor-pointer whitespace-nowrap rounded-lg border border-white/10 bg-white/[0.04] px-3 text-xs text-neutral-300 shadow-none transition-all hover:border-violet-400/30 hover:bg-violet-500/10 hover:text-white active:shadow-[inset_2px_2px_5px_#000] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
           >
             Cerrar sesión
           </button>
