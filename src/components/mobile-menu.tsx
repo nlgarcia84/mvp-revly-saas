@@ -41,7 +41,7 @@ const MobileMenu = () => {
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls="mobile-navigation"
-        className="flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] p-2 text-white transition-colors hover:bg-violet-500/15 hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:hidden"
+        className="relative z-[70] flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-white/20 bg-[#17171d] p-2 text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-colors hover:bg-violet-500/15 hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 sm:hidden"
         aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
       >
         <div className="relative w-5 h-4">
@@ -70,7 +70,7 @@ const MobileMenu = () => {
       <div
         id="mobile-navigation"
         aria-hidden={!open}
-        className={`fixed inset-x-0 bottom-0 top-[72px] z-50 flex max-h-[calc(100dvh-4.5rem)] flex-col border-b border-neutral-200 bg-white pb-[env(safe-area-inset-bottom)] transition-[opacity,visibility] duration-300 ease-out dark:border-neutral-800 dark:bg-neutral-950 sm:hidden ${
+        className={`fixed inset-x-0 bottom-0 top-[72px] z-50 flex max-h-[calc(100dvh-4.5rem)] flex-col border-b border-white/10 bg-[#0d0d12] pb-[env(safe-area-inset-bottom)] text-white transition-[opacity,visibility] duration-300 ease-out sm:hidden ${
           open
             ? 'visible opacity-100'
             : 'invisible opacity-0'
@@ -91,7 +91,7 @@ const MobileMenu = () => {
                 <Link
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="block py-3 text-xl font-medium text-neutral-900 transition-colors hover:text-neutral-400 dark:text-neutral-100 dark:hover:text-neutral-500"
+                  className="block py-3 text-xl font-medium text-white transition-colors hover:text-violet-200"
                 >
                   {link.label}
                 </Link>
@@ -117,14 +117,14 @@ const MobileMenu = () => {
             <Link
               href="/sign-in"
               onClick={() => setOpen(false)}
-              className="text-sm text-neutral-500 transition-colors hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-neutral-100"
+              className="text-sm text-neutral-400 transition-colors hover:text-white"
             >
               Iniciar sesión
             </Link>
             <Link
               href="/sign-up"
               onClick={() => setOpen(false)}
-              className="text-sm font-medium text-neutral-950 transition-colors hover:text-neutral-400 dark:text-neutral-100 dark:hover:text-neutral-500"
+              className="text-sm font-medium text-white transition-colors hover:text-violet-200"
             >
               Empieza prueba gratuita
             </Link>
@@ -149,7 +149,7 @@ const MobileMenu = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="tu@email.com"
               required
-              className="min-w-0 flex-1 rounded-md border border-neutral-200 bg-transparent px-3.5 py-2.5 text-sm text-neutral-950 outline-none placeholder:text-neutral-400 focus:border-neutral-950 dark:border-neutral-700 dark:text-neutral-100 dark:placeholder:text-neutral-400 dark:focus:border-neutral-400"
+              className="min-w-0 flex-1 rounded-md border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-violet-400/60"
             />
             <button
               type="submit"

@@ -33,7 +33,7 @@ const LandingChat = dynamic(
 const HomePage = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="fixed left-0 right-0 top-0 z-40 border-b border-white/10 bg-[#08080a]/85 px-5 py-4 backdrop-blur-xl sm:px-8">
+      <header className="fixed left-0 right-0 top-0 z-[60] border-b border-white/10 bg-[#08080a]/95 px-5 py-4 backdrop-blur-xl sm:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <a href="/" className="flex items-center gap-2.5 text-white">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-sm font-bold text-black">R</span>
@@ -86,7 +86,7 @@ const HomePage = () => {
                 Revly reúne reseñas, fidelización y respuestas con IA en un solo lugar para que tu negocio crezca con la confianza de tus clientes.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Button as="link" variant="primary" href="/sign-up" className="border-white bg-white px-6 py-3 text-black shadow-none hover:bg-violet-100">
+                <Button as="link" variant="primary" href="/sign-up" className="border-white bg-white px-6 py-3 !text-black shadow-none hover:bg-violet-100">
                   Empieza gratis <ArrowRight className="h-4 w-4" />
                 </Button>
                 <a href="#como-funciona" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10">

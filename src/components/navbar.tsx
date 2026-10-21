@@ -50,11 +50,11 @@ const Navbar = ({
   }, []);
 
   return (
-    <header className="relative z-30 flex h-14 shrink-0 items-center border-b border-white/10 bg-[#0b0b0f]/95 px-3 shadow-[0_4px_20px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-5 lg:px-6">
+    <header className="relative z-[60] flex h-14 shrink-0 items-center border-b border-white/10 bg-[#0b0b0f]/95 px-3 shadow-[0_4px_20px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:px-5 lg:px-6">
       {/* Botón hamburguesa — solo visible en mobile (lg:hidden) */}
       <button
         onClick={onMenuToggle}
-        className="mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-violet-500/10 hover:text-violet-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden"
+        className="relative z-[70] mr-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/10 bg-[#17171d] text-white shadow-[0_4px_16px_rgba(0,0,0,0.35)] transition-colors hover:bg-violet-500/10 hover:text-violet-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 lg:hidden"
         aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
         aria-expanded={mobileOpen}
         aria-controls="dashboard-mobile-navigation"
