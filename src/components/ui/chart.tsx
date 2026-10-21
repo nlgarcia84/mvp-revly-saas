@@ -115,19 +115,32 @@ export const ChartLine = ({ data, height = 200, color = '#0a0a0a' }: LineChartPr
 type PieChartProps = {
   data: { name: string; value: number; color: string }[];
   height?: number;
+  innerRadius?: number;
+  outerRadius?: number;
 };
 
-export const ChartPie = ({ data, height = 200 }: PieChartProps) => (
+export const ChartPie = ({
+  data,
+  height = 200,
+  innerRadius = 50,
+  outerRadius = 80,
+}: PieChartProps) => (
   <ResponsiveContainer width="100%" height={height}>
     <PieChart>
       <Pie
         data={data}
         cx="50%"
         cy="50%"
-        innerRadius={50}
-        outerRadius={80}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
         paddingAngle={2}
         dataKey="value"
+        startAngle={90}
+        endAngle={-270}
+        isAnimationActive
+        animationBegin={80}
+        animationDuration={1200}
+        animationEasing="ease-out"
       >
         {data.map((entry, i) => (
           <Cell key={i} fill={entry.color} />

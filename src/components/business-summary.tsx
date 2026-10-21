@@ -225,6 +225,8 @@ const BusinessSummary = () => {
                           { name: 'Resto', value: reviewState.total - sentiment.value, color: '#292929' },
                         ]}
                         height={80}
+                        innerRadius={27}
+                        outerRadius={36}
                       />
                       <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">
                         {percentage}%
