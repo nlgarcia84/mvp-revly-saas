@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     const authError = searchParams.get("error");
     const businessId = searchParams.get("state");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = new URL(request.url).origin;
     const settingsUrl = businessId
       ? `${appUrl}/business/${businessId}/redes`
       : `${appUrl}/business`;

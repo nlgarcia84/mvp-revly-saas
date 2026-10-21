@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/business", request.url));
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = new URL(request.url).origin;
     const clientId = getInstagramClientId();
     if (!clientId) {
       console.error(

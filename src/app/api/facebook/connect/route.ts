@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/business", request.url));
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = new URL(request.url).origin;
     const clientId = process.env.META_CLIENT_ID;
     if (!clientId) {
       console.error("[Facebook/Connect] Falta META_CLIENT_ID en .env.local");
