@@ -153,7 +153,7 @@ const MobileMenu = () => {
             />
             <button
               type="submit"
-              className="shrink-0 rounded-md bg-neutral-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 dark:bg-neutral-100 dark:text-neutral-950 dark:hover:bg-neutral-300"
+              className="shrink-0 rounded-md bg-white px-4 py-2.5 text-sm font-medium !text-black transition-colors hover:bg-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
             >
               Empieza prueba gratuita
             </button>
