@@ -246,8 +246,8 @@ La integración permite leer publicaciones y comentarios, responderlos con IA y 
   - `https://www.revly.es/api/facebook/callback`
   - `https://www.revly.es/api/instagram/callback`
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
-  El OAuth usa el origen real desde el que se inicia la conexión; registra
-  exactamente el host usado (`revly.es` y/o `www.revly.es`, incluido `www`).
+  El OAuth usa `NEXT_PUBLIC_APP_URL` como origen canónico; en producción debe
+  ser `https://www.revly.es` y coincidir exactamente con el host registrado.
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
 ## Notificaciones al cliente

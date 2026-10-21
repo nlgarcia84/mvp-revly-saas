@@ -21,7 +21,8 @@ export async function GET(request: Request) {
     const authError = searchParams.get("error");
     const businessId = searchParams.get("state");
 
-    const appUrl = new URL(request.url).origin;
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const settingsUrl = businessId
       ? `${appUrl}/business/${businessId}/redes`
       : `${appUrl}/business`;
@@ -182,7 +183,8 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("[Facebook/Callback] Error:", error);
     const businessId = new URL(request.url).searchParams.get("state");
-    const appUrl = new URL(request.url).origin;
+    const appUrl =
+      process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const errorMessage =
       error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.redirect(
