@@ -60,19 +60,23 @@ describe('Button', () => {
   // ─── Variantes visuales ─────────────────────
 
   it('applies primary variant classes by default', () => {
-    // Sin variant, debe aplicar primary: bg-neutral-950 + text-white
+    // En light, primary usa fondo oscuro y texto blanco.
     render(<Button>Primary</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-neutral-950');
     expect(btn.className).toContain('text-white');
+    expect(btn.className).toContain('dark:bg-white');
+    expect(btn.className).toContain('dark:text-neutral-950');
   });
 
   it('applies secondary variant classes', () => {
-    // variant="secondary" debe aplicar bg-white + text-neutral-950
+    // En light, secondary usa fondo claro y texto oscuro; en dark se invierte.
     render(<Button variant="secondary">Secondary</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-white');
     expect(btn.className).toContain('text-neutral-950');
+    expect(btn.className).toContain('dark:bg-neutral-900');
+    expect(btn.className).toContain('dark:text-neutral-100');
   });
 
   // ─── Personalización ────────────────────────

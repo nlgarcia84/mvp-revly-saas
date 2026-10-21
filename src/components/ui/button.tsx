@@ -1,21 +1,21 @@
 import Link from "next/link";
 
 // ─── Variantes visuales ──────────────────────────
-// primary   → fondo negro, texto blanco (CTA principal)
-// secondary → fondo blanco, borde gris (acción secundaria)
+// primary   → fondo oscuro en light / claro en dark, siempre con contraste alto
+// secondary → superficie clara en light / oscura en dark
 // ─────────────────────────────────────────────────
 type Variant = "primary" | "secondary";
 
 const variantClass: Record<Variant, string> = {
   primary:
-    "border-[#202020] bg-neutral-950 text-white hover:bg-neutral-800 active:shadow-[inset_3px_3px_7px_#000,inset_-2px_-2px_5px_#333]",
+    "border-[#202020] bg-neutral-950 text-white hover:bg-neutral-800 active:shadow-[inset_3px_3px_7px_#000,inset_-2px_-2px_5px_#333] dark:border-neutral-200 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 dark:active:shadow-[inset_3px_3px_7px_#a3a3a3,inset_-2px_-2px_5px_#fff]",
   secondary:
-    "border-white/15 bg-white !text-black hover:bg-violet-100 hover:!text-black active:shadow-[inset_3px_3px_7px_#bbb,inset_-2px_-2px_5px_#fff]",
+    "border-[#202020] bg-white text-neutral-950 hover:bg-neutral-100 active:shadow-[inset_3px_3px_7px_#bbb,inset_-2px_-2px_5px_#fff]",
 };
 
 // ─── Clases base comunes a todas las variantes ───
 const baseClass =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-[18px] py-2.5 text-sm font-medium shadow-[4px_4px_10px_#000,-3px_-3px_8px_#151515] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border px-[18px] py-2.5 text-sm font-medium shadow-[4px_4px_10px_rgba(0,0,0,0.16),-3px_-3px_8px_#fff] dark:shadow-[4px_4px_10px_#000,-3px_-3px_8px_#151515] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-[#050505] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer";
 
 // ─── Tipos para los tres modos de render ─────────
 // as="button" (default) → <button>
