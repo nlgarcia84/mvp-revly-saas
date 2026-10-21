@@ -1,15 +1,19 @@
--- DropForeignKey
-ALTER TABLE "Invoice" DROP CONSTRAINT "Invoice_businessId_fkey";
-
--- DropForeignKey
-ALTER TABLE "Invoice" DROP CONSTRAINT "Invoice_customerId_fkey";
+-- DropTable: Invoice
+-- La tabla "Invoice" y la columna "Business"."invoiceFormat" nunca llegaron a
+-- crearse por migraciones (la base original se generó con `prisma db push`),
+-- así que en una base nueva no existen. Se eliminan solo si están presentes.
+DO $$
+BEGIN
+    IF to_regclass('"Invoice"') IS NOT NULL THEN
+        ALTER TABLE "Invoice" DROP CONSTRAINT IF EXISTS "Invoice_businessId_fkey";
+        ALTER TABLE "Invoice" DROP CONSTRAINT IF EXISTS "Invoice_customerId_fkey";
+        DROP TABLE "Invoice";
+    END IF;
+END $$;
 
 -- AlterTable
-ALTER TABLE "Business" DROP COLUMN "invoiceFormat",
-ADD COLUMN     "ticketFormat" TEXT;
-
--- DropTable
-DROP TABLE "Invoice";
+ALTER TABLE "Business" DROP COLUMN IF EXISTS "invoiceFormat",
+ADD COLUMN     IF NOT EXISTS "ticketFormat" TEXT;
 
 -- CreateTable
 CREATE TABLE "PointClaim" (

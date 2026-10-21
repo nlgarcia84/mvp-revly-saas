@@ -57,16 +57,16 @@ model Subscription {
 // del kiosko, para mostrarlo como placeholder al cliente.
 // ──────────────────────────────────────────────
 model Business {
-  id            String     @id @default(uuid())
-  name          String
-  googleLink    String?
-  image         String?
-  slug          String?   @unique
-  emailTemplate String?
-  ticketFormat  String?    // Ejemplo: "A-001" — placeholder del ticket del kiosko
+  id             String           @id @default(uuid())
+  name           String
+  googleLink     String?
+  image          String?
+  slug           String?          @unique
+  emailTemplate  String?
+  ticketFormat   String? // Ejemplo: "A-001" — placeholder del ticket del kiosko
   userId         String
-  createdAt      DateTime   @default(now())
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime         @default(now())
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   customers      Customer[]
   pointClaims    PointClaim[]
   pointMovements PointMovement[]
@@ -88,11 +88,11 @@ model Business {
   // de su cuenta y ubicación en Google. Así podemos usar
   // la API de Business Profile para traer TODAS las
   // reseñas en lugar de solo las 5 que da Places API.
-  googleBusinessAccessToken  String?   // token OAuth para llamar a la API
-  googleBusinessRefreshToken String?   // token para renovar el access token cuando caduca
+  googleBusinessAccessToken  String? // token OAuth para llamar a la API
+  googleBusinessRefreshToken String? // token para renovar el access token cuando caduca
   googleBusinessTokenExpiry  DateTime? // cuándo caduca el access token
-  googleBusinessAccountId    String?   // ID de la cuenta en Google Business Profile
-  googleBusinessLocationId   String?   // ID de la ubicación/local en Google Business Profile
+  googleBusinessAccountId    String? // ID de la cuenta en Google Business Profile
+  googleBusinessLocationId   String? // ID de la ubicación/local en Google Business Profile
   // ─────────────────────────────────────────────────
 
   // ── Instagram / Meta Graph API ──────────────────────
@@ -102,27 +102,27 @@ model Business {
   // IDs de la página de Facebook y de la cuenta de
   // Instagram. Así podemos leer comentarios y responder
   // desde el dashboard con la ayuda de la IA.
-  instagramAccessToken     String?   // token long-lived de Meta (60 días)
-  instagramTokenExpiry     DateTime? // cuándo caduca el access token (60 días)
-  instagramPageId          String?   // ID de la página de Facebook vinculada
+  instagramAccessToken       String? // token long-lived de Meta (60 días)
+  instagramTokenExpiry       DateTime? // cuándo caduca el access token (60 días)
+  instagramPageId            String? // ID de la página de Facebook vinculada
   instagramBusinessAccountId String? // ID de la cuenta profesional de Instagram (IGSID)
-  instagramUsername        String?   // nombre de usuario de Instagram (para mostrarlo en Settings)
-  instagramCacheAt         DateTime? // cuándo se guardó la última caché de comentarios
-  instagramCache           Json?     // resultado de publicaciones+comentarios cacheado en BD
+  instagramUsername          String? // nombre de usuario de Instagram (para mostrarlo en Settings)
+  instagramCacheAt           DateTime? // cuándo se guardó la última caché de comentarios
+  instagramCache             Json? // resultado de publicaciones+comentarios cacheado en BD
   // ─────────────────────────────────────────────────
 
   // ── Página de Facebook ──────────────────────────────
   // Si el usuario conecta una Página de Facebook (token de
   // página con pages_show_list), guardamos aquí el token y
   // los IDs para leer comentarios, responder y publicar.
-  facebookAccessToken     String?   // token de la Página de Facebook
-  facebookTokenExpiry     DateTime? // cuándo caduca el access token
-  facebookPageId          String?   // ID de la Página de Facebook
-  facebookPageName        String?   // nombre de la página (para Settings)
-  facebookUsername        String?   // username/handle de la página si existe
-  facebookCacheAt         DateTime? // cuándo se guardó la última caché de comentarios
-  facebookCache           Json?     // resultado de publicaciones+comentarios cacheado en BD
-  facebookPending         Json?     // páginas pendientes de elegir tras el OAuth (si administra varias)
+  facebookAccessToken String? // token de la Página de Facebook
+  facebookTokenExpiry DateTime? // cuándo caduca el access token
+  facebookPageId      String? // ID de la Página de Facebook
+  facebookPageName    String? // nombre de la página (para Settings)
+  facebookUsername    String? // username/handle de la página si existe
+  facebookCacheAt     DateTime? // cuándo se guardó la última caché de comentarios
+  facebookCache       Json? // resultado de publicaciones+comentarios cacheado en BD
+  facebookPending     Json? // páginas pendientes de elegir tras el OAuth (si administra varias)
   // ─────────────────────────────────────────────────
 
   // ── Programa de puntos ──────────────────────────────
@@ -138,9 +138,9 @@ model Business {
   // (para el mapa), fotos y horarios de apertura.
   // Todos los campos son opcionales: si no se rellenan,
   // el bloque público no se muestra.
-  address      String?   // dirección completa ("Carrer de Mallorca 1, Barcelona")
-  latitude     Float?    // latitud del local (-90..90)
-  longitude    Float?    // longitud del local (-180..180)
+  address      String? // dirección completa ("Carrer de Mallorca 1, Barcelona")
+  latitude     Float? // latitud del local (-90..90)
+  longitude    Float? // longitud del local (-180..180)
   // Horarios de apertura estructurados por día (0=lunes … 6=domingo).
   // {
   //   mode: "hours" | "variable" | "always",
@@ -184,8 +184,8 @@ model Reservation {
   email      String
   phone      String?
   partySize  Int
-  date       String   // "YYYY-MM-DD"
-  time       String   // "HH:MM"
+  date       String // "YYYY-MM-DD"
+  time       String // "HH:MM"
   status     String   @default("confirmed")
   notes      String?
   createdAt  DateTime @default(now())
@@ -205,17 +205,17 @@ model Reservation {
 // ──────────────────────────────────────────────
 model PointMovement {
   id         String   @id @default(uuid())
-  type       String   // "welcome" | "earn" | "redeem" | "adjust"
-  points     Int      // firmado: +1 al ganar, -5 al canjear
-  day        String?  // "YYYY-MM-DD" (solo en "earn")
+  type       String // "welcome" | "earn" | "redeem" | "adjust"
+  points     Int // firmado: +1 al ganar, -5 al canjear
+  day        String? // "YYYY-MM-DD" (solo en "earn")
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
   businessId String
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   customerId String
   createdAt  DateTime @default(now())
 
-  @@index([customerId, createdAt])
   @@unique([customerId, businessId, type, day])
+  @@index([customerId, createdAt])
 }
 
 // ──────────────────────────────────────────────
@@ -238,18 +238,18 @@ model PointClaim {
 }
 
 model Customer {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String
-  phone         String
-  whatsappOptIn Boolean   @default(false) // el cliente acepta recibir avisos por WhatsApp
-  businessId    String
-  source        String    @default("qr")
-  status        String    @default("pending")
-  invitedCount  Int       @default(0)
-  lastInvitedAt DateTime?
-  rating        Int?
-  feedback      String?
+  id             String          @id @default(uuid())
+  name           String?
+  email          String
+  phone          String
+  whatsappOptIn  Boolean         @default(false) // el cliente acepta recibir avisos por WhatsApp
+  businessId     String
+  source         String          @default("qr")
+  status         String          @default("pending")
+  invitedCount   Int             @default(0)
+  lastInvitedAt  DateTime?
+  rating         Int?
+  feedback       String?
   // ── Sistema de puntos y descuentos ──────────────────
   // "points" empieza en 1 al registrarse. Luego solo sube
   // canjeando el código del ticket del kiosko (1 punto/día).
@@ -257,18 +257,18 @@ model Customer {
   // "discountCode" es un código único (ej: REVLY-A3X9)
   // que se genera al crear el cliente y se muestra en
   // su perfil público con un QR.
-  points        Int       @default(1)
-  discountCode  String?
+  points         Int             @default(1)
+  discountCode   String?
   // ── Identificador seguro del QR personal ─────────
   // "qrToken" es un token aleatorio opaco que codifica
   // el QR del cliente. No contiene puntos, datos ni nada
   // manipulable: solo sirve para localizar al cliente en
   // el servidor.
-  qrToken       String?   @unique
+  qrToken        String?         @unique
   // ─────────────────────────────────────────────────
-  createdAt     DateTime  @default(now())
-  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  pointClaims   PointClaim[]
+  createdAt      DateTime        @default(now())
+  business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  pointClaims    PointClaim[]
   pointMovements PointMovement[]
 
   @@unique([email, businessId])
@@ -283,19 +283,19 @@ model Customer {
 // (reviewName de Business Profile, o id determinista).
 // ──────────────────────────────────────────────
 model ReviewAnalysis {
-  id               String   @id @default(uuid())
+  id               String @id @default(uuid())
   businessId       String
   source           String
   externalReviewId String
 
-  sentiment        String
-  categories       Json
-  positiveAspects  Json
-  negativeAspects  Json
-  summary          String
+  sentiment       String
+  categories      Json
+  positiveAspects Json
+  negativeAspects Json
+  summary         String
 
-  analyzedAt       DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  analyzedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 

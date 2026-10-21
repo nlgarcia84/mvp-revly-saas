@@ -14,7 +14,10 @@ Revly — SaaS para gestión de negocios locales (reseñas Google, fidelización
 - **Nada que dependa de una variable de entorno puede ejecutarse al importar un módulo**, o el build revienta en "Collecting page data". Ver `getStripe()` en `src/lib/stripe.ts` como patrón correcto (cliente perezoso).
 - Las variables de entorno estaban **solo en el scope `Production`**. Para que los previews compilen hay que replicarlas en `Preview`.
 - Copiar Production → Preview: `vercel env pull /tmp/f.env --environment=production`, luego `vercel env add <NAME> preview "" --value <valor>` — **la rama debe pasarse como cadena vacía** (si no, pregunta por TTY y sale con código 0 sin añadir nada) y **hay que ejecutar desde la raíz del repo** (si no, no encuentra `.vercel/`). Excluir `NX_*`, `TURBO_*`, `VERCEL_*`.
-- `npx prisma migrate dev` **está roto** (shadow DB falla al replicar `20260616223001_drift_catchup`, que usa SQL inválido). Usar `prisma migrate diff` + `migrate deploy`.
+- `npx prisma migrate dev` **ya funciona** (oct 2026): se corrigieron las 3 migraciones con SQL inválido. Aun así, `prisma migrate deploy` + `prisma migrate diff` es la vía segura para producción.
+- **La cadena de migraciones ya se reproduce desde cero**: `prisma migrate deploy` sobre una base vacía deja el esquema idéntico a `schema.prisma` (verificado). Las migraciones están escritas de forma idempotente (`ADD COLUMN IF NOT EXISTS`, `DROP ... IF EXISTS`) porque la base original se generó con `prisma db push` y no con migraciones.
+- Si se edita una migración ya aplicada, Prisma 7 **no** valida checksums en `migrate deploy` (sí en `migrate dev`). Para sincronizar `_prisma_migrations.checksum` hay que hacer `UPDATE _prisma_migrations SET checksum = '<sha256 del migration.sql>' WHERE migration_name = '...'` (`migrate resolve --applied` falla con P3008 si ya está aplicada).
+- **El pooler de Supabase está en modo sesión con `pool_size: 15`** y `src/lib/db.ts` usa `pg.Pool` sin `max` (por defecto 10 por proceso). Con varias lambdas concurrentes salta `EMAXCONNSESSION`. Configurar `max` bajo en el pool o usar la conexión directa.
 - El proyecto tiene **Deployment Protection**: los previews redirigen a `vercel.com/sso-api` y solo los ve la sesión del owner.
 - Comprobar deployments: `vercel ls`, `vercel inspect <url> --wait`, `vercel inspect <id> --logs`.
 
