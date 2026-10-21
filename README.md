@@ -240,12 +240,14 @@ actualiza tanto esta variable como la `Redirect URL` permitida en Supabase.
 
 La integración permite leer publicaciones y comentarios, responderlos con IA y publicar en la Página.
 
-- **Facebook:** OAuth con `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `pages_manage_engagement` y `business_management`. Este último es necesario para que `/me/accounts` devuelva páginas que pertenecen a un portfolio empresarial (si no, se usa el fallback `/me/businesses` → `owned_pages`).
+- **Facebook:** OAuth con `pages_show_list`, `pages_read_engagement`, `pages_read_user_content`, `pages_manage_posts`, `pages_manage_engagement` y `business_management`. `pages_read_user_content` es dependiente de `pages_manage_engagement`; este último y `business_management` son necesarios para leer comentarios y páginas que pertenecen a un portfolio empresarial (si no, se usa el fallback `/me/businesses` → `owned_pages`).
 - **Instagram:** usa `META_INSTAGRAM_CLIENT_ID`/`SECRET` (Instagram Login), con los permisos `instagram_business_basic` e `instagram_business_manage_comments`. La cuenta debe ser profesional (Business/Creator).
 - **Redirect URIs** que hay que registrar en el panel de Meta:
   - `https://www.revly.es/api/facebook/callback`
   - `https://www.revly.es/api/instagram/callback`
   - (y sus equivalentes en `http://localhost:3000` para desarrollo)
+  El OAuth usa el origen real desde el que se inicia la conexión; registra
+  exactamente el host usado (`revly.es` y/o `www.revly.es`, incluido `www`).
 - **Webhook:** `https://www.revly.es/api/webhooks/meta` (verificación con `META_WEBHOOK_VERIFY_TOKEN`, campos `feed` para Page y `comments` para Instagram). Invalida la caché para refrescar el dashboard.
 
 ## Notificaciones al cliente

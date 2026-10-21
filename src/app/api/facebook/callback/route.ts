@@ -182,7 +182,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("[Facebook/Callback] Error:", error);
     const businessId = new URL(request.url).searchParams.get("state");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = new URL(request.url).origin;
     const errorMessage =
       error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.redirect(

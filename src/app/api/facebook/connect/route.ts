@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       response_type: "code",
       state: businessId,
       scope:
-        "public_profile,pages_show_list,pages_read_engagement,pages_manage_posts,pages_manage_engagement,business_management",
+        "public_profile,pages_show_list,pages_read_engagement,pages_read_user_content,pages_manage_posts,pages_manage_engagement,business_management",
     });
 
     return NextResponse.redirect(
