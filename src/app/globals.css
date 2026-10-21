@@ -281,3 +281,35 @@ html:not(.dark) .skeleton-shimmer {
 .animate-float-slow {
   animation: float-slow 9s ease-in-out infinite;
 }
+
+/* Neon: el halo de los gráficos late como el tubo de un cartel de
+   neón. El pulso solo afecta a la opacidad del halo difuso, nunca al
+   trazo principal, para que la lectura del dato no parpadee. */
+@keyframes neon-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.neon-halo {
+  animation: neon-pulse 3.2s ease-in-out infinite;
+}
+
+@keyframes neon-dot-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+.neon-dot {
+  animation: neon-dot-pulse 3.2s ease-in-out infinite;
+  transform-origin: center;
+}

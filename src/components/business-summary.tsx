@@ -16,7 +16,7 @@ import { getBusinessGoogleReviews, getBusinessProfileStatus } from '@/actions/go
 import { getFacebookConnectionStatus } from '@/actions/facebook';
 import { getInstagramConnectionStatus } from '@/actions/instagram';
 import { Card } from '@/components/ui/card';
-import { ChartPie } from '@/components/ui/chart';
+import { NeonDonut, NeonSpinner } from '@/components/ui/neon-chart';
 import { useBusiness } from '@/components/business-context';
 
 const Kpi = ({ value, label }: { value: number; label: string }) => (
@@ -189,10 +189,7 @@ const BusinessSummary = () => {
         </div>
         {reviewState.loading ? (
           <div className="flex items-center gap-4 px-4 py-7 sm:px-5">
-            <div className="relative h-24 w-24 shrink-0">
-              <div className="h-24 w-24 animate-spin rounded-full border-4 border-neutral-800 border-t-violet-400" />
-              <div className="absolute inset-3 animate-pulse rounded-full bg-neutral-900" />
-            </div>
+            <NeonSpinner size={96} color="#a78bfa" />
             <div className="space-y-2">
               <p className="text-sm font-medium animate-pulse">Trayendo reseñas de Google...</p>
               <p className="text-xs text-neutral-500">
@@ -218,19 +215,17 @@ const BusinessSummary = () => {
                     style={{ backgroundColor: sentiment.color }}
                   />
                   <div className="flex items-center gap-3">
-                    <div className="relative h-20 w-20 shrink-0 animate-[fadeSlideIn_0.7s_ease-out]">
-                      <ChartPie
-                        data={[
-                          { name: sentiment.label, value: sentiment.value, color: sentiment.color },
-                          { name: 'Resto', value: reviewState.total - sentiment.value, color: '#292929' },
-                        ]}
-                        height={80}
-                        innerRadius={27}
-                        outerRadius={36}
-                      />
-                      <span className="absolute inset-0 flex items-center justify-center text-sm font-bold">
-                        {percentage}%
-                      </span>
+                    <div className="relative shrink-0 animate-[fadeSlideIn_0.7s_ease-out]">
+                      <NeonDonut
+                        value={percentage / 100}
+                        color={sentiment.color}
+                        size={80}
+                        thickness={9}
+                      >
+                        <span className="text-sm font-bold tabular-nums">
+                          {percentage}%
+                        </span>
+                      </NeonDonut>
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{sentiment.label}</p>

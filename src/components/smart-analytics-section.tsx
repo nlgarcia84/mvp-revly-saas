@@ -5,6 +5,7 @@ import { getSmartAnalytics } from '@/actions/review-analytics';
 import type { ReviewCategory, SmartAnalyticsResult } from '@/actions/review-analytics';
 import AnalyticsProposalsCard from '@/components/analytics-proposals-card';
 import AnalyticsSummary from '@/components/analytics-summary';
+import { NeonBar } from '@/components/ui/neon-chart';
 
 const sentimentLabel: Record<string, string> = {
   positive: 'Positivas',
@@ -13,9 +14,9 @@ const sentimentLabel: Record<string, string> = {
 };
 
 const sentimentColor: Record<string, string> = {
-  positive: 'bg-emerald-500',
-  neutral: 'bg-stone-400',
-  negative: 'bg-red-500',
+  positive: '#10b981',
+  neutral: '#a8a29e',
+  negative: '#ef4444',
 };
 
 type CategoryCount = { name: string; count: number };
@@ -135,11 +136,8 @@ const SmartAnalyticsSection = ({
                   <span className="w-16 text-xs text-neutral-500">
                     {sentimentLabel[key]}
                   </span>
-                  <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${sentimentColor[key]} rounded-full transition-all duration-500`}
-                      style={{ width: `${pct(count)}%` }}
-                    />
+                  <div className="flex-1">
+                    <NeonBar value={pct(count) / 100} color={sentimentColor[key]} />
                   </div>
                   <span className="w-10 text-right text-xs text-neutral-500">
                     {count}
@@ -157,14 +155,14 @@ const SmartAnalyticsSection = ({
           <div className="flex flex-col gap-1.5">
             {([5, 4, 3, 2, 1] as const).map((star) => {
               const count = g.starDistribution[String(star) as '1' | '2' | '3' | '4' | '5'];
-              const width = starTotal > 0 ? Math.round((count / starTotal) * 100) : 0;
               return (
                 <div key={star} className="flex items-center gap-2">
                   <span className="w-6 text-xs text-neutral-500">{star}★</span>
-                  <div className="flex-1 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-amber-400 rounded-full transition-all duration-500"
-                      style={{ width: `${width}%` }}
+                  <div className="flex-1">
+                    <NeonBar
+                      value={starTotal > 0 ? count / starTotal : 0}
+                      color="#fbbf24"
+                      height={6}
                     />
                   </div>
                   <span className="w-8 text-right text-xs text-neutral-400">

@@ -1,6 +1,7 @@
 'use client';
 
 import type { GlobalAnalytics } from '@/lib/review-analysis';
+import { NeonDot, NeonStackedBar } from '@/components/ui/neon-chart';
 
 type Aspect = { text: string; count: number };
 
@@ -47,34 +48,27 @@ const AnalyticsSummary = ({ global }: { global: GlobalAnalytics }) => {
           </p>
           <p className="text-xs text-neutral-400">{balance}</p>
         </div>
-        <div className="h-2 rounded-full overflow-hidden flex bg-neutral-100 dark:bg-neutral-800">
-          {total === 0 && (
-            <p className="sr-only">Sin reseñas analizadas todavía</p>
-          )}
-          <div
-            className="h-full bg-emerald-500 transition-all duration-500"
-            style={{ width: `${positivePct}%` }}
-          />
-          <div
-            className="h-full bg-stone-400 transition-all duration-500"
-            style={{ width: `${neutralPct}%` }}
-          />
-          <div
-            className="h-full bg-red-500 transition-all duration-500"
-            style={{ width: `${negativePct}%` }}
-          />
-        </div>
+        <NeonStackedBar
+          segments={[
+            { value: positivePct, color: '#10b981', label: 'positivas' },
+            { value: neutralPct, color: '#a8a29e', label: 'neutras' },
+            { value: negativePct, color: '#ef4444', label: 'negativas' },
+          ]}
+        />
+        {total === 0 && (
+          <p className="sr-only">Sin reseñas analizadas todavía</p>
+        )}
         <div className="flex items-center gap-4 mt-2">
           <span className="text-xs text-neutral-500">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5 align-middle" />
+            <NeonDot color="#10b981" className="mr-1.5" />
             {positivePct}% positivas
           </span>
           <span className="text-xs text-neutral-500">
-            <span className="inline-block w-2 h-2 rounded-full bg-stone-400 mr-1.5 align-middle" />
+            <NeonDot color="#a8a29e" className="mr-1.5" />
             {neutralPct}% neutras
           </span>
           <span className="text-xs text-neutral-500">
-            <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5 align-middle" />
+            <NeonDot color="#ef4444" className="mr-1.5" />
             {negativePct}% negativas
           </span>
         </div>
