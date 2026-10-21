@@ -74,9 +74,9 @@ describe('Button', () => {
     render(<Button variant="secondary">Secondary</Button>);
     const btn = screen.getByRole('button');
     expect(btn.className).toContain('bg-white');
-    expect(btn.className).toContain('text-neutral-950');
+    expect(btn.className).toContain('!text-black');
     expect(btn.className).toContain('dark:bg-neutral-900');
-    expect(btn.className).toContain('dark:text-neutral-100');
+    expect(btn.className).toContain('dark:!text-neutral-100');
   });
 
   // ─── Personalización ────────────────────────

@@ -10,7 +10,7 @@ const variantClass: Record<Variant, string> = {
   primary:
     "border-[#202020] bg-neutral-950 text-white hover:bg-neutral-800 active:shadow-[inset_3px_3px_7px_#000,inset_-2px_-2px_5px_#333] dark:border-neutral-200 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 dark:active:shadow-[inset_3px_3px_7px_#a3a3a3,inset_-2px_-2px_5px_#fff]",
   secondary:
-    "border-[#202020] bg-white text-neutral-950 hover:bg-neutral-100 active:shadow-[inset_3px_3px_7px_#bbb,inset_-2px_-2px_5px_#fff]",
+    "border-white/15 bg-white !text-black hover:bg-violet-100 hover:!text-black active:shadow-[inset_3px_3px_7px_#bbb,inset_-2px_-2px_5px_#fff] dark:border-neutral-700 dark:bg-neutral-900 dark:!text-neutral-100 dark:hover:bg-neutral-800 dark:active:shadow-[inset_3px_3px_7px_#000,inset_-2px_-2px_5px_#262626]",
 };
 
 // ─── Clases base comunes a todas las variantes ───
