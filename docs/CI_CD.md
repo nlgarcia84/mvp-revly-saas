@@ -13,7 +13,7 @@ Producción usa una sola cola con `cancel-in-progress: false`: una nueva publica
 
 Estos archivos preparan el pipeline; las configuraciones de GitHub, Vercel y Supabase no se crean al añadirlos al repositorio. Configurarlas antes del primer merge, porque ese merge desactiva la publicación Git de `main` y pasa a depender de Actions.
 
-1. En GitHub, crear el environment `production`, restringido a la rama `main`. Configurar los secretos y variables indicados abajo. La aprobación manual es opcional: no es necesaria para el funcionamiento del pipeline.
+1. En GitHub, crear el environment `production`, restringido a la rama `main`, con un reviewer de publicación. Configurar los secretos y variables indicados abajo.
 2. En Vercel, mantener `main` como Production Branch y seleccionar Node.js 22.x. Generar un token de despliegue y un secreto de **Protection Bypass for Automation**. No desactivar Deployment Protection.
 3. Crear un proyecto Supabase exclusivo para Preview. Aplicarle las migraciones y preparar un negocio de prueba, configurar Auth, sus Redirect URLs, Storage y los buckets necesarios. La CI con PostgreSQL temporal verifica el esquema de Prisma; no reproduce Auth ni Storage de Supabase.
 4. Sustituir las variables del scope Preview por las de prueba. No copiar Production a Preview. Definir `PREVIEW_SUPABASE_PROJECT_REF` con la referencia del proyecto de prueba. No configurar esa variable en Production.
@@ -32,7 +32,19 @@ Estos archivos preparan el pipeline; las configuraciones de GitHub, Vercel y Sup
 | Secret | `MIGRATION_DATABASE_URL` | Conexión PostgreSQL directa o session pooler de Supabase para migraciones; no transaction pooler |
 | Secret | `VERCEL_AUTOMATION_BYPASS_SECRET` | Protection Bypass for Automation del proyecto |
 
-El resto de las variables de la aplicación permanece en Vercel. `vercel pull` obtiene la configuración de Production para el build. No se imprimen ni se suben como artifacts. La conexión de migraciones se inyecta en `DATABASE_URL` del runner y no sustituye la configuración runtime de Vercel. El runtime conserva su adaptación al transaction pooler.
+Valores verificados para Revly:
+
+```text
+VERCEL_ORG_ID=team_iJmUSCQQJICmYQgLo5UBbKok
+VERCEL_PROJECT_ID=prj_Br1CstB6M7ARzKJmr3wnUHDy4WpJ
+PRODUCTION_URL=https://www.revly.es
+```
+
+El proyecto Vercel es `mi-saas-mvp` en el equipo `nleyvagarciagmailcoms-projects`. Configurar `SMOKE_PUBLIC_PATH` con una ruta real de negocio antes de activar Production.
+
+La conexión del plugin GitHub y la autenticación de GitHub CLI son independientes. Si la integración permite leer pero devuelve `403 Resource not accessible by integration` al escribir, autenticar la CLI con `gh auth login --hostname github.com --git-protocol https --web --scopes repo,workflow` y configurar Git con `gh auth setup-git`. Los secretos deben introducirse directamente en GitHub, nunca en el chat ni en archivos versionados.
+
+El resto de las variables de la aplicación permanece en Vercel. `vercel pull` obtiene la configuración de Production para el build. No se imprimen ni se suben como artifacts. El token de Vercel se limita a los pasos de autenticación y nunca se pasa como argumento de proceso. La conexión de migraciones solo se inyecta como `DATABASE_URL` en el paso de Prisma y no sustituye la configuración runtime de Vercel. El runtime conserva su adaptación al transaction pooler. Las actions están fijadas por SHA y la CLI por versión exacta.
 
 ### Preview en Vercel
 
