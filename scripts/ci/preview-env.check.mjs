@@ -13,9 +13,9 @@ const preview = {
   EMAIL_FROM: 'Revly <onboarding@resend.dev>',
 };
 
-test('accepts isolated preview and direct database connections', () => {
+test('accepts isolated preview with transaction or session pooler', () => {
   checkPreviewEnvironment(preview);
-  checkPreviewEnvironment({ ...preview, DATABASE_URL: 'postgresql://postgres:password@db.testproject.supabase.co/postgres' });
+  checkPreviewEnvironment({ ...preview, DATABASE_URL: 'postgresql://postgres.testproject:password@aws-0-eu.pooler.supabase.com:5432/postgres' });
 });
 
 test('rejects mixed databases, live payments and real notifications', () => {
@@ -23,6 +23,8 @@ test('rejects mixed databases, live payments and real notifications', () => {
     { PREVIEW_SUPABASE_PROJECT_REF: '' },
     { NEXT_PUBLIC_SUPABASE_URL: 'https://production.supabase.co' },
     { DATABASE_URL: 'postgresql://postgres.production:password@aws-0-eu.pooler.supabase.com/postgres' },
+    { DATABASE_URL: 'postgresql://postgres:password@db.testproject.supabase.co:5432/postgres' },
+    { DATABASE_URL: 'postgresql://postgres.testproject:password@aws-0-eu.pooler.supabase.com:9999/postgres' },
     { STRIPE_SECRET_KEY: 'sk_live_example' },
     { NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: 'pk_live_example' },
     { EMAIL_FROM: 'Revly <hola@revly.es>' },

@@ -54,10 +54,12 @@ La URL, la clave pública, `PREVIEW_SUPABASE_PROJECT_REF`, `DATABASE_URL` y la c
 
 Las tablas de la aplicación y el historial de Prisma tienen RLS habilitado sin políticas para `anon` ni `authenticated`: el acceso de la aplicación se realiza exclusivamente desde el servidor mediante Prisma. Esto bloquea su lectura y escritura desde la Data API pública; no afecta a Supabase Auth ni a Storage. Nuevas tablas públicas deben seguir esta misma restricción mientras no exista un caso de acceso directo con políticas revisadas.
 
+Para pruebas de registro con confirmación de email u OAuth, configurar en Supabase Auth → URL Configuration el origen de Preview como Site URL y su `/api/auth/callback` como Redirect URL. El origen estable de la rama de este PR es `https://mi-saas-mvp-git-chore-ci-03f422-nleyvagarciagmailcoms-projects.vercel.app`. Vercel Preview ya usa ese origen como `NEXT_PUBLIC_APP_URL`. Las comprobaciones de disponibilidad no validan la entrega de correos ni proveedores OAuth externos.
+
 | Servicio | Configuración |
 | --- | --- |
 | Supabase | Proyecto de pruebas distinto al de producción; `NEXT_PUBLIC_SUPABASE_URL`, claves públicas y service role del mismo proyecto |
-| PostgreSQL | `DATABASE_URL` del proyecto de pruebas |
+| PostgreSQL | `DATABASE_URL` del proyecto de pruebas mediante transaction pooler (`:6543`); la conexión directa IPv6 no funciona desde Vercel sin el add-on IPv4 |
 | Identidad de Preview | `PREVIEW_SUPABASE_PROJECT_REF` del proyecto de pruebas, distinta de Production |
 | Stripe | `sk_test_…`, `pk_test_…` y webhook de test registrado para el entorno |
 | Resend | API key de pruebas y `EMAIL_FROM=Revly <onboarding@resend.dev>`; este remitente restringe el envío a la dirección permitida por Resend |
