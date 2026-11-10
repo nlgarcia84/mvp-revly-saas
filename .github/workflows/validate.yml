@@ -1,0 +1,79 @@
+name: Validate
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: TypeScript and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/revly_ci
+      NEXT_PUBLIC_SUPABASE_URL: https://ci.example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run db:validate
+      - run: npm run typecheck
+      - run: npm run test:ci
+      - run: npm run test:pipeline
+      - run: npm run vercel-build
+
+  migrations:
+    name: Migration replay and schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: revly_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/revly_ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run db:migrate:deploy
+      - run: npm run db:check
+
+  ready:
+    name: CI passed
+    if: always()
+    needs: [quality, migrations]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every validation to succeed
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          MIGRATIONS_RESULT: ${{ needs.migrations.result }}
+        run: test "$QUALITY_RESULT" = success && test "$MIGRATIONS_RESULT" = success

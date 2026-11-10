@@ -4,12 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:ci": "jest --ci --runInBand",
+    "db:validate": "prisma validate",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:check": "prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code",
+    "smoke": "node scripts/ci/smoke.mjs",
+    "test:pipeline": "node --test scripts/ci/*.check.mjs",
     "dev": "next dev --turbopack",
     "build": "next build",
-    "vercel-build": "prisma generate && next build",
+    "vercel-build": "node scripts/ci/check-preview-env.mjs && prisma generate && next build",
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch"
+  },
+  "engines": {
+    "node": "22.x"
   },
   "keywords": [],
   "author": "",

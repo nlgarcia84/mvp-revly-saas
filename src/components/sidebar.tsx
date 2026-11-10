@@ -99,7 +99,7 @@ const Sidebar = ({
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);
             return (
-              <Link key={link.href} href={link.href} onClick={onClose} className={linkClass(active)}>
+              <Link key={link.href} href={link.href} onClick={onClose} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
                 {link.label}
               </Link>
             );
@@ -116,7 +116,7 @@ const Sidebar = ({
           {links.map((link) => {
             const active = isRouteActive(pathname, link.href);
             return (
-              <Link key={link.href} href={link.href} className={linkClass(active)}>
+              <Link key={link.href} href={link.href} aria-current={active ? 'page' : undefined} className={linkClass(active)}>
                 {link.label}
               </Link>
             );

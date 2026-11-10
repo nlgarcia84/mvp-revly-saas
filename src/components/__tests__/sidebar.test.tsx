@@ -49,22 +49,18 @@ describe('Sidebar', () => {
 
   // ─── Estado activo ──────────────────────────
 
-  it('applies active styles to the current route link', () => {
-    // Con pathname = "/dashboard", el link "Dashboard" debe tener
-    // las clases de activo: font-medium, bg-white
+  it('marks the current route link as the current page', () => {
     render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
     screen.getAllByText('Dashboard').forEach((link) => {
-      expect(link.className).toContain('font-medium');
-      expect(link.className).toContain('bg-white');
+      expect(link).toHaveAttribute('aria-current', 'page');
     });
   });
 
-  it('does not apply active styles to other route links', () => {
-    // Con pathname = "/pricing", "Dashboard" debe tener clase inactivo: bg-transparent
+  it('does not mark other route links as the current page', () => {
     mockPathname.mockReturnValue('/pricing');
     render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
     screen.getAllByText('Dashboard').forEach((link) => {
-      expect(link.className).toContain('bg-transparent');
+      expect(link).not.toHaveAttribute('aria-current');
     });
   });
 
@@ -74,8 +70,7 @@ describe('Sidebar', () => {
     mockPathname.mockReturnValue('/business/abc123');
     render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
     screen.getAllByText('Negocios').forEach((link) => {
-      expect(link.className).toContain('font-medium');
-      expect(link.className).toContain('bg-white');
+      expect(link).toHaveAttribute('aria-current', 'page');
     });
   });
 
@@ -84,7 +79,7 @@ describe('Sidebar', () => {
     mockPathname.mockReturnValue('/businesses-otro');
     render(<Sidebar mobileOpen={false} onClose={jest.fn()} />);
     screen.getAllByText('Negocios').forEach((link) => {
-      expect(link.className).toContain('bg-transparent');
+      expect(link).not.toHaveAttribute('aria-current');
     });
   });
 
