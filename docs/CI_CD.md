@@ -50,7 +50,9 @@ El resto de las variables de la aplicación permanece en Vercel. `vercel pull` o
 
 El proyecto de pruebas de Revly es `revly-preview`, referencia `lhtthnrakoxhdeakkkxv`, en la organización SaaS y región `eu-north-1`. Su API es `https://lhtthnrakoxhdeakkkxv.supabase.co`. No usar la referencia del proyecto de producción para estas variables.
 
-La URL, la clave pública y `PREVIEW_SUPABASE_PROJECT_REF` están configuradas en el scope Preview. Completar `DATABASE_URL` con la conexión del proyecto de pruebas y `SUPABASE_SERVICE_ROLE_KEY` con su clave privada antes de aplicar las migraciones y validar el entorno. Las credenciales anteriores de base de datos, Storage, Stripe, Resend y WhatsApp de Preview se han vaciado; los servicios opcionales necesitan credenciales de pruebas para funcionar.
+La URL, la clave pública, `PREVIEW_SUPABASE_PROJECT_REF`, `DATABASE_URL` y la clave privada de Storage están configuradas en el scope Preview. Las migraciones se han aplicado al proyecto de pruebas, y los buckets `business-logos` y `business-photos` están preparados. El negocio ficticio `/revly-preview-demo` permite comprobar la página pública sin copiar datos de producción. Stripe, Resend y WhatsApp siguen sin credenciales en Preview; configurar credenciales de pruebas para verificar esos servicios.
+
+Las tablas de la aplicación y el historial de Prisma tienen RLS habilitado sin políticas para `anon` ni `authenticated`: el acceso de la aplicación se realiza exclusivamente desde el servidor mediante Prisma. Esto bloquea su lectura y escritura desde la Data API pública; no afecta a Supabase Auth ni a Storage. Nuevas tablas públicas deben seguir esta misma restricción mientras no exista un caso de acceso directo con políticas revisadas.
 
 | Servicio | Configuración |
 | --- | --- |
