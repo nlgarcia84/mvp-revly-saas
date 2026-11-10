@@ -48,6 +48,10 @@ El resto de las variables de la aplicación permanece en Vercel. `vercel pull` o
 
 ### Preview en Vercel
 
+El proyecto de pruebas de Revly es `revly-preview`, referencia `lhtthnrakoxhdeakkkxv`, en la organización SaaS y región `eu-north-1`. Su API es `https://lhtthnrakoxhdeakkkxv.supabase.co`. No usar la referencia del proyecto de producción para estas variables.
+
+La URL, la clave pública y `PREVIEW_SUPABASE_PROJECT_REF` están configuradas en el scope Preview. Completar `DATABASE_URL` con la conexión del proyecto de pruebas y `SUPABASE_SERVICE_ROLE_KEY` con su clave privada antes de aplicar las migraciones y validar el entorno. Las credenciales anteriores de base de datos, Storage, Stripe, Resend y WhatsApp de Preview se han vaciado; los servicios opcionales necesitan credenciales de pruebas para funcionar.
+
 | Servicio | Configuración |
 | --- | --- |
 | Supabase | Proyecto de pruebas distinto al de producción; `NEXT_PUBLIC_SUPABASE_URL`, claves públicas y service role del mismo proyecto |
