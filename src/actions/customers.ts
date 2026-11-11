@@ -221,12 +221,17 @@ export const updateCustomerStatus = async (
   customerId: string,
   status: string,
 ) => {
-  await requireUserId();
+  const userId = await requireUserId();
+  if (!["pending", "invited", "completed"].includes(status)) {
+    throw new Error("Estado de cliente no válido");
+  }
 
-  return prisma.customer.update({
-    where: { id: customerId },
+  const result = await prisma.customer.updateMany({
+    where: { id: customerId, business: { userId } },
     data: { status },
   });
+  if (result.count === 0) throw new Error("Cliente no encontrado");
+  return { success: true };
 };
 
 // Crea o actualiza varios clientes a la vez (importación CSV o manual).
