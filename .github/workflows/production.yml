@@ -1,0 +1,118 @@
+name: Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never interrupt migrations or promotion with a newer release.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/validate.yml
+
+  release:
+    name: Build, migrate and promote
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      SMOKE_PUBLIC_PATH: ${{ vars.SMOKE_PUBLIC_PATH }}
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Check release configuration
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          SMOKE_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          for name in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN DATABASE_URL SMOKE_BYPASS_SECRET SMOKE_PUBLIC_PATH PRODUCTION_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing production configuration: $name"
+              exit 1
+            fi
+          done
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install pinned deployment CLI
+        run: npm install --global vercel@65.14.0
+      - name: Pull production build configuration
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production
+      - name: Build before changing the database
+        run: vercel build --prod
+      - name: Reject obsolete releases
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { data: branch } = await github.rest.repos.getBranch({
+              ...context.repo,
+              branch: 'main',
+            });
+            if (branch.commit.sha !== context.sha) {
+              core.setFailed('This release is no longer the tip of main. Deploy the latest commit.');
+            }
+      - name: Apply migrations and verify schema
+        env:
+          DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+        run: |
+          npm run db:migrate:deploy
+          npm run db:check
+      - name: Stage production deployment
+        id: stage
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prebuilt --prod --skip-domain)
+          DEPLOYMENT_URL="$url" node --input-type=module -e '
+            const value = process.env.DEPLOYMENT_URL;
+            const url = new URL(value);
+            if (url.protocol !== "https:" || url.origin !== value || !url.hostname.endsWith(".vercel.app")) process.exit(1);
+          '
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Verify staged deployment
+        env:
+          SMOKE_BASE_URL: ${{ steps.stage.outputs.url }}
+          SMOKE_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: npm run smoke
+      - name: Promote verified deployment
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel promote "$DEPLOYMENT_URL" --yes
+      - name: Verify production domain
+        env:
+          SMOKE_BASE_URL: ${{ env.PRODUCTION_URL }}
+        run: npm run smoke
+      - name: Release summary
+        if: always()
+        env:
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+          RELEASE_STATUS: ${{ job.status }}
+        run: |
+          {
+            echo "Release: $GITHUB_SHA"
+            echo "Status: $RELEASE_STATUS"
+            echo "Deployment: $DEPLOYMENT_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove downloaded environment files
+        if: always()
+        run: rm -rf .vercel

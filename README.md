@@ -171,12 +171,17 @@ Cuando Business Profile no está conectado, se usa Google Places API que devuelv
 
 ## Scripts
 
+CI/CD, configuración de entornos y procedimiento de publicación: [docs/CI_CD.md](docs/CI_CD.md).
+
 ```bash
 npm run dev              # Iniciar servidor de desarrollo
-npx prisma db push       # Sincronizar esquema con la BD
+npx prisma migrate dev   # Crear/aplicar migraciones en desarrollo
 npx prisma generate      # Generar cliente Prisma
 npx prisma studio        # Abrir explorador de BD
 npm run build            # Compilar para producción
+npm run typecheck        # Validar TypeScript
+npm run test:ci          # Ejecutar Jest en CI
+npm run test:pipeline    # Verificar controles del pipeline
 ```
 
 ## Variables de entorno

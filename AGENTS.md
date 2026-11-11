@@ -10,10 +10,9 @@ Revly — SaaS para gestión de negocios locales (reseñas Google, fidelización
 - Despliegue: Vercel, push automático a `main` → producción
 
 ## Despliegue en Vercel (leer antes de tocar despliegue)
-- `vercel-build` = `prisma generate && next build`. **No** aplica migraciones.
+- `vercel-build` valida el aislamiento de Preview, genera Prisma y compila Next. **No** aplica migraciones.
 - **Nada que dependa de una variable de entorno puede ejecutarse al importar un módulo**, o el build revienta en "Collecting page data". Ver `getStripe()` en `src/lib/stripe.ts` como patrón correcto (cliente perezoso).
-- Las variables de entorno estaban **solo en el scope `Production`**. Para que los previews compilen hay que replicarlas en `Preview`.
-- Copiar Production → Preview: `vercel env pull /tmp/f.env --environment=production`, luego `vercel env add <NAME> preview "" --value <valor>` — **la rama debe pasarse como cadena vacía** (si no, pregunta por TTY y sale con código 0 sin añadir nada) y **hay que ejecutar desde la raíz del repo** (si no, no encuentra `.vercel/`). Excluir `NX_*`, `TURBO_*`, `VERCEL_*`.
+- Preview debe usar servicios de prueba separados: **no copiar secretos de Production a Preview**. Configurar `PREVIEW_SUPABASE_PROJECT_REF`, Auth/BD del proyecto de pruebas, Stripe test y notificaciones controladas. `scripts/ci/check-preview-env.mjs` bloquea configuraciones incoherentes. Ver `docs/CI_CD.md`.
 - `npx prisma migrate dev` **ya funciona** (oct 2026): se corrigieron las 3 migraciones con SQL inválido. Aun así, `prisma migrate deploy` + `prisma migrate diff` es la vía segura para producción.
 - **La cadena de migraciones ya se reproduce desde cero**: `prisma migrate deploy` sobre una base vacía deja el esquema idéntico a `schema.prisma` (verificado). Las migraciones están escritas de forma idempotente (`ADD COLUMN IF NOT EXISTS`, `DROP ... IF EXISTS`) porque la base original se generó con `prisma db push` y no con migraciones.
 - Si se edita una migración ya aplicada, Prisma 7 **no** valida checksums en `migrate deploy` (sí en `migrate dev`). Para sincronizar `_prisma_migrations.checksum` hay que hacer `UPDATE _prisma_migrations SET checksum = '<sha256 del migration.sql>' WHERE migration_name = '...'` (`migrate resolve --applied` falla con P3008 si ya está aplicada).
@@ -22,14 +21,15 @@ Revly — SaaS para gestión de negocios locales (reseñas Google, fidelización
 - Comprobar deployments: `vercel ls`, `vercel inspect <url> --wait`, `vercel inspect <id> --logs`.
 
 ## Rama principal
-- `main` es la rama de producción. Cada `git push origin main` despliega automáticamente.
+- `main` es la rama de producción. `.github/workflows/production.yml` valida, compila, migra, despliega sin asignar dominio, verifica y promueve. `vercel.json` desactiva el despliegue Git de `main` para evitar carreras con las migraciones.
 - Los features van en rama propia (`store-locator`, etc.) y se mergean a `main` con un PR: https://github.com/nlgarcia84/mvp-revly-saas/pulls
 
 ## Flujo de trabajo
-1. Hacer cambios en archivos
-2. `npx tsc --noEmit` para verificar compilación
-3. `git add . && git commit -m "..." && git push origin main`
-4. Verificar en producción
+1. Crear una rama de feature y hacer los cambios.
+2. Ejecutar `npx prisma generate`, `npm run typecheck`, `npm run test:ci` y `npm run test:pipeline`.
+3. Abrir un PR a `main`, esperar CI y revisar la Preview con servicios de prueba.
+4. Mergear con los checks obligatorios; Production coordina migraciones y publicación.
+5. Revisar el resultado del workflow y los smoke checks. Activación y recuperación: `docs/CI_CD.md`.
 
 ## Estructura clave
 - `src/app/(dashboard)/business/[id]/page.tsx` — Dashboard principal del negocio
@@ -79,7 +79,7 @@ Revly — SaaS para gestión de negocios locales (reseñas Google, fidelización
 ## Cambios recientes
 - Store Locator completo: dirección, mapa por iframe, hasta 8 fotos y horarios por día (rama `store-locator`)
 - Cliente de Stripe perezoso (`getStripe()`): el build ya no depende de `STRIPE_SECRET_KEY`
-- 20 variables de entorno replicadas de `Production` a `Preview` en Vercel (los previews no compilaban antes)
+- CI/CD preparado con validación de Preview; sustituir las antiguas variables copiadas de Production por credenciales de prueba antes de activarlo (ver `docs/CI_CD.md`)
 - `reviewName` disponible en reseñas GBP y Places (para responder)
 - `readMask=reviewer,starRating,comment,createTime,name` en GBP API reviews
 - `sortOrder=NEWEST` en GBP API
