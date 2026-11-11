@@ -7,6 +7,8 @@
 - `production.yml`: vuelve a validar el commit de `main`, compila con configuración de Production, aplica migraciones, verifica el esquema, crea un deployment sin asignar dominios, ejecuta smoke checks, promueve y comprueba el dominio público.
 - `vercel.json`: desactiva únicamente los deployments Git de `main`. Las ramas de feature conservan sus previews automáticas.
 
+La promoción usa `scripts/ci/promote.mjs` con la API de Vercel y `teamId` explícito. Antes de publicar exige que el deployment esté READY, sea de Production y corresponda al equipo, proyecto y commit aprobados; después espera a que sea el target de producción. Esto evita la resolución de usuario personal de `vercel promote`, que puede fallar con `User not found (404)` aunque el token permita desplegar el proyecto.
+
 Producción usa una sola cola con `cancel-in-progress: false`: una nueva publicación no interrumpe una migración o promoción. Antes de migrar se comprueba que el commit sigue siendo la punta de `main`, para rechazar ejecuciones obsoletas. Los checks de PR no reciben secretos. No se usa `pull_request_target` para ejecutar código de contribuciones.
 
 ## Activación antes de mergear este cambio
