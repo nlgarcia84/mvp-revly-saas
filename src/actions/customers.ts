@@ -198,6 +198,7 @@ export const getCustomerSummary = async (businessId: string) => {
     prisma.pointMovement.count({
       where: {
         businessId,
+        business: { userId: user.id },
         type: "redeem",
         createdAt: { gte: monthStart },
       },
@@ -297,12 +298,10 @@ export const addCustomerBatch = async (
 export const deleteCustomer = async (customerId: string) => {
   const userId = await requireUserId();
 
-  const customer = await prisma.customer.findFirst({
+  const result = await prisma.customer.deleteMany({
     where: { id: customerId, business: { userId } },
   });
-  if (!customer) throw new Error("Cliente no encontrado");
-
-  await prisma.customer.delete({ where: { id: customerId } });
+  if (result.count === 0) throw new Error("Cliente no encontrado");
   return { success: true };
 };
 
@@ -311,7 +310,7 @@ export const clearCustomers = async (businessId: string) => {
   const userId = await requireUserId();
   await requireOwnedBusiness(businessId, userId);
 
-  await prisma.customer.deleteMany({ where: { businessId } });
+  await prisma.customer.deleteMany({ where: { businessId, business: { userId } } });
   return { success: true };
 };
 
@@ -321,7 +320,7 @@ export const clearCompletedCustomers = async (businessId: string) => {
   await requireOwnedBusiness(businessId, userId);
 
   const { count } = await prisma.customer.deleteMany({
-    where: { businessId, status: "completed" },
+    where: { businessId, business: { userId }, status: "completed" },
   });
   return { count };
 };
@@ -390,14 +389,10 @@ export const getPublicCustomer = async (customerId: string, slug: string) => {
 export const deleteSelectedCustomers = async (ids: string[]) => {
   const userId = await requireUserId();
 
-  const ownedCustomers = await prisma.customer.findMany({
+  const { count } = await prisma.customer.deleteMany({
     where: { id: { in: ids }, business: { userId } },
-    select: { id: true },
   });
-  const ownedIds = ownedCustomers.map((customer) => customer.id);
-
-  await prisma.customer.deleteMany({ where: { id: { in: ownedIds } } });
-  return { deleted: ownedIds.length };
+  return { deleted: count };
 };
 
 // Identifica a un cliente a partir del token de su QR personal

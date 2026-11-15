@@ -1,5 +1,7 @@
 # F0-01 — Validación de updateCustomerStatus
 
+> Registro histórico del 2026-11-11, limitado a una acción. La [auditoría completa del 2026-11-15](F0_01_CUSTOMER_ISOLATION.md) identifica bloqueos de aceptación adicionales; estos resultados no acreditan F0-01 completa.
+
 PR: [#4](https://github.com/nlgarcia84/mvp-revly-saas/pull/4). Rama: `fix/f0-01-customer-status-ownership`. Base revisada: `319699c`. Comprobaciones locales realizadas el 2026-11-11 con Node.js 22.23.4.
 
 ## Cobertura automatizada
