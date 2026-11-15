@@ -24,7 +24,7 @@ import {
   addPointToCustomer,
   subtractPointFromCustomer,
 } from '@/actions/points';
-import { sendBatchInvitations, sendInvitation } from '@/actions/send';
+import { getWhatsAppLink, sendBatchInvitations, sendInvitation } from '@/actions/send';
 import ActionMenu from '@/components/customer-row-actions';
 import Button from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -402,14 +402,18 @@ const CustomersTable = ({
                         onAddPoint={handleAddPoint}
                         onSubtractPoint={handleSubtractPoint}
                         onSendEmail={handleSend}
-                        onWhatsApp={(phone) => {
-                          const cleanPhone = phone.replace(/[\s\-()\+]/g, '');
-                          window.open(
-                            `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-                              `Hola ${c.name ?? ''}, ¿cómo valorarías tu experiencia en ${businessName}?`,
-                            )}`,
-                            '_blank',
-                          );
+                        onWhatsApp={async (customerId) => {
+                          // Open during the click so the browser does not block the popup after await.
+                          const popup = window.open('about:blank', '_blank');
+                          if (!popup) { alert('Permite ventanas emergentes para abrir WhatsApp.'); return; }
+                          popup.opener = null;
+                          try {
+                            const { waLink } = await getWhatsAppLink(customerId);
+                            popup.location.replace(waLink);
+                          } catch {
+                            popup.close();
+                            alert('No se pudo crear la invitación de WhatsApp.');
+                          }
                           setDropdownId(null);
                         }}
                         onDelete={handleDelete}

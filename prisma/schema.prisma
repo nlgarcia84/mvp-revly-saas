@@ -67,6 +67,8 @@ model Business {
   userId         String
   createdAt      DateTime         @default(now())
   user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailChallenges CustomerEmailChallenge[]
+  capabilities CustomerCapability[]
   customers      Customer[]
   pointClaims    PointClaim[]
   pointMovements PointMovement[]
@@ -270,7 +272,9 @@ model Customer {
   business       Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
   pointClaims    PointClaim[]
   pointMovements PointMovement[]
+  capabilities CustomerCapability[]
 
+  @@unique([id, businessId])
   @@unique([email, businessId])
 }
 
@@ -301,4 +305,38 @@ model ReviewAnalysis {
 
   @@unique([businessId, source, externalReviewId])
   @@index([businessId, source])
+}
+
+// Private server-only records. Raw OTP/session/review credentials are never stored.
+model CustomerEmailChallenge {
+  id String @id
+  businessId String
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  email String
+  codeHash String
+  registration Json?
+  attempts Int @default(0)
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([expiresAt])
+}
+
+model CustomerCapability {
+  tokenHash String @id
+  customerId String
+  businessId String
+  customer Customer @relation(fields: [customerId, businessId], references: [id, businessId], onDelete: Cascade, onUpdate: Restrict)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  email String
+  scope String
+  expiresAt DateTime
+  @@index([expiresAt])
+}
+
+model PublicAccessRateLimit {
+  key String @id
+  count Int @default(1)
+  expiresAt DateTime
+  @@index([expiresAt])
 }

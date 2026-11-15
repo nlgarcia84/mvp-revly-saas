@@ -4,6 +4,7 @@ import prisma from '@/lib/db';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail } from '@/lib/email';
 import { buildReviewEmail } from '@/lib/review-email';
+import { issueReviewToken } from '@/lib/customer-capabilities';
 
 // Devuelve el id del usuario autenticado o lanza si no hay sesión.
 async function requireUserId(): Promise<string> {
@@ -29,7 +30,9 @@ export const sendInvitation = async (customerId: string) => {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const reviewToken = await issueReviewToken(customer.id);
   const { subject, html } = buildReviewEmail({
+    reviewToken,
     customerId: customer.id,
     customerName: customer.name ?? '',
     businessName: customer.business.name,
@@ -92,7 +95,8 @@ export const getWhatsAppLink = async (customerId: string) => {
   }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const reviewUrl = `${baseUrl}/api/review-confirm/${customer.id}?auto=1&rating=5&redirect=${encodeURIComponent(googleLink)}`;
+  const reviewToken = await issueReviewToken(customer.id);
+  const { reviewUrl } = buildReviewEmail({ customerId: customer.id, customerName, businessName, googleLink, baseUrl, reviewToken });
 
   // Normalizamos el teléfono: sin espacios, guiones, paréntesis ni prefijo +.
   const cleanPhone = phone.replace(/[\s\-()\+]/g, '');

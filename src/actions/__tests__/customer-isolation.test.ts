@@ -15,11 +15,13 @@ import { sendEmail } from '@/lib/email';
 
 const mockGetUser = jest.fn();
 jest.mock('@/lib/supabase/server', () => ({ createClient: async () => ({ auth: { getUser: mockGetUser } }) }));
+jest.mock('next/headers', () => ({ cookies: async () => ({ get: jest.fn() }) }));
 jest.mock('@/lib/email', () => ({ sendEmail: jest.fn(async () => true) }));
 jest.mock('@/lib/notifications', () => ({ notifyCustomerDiscount: jest.fn(), notifyCustomerRegistered: jest.fn(), notifyBusinessNewCustomer: jest.fn() }));
 jest.mock('@/lib/db', () => ({ __esModule: true, default: {
   customer: Object.fromEntries(['findFirst', 'findUnique', 'findMany', 'count', 'groupBy', 'aggregate', 'deleteMany', 'delete', 'update', 'create'].map(k => [k, jest.fn()])),
   business: { findFirst: jest.fn(), findUnique: jest.fn() },
+  customerCapability: { create: jest.fn() },
   pointMovement: { count: jest.fn(), findFirst: jest.fn(), create: jest.fn() },
   $transaction: jest.fn(),
 } }));
@@ -149,36 +151,41 @@ it.each([['owner-a', 'b', 404], ['owner-b', 'a', 404], [null, 'a', 401]])('prote
   expect(db.customer.count).not.toHaveBeenCalled();
 });
 
-// Reproductions, NOT acceptance tests: these explicitly record remaining blockers.
-describe('OPEN SECURITY FINDINGS: public paths accept identifiers without identity proof', () => {
-  it('exposes another tenant customer by public slug and email without session', async () => {
+// Original exploit cases retained as regression assertions of denial.
+describe('public paths require proof instead of identifiers', () => {
+  it('does not expose a foreign customer by slug and email without a verified session', async () => {
     session(null);
-    expect(await findPublicCustomerByEmail('b', 'b@example.invalid')).toMatchObject({ id: 'customer-b', discountCode: 'CODE-b' });
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(await findPublicCustomerByEmail('b', 'b@example.invalid')).toBeNull();
+    expect(db.customer.findUnique).not.toHaveBeenCalled();
   });
-  it('exposes the QR capability with only customer ID and public slug', async () => {
+  it('does not expose QR capability by customer ID and slug', async () => {
     session(null);
-    expect(await getPublicCustomer('customer-b', 'b')).toMatchObject({ qrToken: 'qr-b' });
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(await getPublicCustomer('customer-b', 'b')).toBeNull();
+    expect(db.customer.findFirst).not.toHaveBeenCalled();
   });
-  it('does enforce slug matching, but that is not identity verification', async () => {
+  it('denies a mismatched slug without identity proof', async () => {
     expect(await getPublicCustomer('customer-b', 'a')).toBeNull();
   });
-  it('overwrites another tenant customer via public registration using a known email', async () => {
+  it('does not overwrite existing customer via public registration before email verification', async () => {
     session(null);
+    const before = structuredClone(rows);
     await addPublicCustomer({ slug: 'b', email: 'b@example.invalid', name: 'Attacker', phone: '0', consent: true });
-    expect(rows.find(r => r.id === 'customer-b').name).toBe('Attacker');
-    expect(mockGetUser).not.toHaveBeenCalled();
+    expect(rows).toEqual(before);
+    expect(db.customer.update).not.toHaveBeenCalled();
   });
-  it('modifies a foreign review from an anonymous GET', async () => {
+  it('never modifies a review from GET, including a legacy auto/rating URL', async () => {
     session(null);
+    const before = structuredClone(rows);
     await confirmReview(new Request('https://example.invalid/api/review-confirm/customer-b?auto=1&rating=1'), { params: Promise.resolve({ customerId: 'customer-b' }) });
-    expect(rows.find(r => r.id === 'customer-b')).toMatchObject({ rating: 1, status: 'completed' });
+    expect(rows).toEqual(before);
+    expect(db.customer.update).not.toHaveBeenCalled();
+    expect(db.customer.findUnique).not.toHaveBeenCalled();
   });
-  it('modifies foreign feedback from an anonymous POST', async () => {
+  it('rejects foreign feedback submitted with only a known customer ID', async () => {
     session(null);
-    const response = await saveReview(new Request('https://example.invalid/api/review-confirm/customer-b', { method: 'POST', body: JSON.stringify({ feedback: 'Attacker' }) }), { params: Promise.resolve({ customerId: 'customer-b' }) });
-    expect(response.status).toBe(200);
-    expect(rows.find(r => r.id === 'customer-b').feedback).toBe('Attacker');
+    const before = structuredClone(rows);
+    const response = await saveReview(new Request('https://example.invalid/api/review-confirm/customer-b', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'submit', rating: 1, feedback: 'Attacker' }) }), { params: Promise.resolve({ customerId: 'customer-b' }) });
+    expect(response.status).toBe(403);
+    expect(rows).toEqual(before);
   });
 });

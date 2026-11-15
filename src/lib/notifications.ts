@@ -4,6 +4,7 @@
 
 import { sendEmail } from '@/lib/email';
 import { buildReviewEmail } from '@/lib/review-email';
+import { issueReviewToken } from '@/lib/customer-capabilities';
 import { formatReservationDate } from '@/lib/reservations';
 import {
   sendWhatsAppTemplate,
@@ -147,7 +148,9 @@ export async function scheduleReviewRequest({
   if (!email || !googleLink) return false;
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const reviewToken = await issueReviewToken(customerId);
   const { subject, html } = buildReviewEmail({
+    reviewToken,
     customerId,
     customerName: name ?? '',
     businessName,

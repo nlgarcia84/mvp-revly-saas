@@ -3,6 +3,7 @@
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
+import { requirePublicCustomerAccess } from "@/lib/public-customer-access";
 import { generateQrToken } from "@/lib/qr-token";
 import { POINTS_PER_REDEMPTION, POINTS_CAP, DISCOUNT_PERCENT, todayKey } from "@/lib/loyalty";
 
@@ -325,64 +326,29 @@ export const clearCompletedCustomers = async (businessId: string) => {
   return { count };
 };
 
-// Pública: busca un cliente por email dentro de un negocio.
-// Se usa en la página pública para saber si el cliente ya existe.
+// Consulta por email solo dentro de la sesión pública ya verificada; no sirve para enumerar perfiles.
 export const findPublicCustomerByEmail = async (
   slug: string,
   email: string,
 ) => {
-  const business = await prisma.business.findUnique({
-    where: { slug },
-    select: { id: true },
-  });
-  if (!business) return null;
-
-  const customer = await prisma.customer.findUnique({
-    where: { email_businessId: { email, businessId: business.id } },
-    include: { business: { select: { name: true, slug: true } } },
-  });
-  if (!customer) return null;
-
-  return {
-    id: customer.id,
-    name: customer.name,
-    points: customer.points,
-    discountCode: customer.discountCode,
-    businessName: customer.business.name,
-  };
+  const access = await requirePublicCustomerAccess(slug);
+  if (!access || typeof email !== 'string' || access.email.toLowerCase() !== email.trim().toLowerCase()) return null;
+  return getPublicCustomer(access.customerId, slug);
 };
 
-// Pública: datos del perfil de un cliente (puntos, código y negocio).
-// Verifica que el slug coincida para no mostrar datos de otro negocio.
+// Public profile requires a verified cookie scoped to this customer AND business.
 export const getPublicCustomer = async (customerId: string, slug: string) => {
-  const customer = await prisma.customer.findUnique({
-    where: { id: customerId },
-    include: {
-      business: { select: { name: true, slug: true, ticketFormat: true } },
-    },
+  const access = await requirePublicCustomerAccess(slug);
+  if (!access || access.customerId !== customerId) return null;
+  const customer = await prisma.customer.findFirst({
+    where: { id: customerId, businessId: access.businessId, email: access.email },
+    select: { id: true, name: true, points: true, discountCode: true, qrToken: true,
+      business: { select: { name: true, ticketFormat: true } } },
   });
-  if (!customer || customer.business.slug !== slug) return null;
-
-  // Si el cliente aún no tiene token de QR (clientes antiguos),
-  // lo generamos ahora para que su QR personal funcione.
-  let qrToken = customer.qrToken;
-  if (!qrToken) {
-    qrToken = await generateUniqueQrToken();
-    await prisma.customer.update({
-      where: { id: customer.id },
-      data: { qrToken },
-    });
-  }
-
-  return {
-    id: customer.id,
-    name: customer.name,
-    points: customer.points,
-    discountCode: customer.discountCode,
-    businessName: customer.business.name,
-    ticketFormat: customer.business.ticketFormat,
-    qrToken,
-  };
+  if (!customer) return null;
+  return { id: customer.id, name: customer.name, points: customer.points,
+    discountCode: customer.discountCode, qrToken: customer.qrToken,
+    businessName: customer.business.name, ticketFormat: customer.business.ticketFormat };
 };
 
 // Elimina varios clientes seleccionados, solo los que sean del usuario.
