@@ -76,7 +76,7 @@ Se han leído y parseado los tres YAML. `ci.yml` escucha PR a main, merge_group 
 
 El conector GitHub informa permisos `admin`, `maintain`, `push`, `pull`, `triage` sobre el repositorio. La autenticación local de `gh` está inválida. La API REST pública de `actions/permissions` devuelve 401; el conector no expone esa configuración. Por tanto no están verificadas políticas efectivas de Actions, facturación/cuotas ni disponibilidad de runners. No se puede atribuir el problema a ninguna de ellas con la evidencia disponible.
 
-Siguiente acción del propietario: consultar Settings → Actions y la anotación autenticada; revisar estado/cuotas y reintentar CI de la rama. Si persiste el mismo fallo previo a jobs, abrir soporte con ambos run IDs y el request ID. Un reintento sin jobs no es evidencia de pruebas superadas. CI sigue bloqueada en GitHub con causa interna no determinada más allá de su anotación.
+Siguiente acción del propietario: consultar Settings → Actions y la anotación autenticada; revisar estado/cuotas y reintentar CI de la rama. Si persiste el mismo fallo previo a jobs, abrir soporte con ambos run IDs y el request ID. Un reintento sin jobs no es evidencia de pruebas superadas. Estas ejecuciones históricas quedaron bloqueadas en GitHub con causa interna no determinada más allá de su anotación; véase abajo el resultado de la nueva ejecución.
 
 ## Decisión de entrega
 
@@ -104,3 +104,13 @@ Runtime: Node.js **22.23.5**, checksum verificado contra SHASUMS256 oficial, ins
 | Navegador / Preview con dos sesiones | No ejecutado; pendiente para aceptación |
 
 Los primeros intentos detectaron límites del entorno: Turbopack no permite un `node_modules` enlazado fuera de su raíz (resuelto copiando dependencias), y el sandbox impide los puertos internos de Turbopack y los servidores de pruebas de smoke (repetidos con aprobación fuera del sandbox, correctos). No fueron fallos funcionales ni motivaron cambios de producto. Las primeras comprobaciones con Node 26 también pasaron, pero los resultados anteriores corresponden al runtime 22 del proyecto.
+
+## Actualización de CI tras publicar las correcciones
+
+La nueva ejecución [43710459599](https://github.com/nlgarcia84/mvp-revly-saas/actions/runs/43710459599), sobre el commit `a17e05dd0a26d76f2d83ac094876785e4abfc38d`, terminó **completed / success** el 2026-11-15. Pasaron los tres jobs:
+
+- `132800663415`: TypeScript and tests — `npm ci`, Prisma generate/validate, typecheck, Jest, pipeline y build correctos.
+- `132800663196`: Migration replay and schema — contenedor PostgreSQL efímero, `db:migrate:deploy` y `db:check` correctos. Esta ejecución cubre el replay que no estaba disponible localmente.
+- `132800896566`: CI passed — agregación final correcta.
+
+**El bloqueo de arranque no se reproduce en la nueva ejecución; CI ya no es un bloqueo actual del código auditado.** No se modificó ningún workflow ni configuración de Actions. Esto no determina la causa interna del fallo histórico. Los accesos públicos y la comprobación real de dos sesiones en staging siguen impidiendo dar F0-01 por completa.
