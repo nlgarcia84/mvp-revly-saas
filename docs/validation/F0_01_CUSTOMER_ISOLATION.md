@@ -52,7 +52,7 @@ Los presupuestos compartidos impiden envío ilimitado, pero un atacante distribu
 
 Migración aditiva `20261115000000_public_customer_authorization`: `CustomerEmailChallenge`, `CustomerCapability`, `PublicAccessRateLimit`, índice único compuesto de `Customer` e índices de caducidad. Las tres tablas privadas tienen RLS sin políticas para roles de navegador; la app accede mediante Prisma del servidor. No se ha aplicado a producción ni se ha cambiado ningún secreto.
 
-Prisma 7.8.0 valida y genera el cliente. La reproducción completa y diff del esquema deben pasar en la CI de este commit. Antes de probar el Preview es necesario aplicar la migración **solo** al proyecto de prueba aislado mediante el procedimiento de `docs/CI_CD.md`; el build no aplica migraciones.
+Prisma 7.8.0 valida y genera el cliente. La reproducción completa y diff del esquema han pasado en la CI del commit de implementación `1583d7b` (ver evidencia abajo). Antes de probar el Preview es necesario aplicar la migración **solo** al proyecto de prueba aislado mediante el procedimiento de `docs/CI_CD.md`; el build no aplica migraciones.
 
 ## Inventario de autorización privada conservada
 
@@ -132,7 +132,13 @@ Extensiones de revisión manual obligatorias antes de aceptar:
 
 Histórico: `43096749988` permaneció queued sin jobs; `43097209724` terminó startup_failure sin jobs y con anotación de error inesperado de GitHub. No se identificó defecto del YAML. Las ejecuciones posteriores `43710459599` y `43710681554` de la primera auditoría pasaron todos los jobs sin cambiar workflows. Los 3 workflows permanecen intactos.
 
-La CI de esta continuación se consulta después de publicar y se registra en la descripción del PR con SHA y enlace exactos; no debe confundirse la CI del baseline `10f18eee` con la nueva. Mantener Draft independientemente del resultado de CI hasta validar staging y superar revisión.
+[CI 43714706497](https://github.com/nlgarcia84/mvp-revly-saas/actions/runs/43714706497), del commit de implementación `1583d7b5648337dcc462dc879b9e41e66f5d01ac`, ha terminado **completed / success** con los tres jobs correctos:
+
+- `132813595689`: calidad — npm ci limpio, Prisma generate/validate, TypeScript, Jest, pipeline y build.
+- `132813595487`: replay de migraciones en PostgreSQL efímero y `db:check`, incluidos nuevos índices, tablas, integridad compuesta y RLS del SQL de la migración. El diff Prisma no certifica por sí solo las políticas RLS del entorno remoto.
+- `132813840841`: CI passed.
+
+No confundir ese resultado con la CI del baseline `10f18eee`. El commit posterior de este informe solo añade evidencia documental; su check final se registra en el PR. Mantener Draft independientemente de CI hasta validar staging y superar revisión.
 
 ## Archivos de esta continuación
 
