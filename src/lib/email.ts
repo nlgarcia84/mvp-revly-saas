@@ -37,12 +37,12 @@ export async function sendEmail({
     });
 
     if (!response.ok) {
-      console.error('[Email] Error enviando email:', await response.text());
+      console.error('[Email] Error enviando email. Estado:', response.status);
       return false;
     }
     return true;
   } catch (error) {
-    console.error('[Email] Error:', error);
+    console.error('[Email] No se pudo contactar con el proveedor.');
     return false;
   }
 }

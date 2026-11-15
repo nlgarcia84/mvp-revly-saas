@@ -5,12 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { resolveShortUrl } from '@/lib/google-places';
 import { getPlan, canCreateBusiness } from '@/lib/subscription';
-import { generateDiscountCode } from '@/lib/discount-code';
-import { generateQrToken } from '@/lib/qr-token';
-import {
-  notifyCustomerRegistered,
-  scheduleReviewRequest,
-} from '@/lib/notifications';
+import { requestEmailChallenge } from '@/lib/public-customer-access';
 
 // Convierte un texto en un slug URL-friendly: minúsculas, sin acentos y
 // espacios convertidos en guiones. "Cafetería El Centro" → "cafeteria-el-centro".
@@ -139,12 +134,11 @@ export const getDashboardBusinessData = async (id: string) => {
 
 // Busca un negocio por su slug (página pública, sin autenticación).
 export const getBusinessBySlug = async (slug: string) => {
-  return prisma.business.findUnique({ where: { slug } });
+  return prisma.business.findUnique({ where: { slug }, select: businessPublicSelect });
 };
 
-// Crea un cliente desde la página pública con 1 punto de bienvenida.
-// Si el email ya existe para este negocio, solo actualiza sus datos
-// (no vuelve a sumar puntos; para eso está el ticket del kiosko).
+// Solicita un registro público: el punto de bienvenida se concede después del OTP.
+// La solicitud no crea ni modifica clientes; los datos se aplican al verificar el email.
 export const addPublicCustomer = async (data: {
   slug: string;
   name: string;
@@ -153,84 +147,16 @@ export const addPublicCustomer = async (data: {
   consent: boolean;
   whatsappOptIn?: boolean;
 }) => {
-  if (!data.consent) {
-    throw new Error('Debes aceptar la política de privacidad');
+  if (!data || data.consent !== true || typeof data.name !== 'string' || data.name.trim().length < 1 || data.name.length > 100 ||
+      typeof data.phone !== 'string' || data.phone.length > 30 ||
+      (data.whatsappOptIn !== undefined && typeof data.whatsappOptIn !== 'boolean')) {
+    return { success: false as const, error: 'Revisa tus datos y acepta la política de privacidad.' };
   }
-
-  const business = await prisma.business.findUnique({
-    where: { slug: data.slug },
-  });
-  if (!business) throw new Error('Negocio no encontrado');
-
-  // Si el cliente ya existe, solo actualizamos sus datos (sin volver a dar puntos).
-  const existingCustomer = await prisma.customer.findUnique({
-    where: {
-      email_businessId: { email: data.email, businessId: business.id },
-    },
-  });
-  if (existingCustomer) {
-    return prisma.customer.update({
-      where: { id: existingCustomer.id },
-      data: {
-        name: data.name || null,
-        phone: data.phone || '',
-        whatsappOptIn: data.whatsappOptIn ?? false,
-      },
-    });
-  }
-
-  const customer = await prisma.$transaction(async (tx) => {
-    const created = await tx.customer.create({
-      data: {
-        name: data.name || null,
-        email: data.email,
-        phone: data.phone,
-        whatsappOptIn: data.whatsappOptIn ?? false,
-        source: 'qr',
-        businessId: business.id,
-        points: 1,
-        discountCode: generateDiscountCode(),
-        qrToken: generateQrToken(),
-      },
-    });
-    // Punto de bienvenida registrado en el historial.
-    await tx.pointMovement.create({
-      data: {
-        type: 'welcome',
-        points: 1,
-        day: null,
-        businessId: business.id,
-        customerId: created.id,
-      },
-    });
-    return created;
-  });
-
-  // Aviso de bienvenida por email (si está configurado).
-  // No rompe el registro si el email falla.
   try {
-    await notifyCustomerRegistered({
-      name: customer.name,
-      email: customer.email,
-      businessName: business.name,
-      points: customer.points,
-      discountCode: customer.discountCode,
-    });
-  } catch (notifError) {
-    console.error('Error notificando registro:', notifError);
+    return await requestEmailChallenge(data.slug, data.email, { name: data.name.trim(), phone: data.phone.trim(), whatsappOptIn: data.whatsappOptIn ?? false });
+  } catch {
+    return { success: false as const, error: 'No se pudo tramitar la solicitud. Inténtalo más tarde.' };
   }
-
-  // Programa la petición de reseña para el día siguiente.
-  await scheduleReviewRequest({
-    customerId: customer.id,
-    name: customer.name,
-    email: customer.email,
-    businessName: business.name,
-    googleLink: business.googleLink,
-    emailTemplate: business.emailTemplate,
-  });
-
-  return customer;
 };
 
 // Actualiza los datos de un negocio (solo el dueño).

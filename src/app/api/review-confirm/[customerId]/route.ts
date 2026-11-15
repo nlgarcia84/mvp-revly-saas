@@ -1,257 +1,102 @@
+import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
+import { authorizeReview, safeGoogleReviewUrl, takePublicRateLimit } from '@/lib/customer-capabilities';
 
-const feedbackPage = (businessName: string, customerId: string, googleLink: string) => `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gracias por tu opinión</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    margin: 0; padding: 24px; background: #f5f5f5;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  }
-  .card {
-    max-width: 480px; width: 100%; text-align: center;
-    background: #fff; border-radius: 16px; padding: 40px 32px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .check { width: 56px; height: 56px; border-radius: 50%; background: #0a0a0a; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
-  h1 { font-size: 22px; color: #0a0a0a; margin-bottom: 8px; }
-  p  { font-size: 15px; color: #737373; line-height: 1.5; margin-bottom: 24px; }
-  textarea {
-    width: 100%; padding: 12px; border: 1px solid #e5e5e5; border-radius: 8px;
-    font-size: 14px; font-family: inherit; resize: vertical; min-height: 100px;
-    outline: none; margin-bottom: 12px;
-  }
-  textarea:focus { border-color: #0a0a0a; }
-  .btn {
-    display: block; width: 100%; padding: 10px 24px; border-radius: 8px;
-    font-size: 14px; font-weight: 500; cursor: pointer; border: none;
-    background: #0a0a0a; color: #fff; transition: opacity .15s;
-  }
-  .btn:hover { opacity: .8; }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-secondary {
-    display: block; width: 100%; padding: 10px 24px; border-radius: 8px;
-    font-size: 14px; font-weight: 500; cursor: pointer; border: 1px solid #e5e5e5;
-    background: transparent; color: #737373; transition: all .15s; margin-top: 8px;
-  }
-  .btn-secondary:hover { border-color: #0a0a0a; color: #0a0a0a; }
-  .divider { margin: 16px 0; border: none; border-top: 1px solid #e5e5e5; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <div class="check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <h1>¡Gracias por tu valoración!</h1>
-    <p>Nos ayuda a mejorar. ¿Quieres dejarnos un comentario privado?</p>
+const headers = { 'Cache-Control': 'no-store, private', 'Referrer-Policy': 'no-referrer', 'X-Content-Type-Options': 'nosniff' };
+const denied = () => NextResponse.json({ error: 'Enlace no válido o caducado. Solicita una nueva invitación.' }, { status: 403, headers });
 
-    <textarea id="message" placeholder="¿Cómo podemos mejorar? (opcional)"></textarea>
-    <button class="btn" id="sendBtn" onclick="sendAndGo()">Enviar y dejar reseña en Google</button>
-    <button class="btn-secondary" onclick="goToGoogle()">Omitir y dejar reseña en Google</button>
-  </div>
-
-  <script>
-    const googleLink = ${googleLink ? `'${googleLink}'` : 'null'};
-    const customerId = '${customerId}';
-
-    async function sendAndGo() {
-      const msg = document.getElementById('message').value;
-      const btn = document.getElementById('sendBtn');
-      btn.disabled = true; btn.textContent = 'Enviando…';
-      try {
-        await fetch('/api/review-confirm/' + customerId, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ feedback: msg }),
-        });
-      } catch { /* silencioso */ }
-      goToGoogle();
-    }
-
-    function goToGoogle() {
-      if (googleLink) {
-        window.location.href = googleLink;
-      } else {
-        window.location.href = 'https://www.google.com';
-      }
-    }
-  </script>
-</body>
-</html>`;
-
-const starsPage = (customerId: string, existingRating: number | null, googleLink: string, businessName: string) => `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gracias por tu reseña</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    margin: 0; padding: 24px; background: #f5f5f5;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  }
-  .card {
-    max-width: 420px; width: 100%; text-align: center;
-    background: #fff; border-radius: 16px; padding: 40px 32px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .check { width: 56px; height: 56px; border-radius: 50%; background: #0a0a0a; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
-  h1 { font-size: 22px; color: #0a0a0a; margin-bottom: 8px; }
-  p  { font-size: 15px; color: #737373; line-height: 1.5; margin-bottom: 24px; }
-  .stars { display: flex; gap: 6px; justify-content: center; }
-  .star {
-    font-size: 44px; cursor: pointer; color: #d4d4d4; user-select: none;
-    transition: transform .15s, color .15s;
-  }
-  .star:hover { transform: scale(1.15); }
-  .star.selected { color: #f59e0b; }
-  .hint { font-size: 13px; color: #a3a3a3; margin-top: 16px; }
-  .btn { display: inline-block; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; text-decoration: none; background: #0a0a0a; color: #fff; transition: opacity .15s; margin-top: 16px; }
-  .btn:hover { opacity: .8; }
-  .hidden { display: none; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <div class="check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
-    <h1>¡Gracias por tu visita!</h1>
-    <p>¿Qué tal tu experiencia en <strong>${businessName}</strong>? Pulsa una estrella para valorar.</p>
-
-    <div class="stars" id="stars">
-      <span class="star" data-value="1">★</span>
-      <span class="star" data-value="2">★</span>
-      <span class="star" data-value="3">★</span>
-      <span class="star" data-value="4">★</span>
-      <span class="star" data-value="5">★</span>
-    </div>
-    <p class="hint" id="hint">Pulsa una estrella para continuar</p>
-  </div>
-
-  <script>
-    const stars = document.querySelectorAll('.star');
-    const hint = document.getElementById('hint');
-    let saved = ${existingRating !== null ? 'true' : 'false'};
-    const googleLink = ${googleLink ? `'${googleLink}'` : 'null'};
-
-    if (saved) {
-      hint.textContent = 'Ya valoraste este negocio. ¡Gracias!';
-    }
-
-    stars.forEach(s => {
-      s.addEventListener('click', async () => {
-        if (saved) return;
-        const val = parseInt(s.dataset.value);
-        saved = true;
-        stars.forEach(st => st.classList.toggle('selected', parseInt(st.dataset.value) <= val));
-
-        try {
-          await fetch('/api/review-confirm/${customerId}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ rating: val }),
-          });
-        } catch { /* silencioso */ }
-
-        if (googleLink) {
-          hint.textContent = 'Redirigiendo a Google…';
-          window.location.href = googleLink;
-        } else {
-          hint.textContent = '¡Gracias por tu valoración!';
-          window.location.href = 'https://www.google.com';
-        }
-      });
-    });
-  </script>
-</body>
-</html>`;
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ customerId: string }> },
-) {
+// Deliberately generic: GET performs NO database access, authorization exchange or mutation.
+// Tokens travel in a fragment (not sent in the HTTP URL), then in an HTTPS POST body.
+export async function GET(_request: Request, { params }: { params: Promise<{ customerId: string }> }) {
   const { customerId } = await params;
-  const { searchParams } = new URL(request.url);
-  const isAutoFlow = searchParams.get('auto') === '1';
-  const ratingParam = searchParams.get('rating');
-  const redirectUrl = searchParams.get('redirect');
-
-  if (isAutoFlow) {
-    const rating = Math.min(Math.max(parseInt(ratingParam || '5'), 1), 5);
-    try {
-      await prisma.customer.update({
-        where: { id: customerId },
-        data: { status: 'completed', rating },
-      });
-    } catch { /* silencioso */ }
-
-    let businessName = 'tu negocio';
-    let googleLink = redirectUrl ?? '';
-    try {
-      const customer = await prisma.customer.findUnique({
-        where: { id: customerId },
-        include: { business: { select: { name: true, googleLink: true } } },
-      });
-      businessName = customer?.business?.name ?? businessName;
-      if (!googleLink) googleLink = customer?.business?.googleLink ?? '';
-    } catch { /* silencioso */ }
-
-    return new NextResponse(
-      feedbackPage(businessName, customerId, googleLink),
-      { headers: { 'Content-Type': 'text/html' } },
-    );
-  }
-
-  let existingRating: number | null = null;
-  let googleLink = '';
-  let businessName = '';
-
+  const nonce = randomBytes(18).toString('base64');
+  const endpoint = JSON.stringify(`/api/review-confirm/${encodeURIComponent(customerId)}`).replace(/</g, '\\u003c');
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tu valoración · Revly</title></head>
+<body><main><h1>Tu experiencia</h1><p id="message" role="status">Validando invitación…</p>
+<form id="review" hidden><label>Valoración <select id="rating" required><option value="">Elige de 1 a 5</option>${[1,2,3,4,5].map(n => `<option value="${n}">${n} estrella${n === 1 ? '' : 's'}</option>`).join('')}</select></label>
+<label>Comentario privado (opcional)<textarea id="feedback" maxlength="2000"></textarea></label><button id="submit">Guardar y continuar</button></form>
+<a id="google" hidden rel="noreferrer noopener">Dejar reseña en Google</a>
+<p id="recovery" hidden>Por seguridad los enlaces antiguos o caducados necesitan una invitación nueva. Solicítala al negocio o vuelve a su QR para verificar tu email.</p></main>
+<script nonce="${nonce}">
+const endpoint = ${endpoint};
+const token = new URLSearchParams(location.hash.slice(1)).get('token') || '';
+const preselected = new URLSearchParams(location.search).get('rating');
+history.replaceState(null, '', location.pathname);
+const message = document.getElementById('message'), form = document.getElementById('review'), google = document.getElementById('google');
+let googleLink = null;
+async function post(payload) {
+  const response = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, ...payload }) });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || 'No se pudo guardar. Inténtalo de nuevo.');
+  return data;
+}
+(async () => {
   try {
-    const customer = await prisma.customer.update({
-      where: { id: customerId },
-      data: { status: 'completed' },
-      include: { business: { select: { googleLink: true, name: true } } },
-    });
-    existingRating = customer.rating;
-    googleLink = customer.business?.googleLink ?? '';
-    businessName = customer.business?.name ?? '';
-  } catch { /* silencioso */ }
-
-  return new NextResponse(
-    starsPage(customerId, existingRating, googleLink, businessName),
-    { headers: { 'Content-Type': 'text/html' } },
-  );
+    if (!token) throw new Error('Enlace no válido o caducado.');
+    const data = await post({ action: 'view' });
+    message.textContent = '¿Qué tal tu experiencia en ' + data.businessName + '?';
+    googleLink = data.googleLink;
+    if (googleLink) { google.href = googleLink; google.hidden = false; }
+    if (/^[1-5]$/.test(preselected || '')) document.getElementById('rating').value = preselected;
+    form.hidden = false;
+  } catch (error) { message.textContent = error.message; document.getElementById('recovery').hidden = false; }
+})();
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = document.getElementById('submit'); button.disabled = true;
+  try {
+    await post({ action: 'submit', rating: Number(document.getElementById('rating').value), feedback: document.getElementById('feedback').value });
+    form.hidden = true; message.textContent = 'Gracias por tu opinión. Puedes continuar a Google Reviews.';
+    if (googleLink) location.assign(googleLink);
+  } catch (error) { message.textContent = error.message; button.disabled = false; }
+});
+</script></body></html>`;
+  return new NextResponse(html, { headers: { ...headers, 'Content-Type': 'text/html; charset=utf-8',
+    'Content-Security-Policy': `default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'` } });
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ customerId: string }> },
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ customerId: string }> }) {
   const { customerId } = await params;
-  const payload = await request.json();
-  const rating = payload.rating;
-  const feedback = payload.feedback;
-
-  if (rating !== undefined && (rating < 1 || rating > 5)) {
-    return NextResponse.json({ error: 'Valoración inválida' }, { status: 400 });
-  }
-
+  const origin = request.headers.get('origin');
+  if (origin && origin !== new URL(request.url).origin) return denied();
+  let payload: any;
   try {
-    await prisma.customer.update({
-      where: { id: customerId },
-      data: {
-        ...(rating !== undefined ? { rating } : {}),
-        ...(feedback !== undefined ? { feedback } : {}),
-      },
-    });
-    return NextResponse.json({ ok: true });
-  } catch {
-    return NextResponse.json({ error: 'Error al guardar' }, { status: 500 });
+    if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new Error();
+    if (Number(request.headers.get('content-length')) > 12_000 || !request.body) throw new Error();
+    const reader = request.body.getReader();
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > 12_000) { await reader.cancel(); throw new Error(); }
+      parts.push(value);
+    }
+    const raw = Buffer.concat(parts).toString('utf8');
+    payload = JSON.parse(raw);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload) || Object.keys(payload).some(k => !['action', 'token', 'rating', 'feedback'].includes(k))) throw new Error();
+  } catch { return NextResponse.json({ error: 'Solicitud no válida' }, { status: 400, headers }); }
+  const grant = await authorizeReview(customerId, payload.token);
+  if (!grant) return denied();
+  if (!['view', 'submit'].includes(payload.action) ||
+      (payload.action === 'view' && ('rating' in payload || 'feedback' in payload)) ||
+      (payload.action === 'submit' && (!Number.isInteger(payload.rating) || payload.rating < 1 || payload.rating > 5 ||
+        (payload.feedback !== undefined && (typeof payload.feedback !== 'string' || payload.feedback.length > 2000))))) {
+    return NextResponse.json({ error: 'Valoración o comentario no válidos' }, { status: 400, headers });
   }
+  // Authorization failures never cause customer writes or rate-limit side effects.
+  if (payload.action === 'view') {
+    const customer = await prisma.customer.findFirst({ where: { id: customerId, businessId: grant.businessId }, select: { business: { select: { name: true, googleLink: true } } } });
+    if (!customer) return denied();
+    return NextResponse.json({ businessName: customer.business.name, googleLink: safeGoogleReviewUrl(customer.business.googleLink) }, { headers });
+  }
+  if (!await takePublicRateLimit(`review:${grant.tokenHash}`, 10)) return NextResponse.json({ error: 'Demasiados intentos. Inténtalo más tarde.' }, { status: 429, headers });
+  // Recheck expiry in the writing statement, including the composite customer/business relation.
+  const updated = await prisma.customer.updateMany({ where: { id: customerId, businessId: grant.businessId, email: grant.email,
+    capabilities: { some: { tokenHash: grant.tokenHash, scope: 'review', expiresAt: { gt: new Date() } } } },
+    data: { status: 'completed', rating: payload.rating, ...(payload.feedback !== undefined ? { feedback: payload.feedback } : {}) } });
+  if (updated.count !== 1) return denied();
+  return NextResponse.json({ ok: true }, { headers });
 }

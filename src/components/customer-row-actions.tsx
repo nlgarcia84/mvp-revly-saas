@@ -28,7 +28,7 @@ const ActionMenu = ({
   onAddPoint: (id: string) => void;
   onSubtractPoint: (id: string) => void;
   onSendEmail: (id: string) => void;
-  onWhatsApp: (phone: string) => void;
+  onWhatsApp: (id: string) => void;
   onDelete: (id: string) => void;
   onDetail: (customer: CustomerRow) => void;
 }) => {
@@ -111,7 +111,7 @@ const ActionMenu = ({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onWhatsApp(customer.phone);
+                      onWhatsApp(customer.id);
                       onClose();
                     }}
                     className={itemClass}

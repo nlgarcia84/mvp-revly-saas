@@ -1,5 +1,5 @@
 import { getPublicCustomer } from '@/actions/customers';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import Button from '@/components/ui/button';
 import CustomerQR from '@/components/customer-qr';
 
@@ -17,8 +17,7 @@ import CustomerQR from '@/components/customer-qr';
 // El cliente muestra su QR en caja y el empleado lo escanea
 // para sumarle un punto o canjear la recompensa.
 //
-// No requiere autenticación. Es una página pública para
-// que el cliente pueda consultar sus puntos desde casa.
+// Requiere la sesión pública del cliente verificada por email.
 // ─────────────────────────────────────────────────────
 const CustomerProfilePage = async ({
   params,
@@ -29,7 +28,7 @@ const CustomerProfilePage = async ({
   const customer = await getPublicCustomer(customerId, slug);
 
   if (!customer) {
-    notFound();
+    redirect(`/${encodeURIComponent(slug)}`);
   }
 
   const puntos = customer.points;
